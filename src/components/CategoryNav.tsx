@@ -9,8 +9,8 @@ export function CategoryNav() {
   const categories = [
     { name: 'Thiết bị chụp ảnh', icon: Camera, value: 'Photography' },
     { name: 'Thiết bị âm thanh', icon: Speaker, value: 'Audio Equipment' },
-    { name: 'Đồ cắm trại', icon: Tent, value: 'Camping Gear' },
-    { name: 'Thiết bị SUP', icon: Ship, value: 'SUP Equipment' },
+    { name: 'Dụng cụ cắm trại', icon: Tent, value: 'Camping Gear' },
+    { name: 'SUP', icon: Ship, value: 'SUP Equipment' },
   ];
 
   const handleCategoryClick = (value: string) => {

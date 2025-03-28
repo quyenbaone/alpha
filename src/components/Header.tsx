@@ -1,11 +1,11 @@
+import { Home, LogOut, Menu, MessageSquare, Search, Shield, User, X } from 'lucide-react';
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, MessageSquare, User, LogOut, Shield, Bell, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { cn } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
 import { useEquipmentStore } from '../store/equipmentStore';
 import { AuthModal } from './AuthModal';
 import { NotificationsDropdown } from './NotificationsDropdown';
-import { cn } from '../lib/utils';
 
 export function Header() {
   const { user, signOut, isAdmin } = useAuthStore();
@@ -56,8 +56,8 @@ export function Header() {
               {user ? (
                 <>
                   {isAdmin && (
-                    <Link 
-                      to="/admin" 
+                    <Link
+                      to="/admin"
                       className={cn(
                         "hover:text-primary-foreground/80 flex items-center gap-1",
                         isActive('/admin') && "text-primary-foreground/80"
@@ -68,8 +68,8 @@ export function Header() {
                     </Link>
                   )}
                   <NotificationsDropdown />
-                  <Link 
-                    to="/messages" 
+                  <Link
+                    to="/messages"
                     className={cn(
                       "hover:text-primary-foreground/80",
                       isActive('/messages') && "text-primary-foreground/80"
@@ -115,15 +115,18 @@ export function Header() {
             </div>
           </div>
         </div>
-        
+
         {/* Main Header */}
         <div className="py-4">
           <div className="flex items-center gap-8">
-            <Link to="/" className="text-2xl font-bold flex items-center gap-2">
+            <div
+              onClick={() => window.location.href = '/'}
+              className="text-2xl font-bold flex items-center gap-2 cursor-pointer"
+            >
               <Home className="h-8 w-8" />
-              RentGear
-            </Link>
-            
+              Alpha
+            </div>
+
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="flex-1 max-w-4xl hidden md:flex">
               <div className="flex w-full">
@@ -145,8 +148,8 @@ export function Header() {
 
             {/* Header Icons */}
             <div className="hidden md:flex items-center gap-6">
-              <Link 
-                to="/messages" 
+              <Link
+                to="/messages"
                 className={cn(
                   "hover:text-primary-foreground/80",
                   isActive('/messages') && "text-primary-foreground/80"
@@ -154,8 +157,8 @@ export function Header() {
               >
                 <MessageSquare className="h-6 w-6" />
               </Link>
-              <Link 
-                to="/profile" 
+              <Link
+                to="/profile"
                 className={cn(
                   "hover:text-primary-foreground/80",
                   isActive('/profile') && "text-primary-foreground/80"
@@ -190,22 +193,22 @@ export function Header() {
         {showMobileMenu && (
           <div className="md:hidden border-t border-primary/20 py-4">
             <nav className="flex flex-col gap-4">
-              <Link 
-                to="/become-lender" 
+              <Link
+                to="/become-lender"
                 className="hover:text-primary-foreground/80 flex items-center gap-2"
                 onClick={() => setShowMobileMenu(false)}
               >
                 Trở thành người cho thuê
               </Link>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="hover:text-primary-foreground/80 flex items-center gap-2"
                 onClick={() => setShowMobileMenu(false)}
               >
                 Tải ứng dụng
               </a>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="hover:text-primary-foreground/80 flex items-center gap-2"
                 onClick={() => setShowMobileMenu(false)}
               >

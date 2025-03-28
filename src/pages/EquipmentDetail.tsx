@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Calendar, Clock, Shield, Heart } from 'lucide-react';
+import { Calendar, Clock, Heart, MapPin, Shield, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Equipment } from '../store/equipmentStore';
 import { useAuthStore } from '../store/authStore';
+import { Equipment } from '../store/equipmentStore';
 
 export function EquipmentDetail() {
   const { id } = useParams();
@@ -91,7 +91,7 @@ export function EquipmentDetail() {
         {/* Details Section */}
         <div>
           <h1 className="text-3xl font-bold mb-4">{equipment.title}</h1>
-          
+
           <div className="flex items-center gap-4 mb-6">
             <div className="flex items-center">
               <Star className="h-5 w-5 text-yellow-400 fill-current" />
@@ -105,10 +105,10 @@ export function EquipmentDetail() {
           </div>
 
           <div className="bg-gray-50 p-6 rounded-lg mb-6">
-            <h2 className="text-xl font-semibold mb-4">Rental Details</h2>
+            <h2 className="text-xl font-semibold mb-4">Chi tiết thuê</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-600 mb-2">Start Date</label>
+                <label className="block text-gray-600 mb-2">Ngày bắt đầu</label>
                 <input
                   type="date"
                   value={startDate}
@@ -118,7 +118,7 @@ export function EquipmentDetail() {
                 />
               </div>
               <div>
-                <label className="block text-gray-600 mb-2">End Date</label>
+                <label className="block text-gray-600 mb-2">Ngày kết thúc</label>
                 <input
                   type="date"
                   value={endDate}
@@ -128,25 +128,28 @@ export function EquipmentDetail() {
                 />
               </div>
             </div>
-            
+
             <div className="mt-4">
               <div className="flex justify-between items-center mb-2">
-                <span>Price per day</span>
-                <span className="font-semibold">${equipment.price}</span>
+                <span>Giá mỗi ngày
+                </span>
+                <span className="font-semibold">{equipment.price.toLocaleString()} VND</span>
               </div>
               <div className="flex justify-between items-center mb-2">
-                <span>Insurance fee</span>
-                <span className="font-semibold">$5</span>
+                <span>Phí bảo hiểm
+                </span>
+                <span className="font-semibold">50,000 VND</span>
               </div>
               <div className="flex justify-between items-center mb-2">
-                <span>Service fee</span>
-                <span className="font-semibold">$10</span>
+                <span>Phí dịch vụ
+                </span>
+                <span className="font-semibold">100,000 VND</span>
               </div>
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold">Total</span>
+                  <span className="font-bold">Tổng chi phí  </span>
                   <span className="font-bold text-xl">
-                    ${equipment.price + 15}/day
+                    {(equipment.price + 50000 + 100000).toLocaleString()} VND/day
                   </span>
                 </div>
               </div>
@@ -162,12 +165,13 @@ export function EquipmentDetail() {
 
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-2">Description</h2>
+              <h2 className="text-xl font-semibold mb-2">Sự miêu tả</h2>
               <p className="text-gray-600">{equipment.description}</p>
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-4">What's included</h2>
+              <h2 className="text-xl font-semibold mb-4">Bao gồm những gì
+              </h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-gray-600" />
@@ -175,11 +179,11 @@ export function EquipmentDetail() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-gray-600" />
-                  <span>Insurance included</span>
+                  <span>Bao gồm bảo hiểm</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-gray-600" />
-                  <span>Flexible dates</span>
+                  <span>Thời gian linh hoạt</span>
                 </div>
               </div>
             </div>

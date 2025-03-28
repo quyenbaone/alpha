@@ -8,7 +8,7 @@ export function Footer() {
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-bold mb-4 text-white">Về RentGear</h3>
+            <h3 className="text-lg font-bold mb-4 text-white">Về Alpha</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/about" className="hover:text-primary transition-colors">
@@ -122,7 +122,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-sm">
-              © {new Date().getFullYear()} RentGear. Đã đăng ký bản quyền.
+              © {new Date().getFullYear()} Alpha. Đã đăng ký bản quyền.
             </div>
             <div className="flex items-center gap-6">
               <a 

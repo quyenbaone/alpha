@@ -6,17 +6,17 @@ export function RentalAgreement() {
       <h1 className="text-4xl font-bold mb-8">Hợp đồng thuê</h1>
       <div className="prose prose-lg max-w-none">
         <p>
-          Đây là các điều khoản và điều kiện chi tiết về việc thuê thiết bị trên nền tảng RentGear.
+          Đây là các điều khoản và điều kiện chi tiết về việc thuê thiết bị trên nền tảng Alpha.
         </p>
 
         <h2>1. Định nghĩa</h2>
         <ul>
           <li>
             
-            <strong>Người cho thuê:</strong> Cá nhân hoặc tổ chức sở hữu thiết bị và đăng ký cho thuê trên RentGear
+            <strong>Người cho thuê:</strong> Cá nhân hoặc tổ chức sở hữu thiết bị và đăng ký cho thuê trên Alpha
           </li>
           <li>
-            <strong>Người thuê:</strong> Cá nhân hoặc tổ chức thuê thiết bị thông qua nền tảng RentGear
+            <strong>Người thuê:</strong> Cá nhân hoặc tổ chức thuê thiết bị thông qua nền tảng Alpha
           </li>
           <li>
             <strong>Thời gian thuê:</strong> Khoảng thời gian từ khi nhận đến khi trả thiết bị

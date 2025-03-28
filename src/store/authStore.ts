@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Database } from '../lib/database.types';
+import { create } from 'zustand';
 import { getAuthError } from '../lib/auth';
+import { Database } from '../lib/database.types';
+import { supabase } from '../lib/supabase';
 
 type Profile = Database['public']['Tables']['users']['Row'];
 
@@ -17,6 +17,7 @@ interface AuthState {
   setSession: (session: any) => Promise<void>;
   checkAdminStatus: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -31,7 +32,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         email: email.trim().toLowerCase(),
         password: password.trim()
       });
-      
+
       if (error) throw error;
 
       if (!data.user || !data.session) {
@@ -52,9 +53,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (profileError) throw profileError;
 
-      set({ 
-        user: profile, 
-        session: data.session, 
+      set({
+        user: profile,
+        session: data.session,
         isAdmin: profile.is_admin || false,
         loading: false
       });
@@ -77,7 +78,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
-      
+
       if (error) throw error;
 
       if (!data.user) {
@@ -115,8 +116,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         // Check if email is confirmed
         if (!session.user.email_confirmed_at) {
-          set({ 
-            session: null, 
+          set({
+            session: null,
             user: null,
             loading: false,
             isAdmin: false
@@ -132,7 +133,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (error) throw error;
 
-        set({ 
+        set({
           session,
           user: profile,
           loading: false,
@@ -140,16 +141,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
       } catch (error) {
         console.error('Error fetching user profile:', error);
-        set({ 
-          session: null, 
+        set({
+          session: null,
           user: null,
           loading: false,
           isAdmin: false
         });
       }
     } else {
-      set({ 
-        session: null, 
+      set({
+        session: null,
         user: null,
         loading: false,
         isAdmin: false
@@ -166,9 +167,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           .select('*')
           .eq('id', user.id)
           .single();
-        
+
         if (error) throw error;
-        
+
         set({ user: data, isAdmin: data.is_admin || false });
       }
     } catch (error) {
@@ -202,6 +203,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Đã xảy ra lỗi khi cập nhật thông tin');
+      throw error;
+    }
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    try {
+      // First verify current password by attempting to sign in
+      const { user } = get();
+      if (!user || !user.email) throw new Error('No user logged in');
+
+      // Verify current password
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+
+      if (verifyError) throw new Error('Current password is incorrect');
+
+      // Update password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success('Password updated successfully');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to change password');
+      }
       throw error;
     }
   }

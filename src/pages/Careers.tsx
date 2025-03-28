@@ -6,7 +6,7 @@ export function Careers() {
       <h1 className="text-4xl font-bold mb-8">Tuyển dụng</h1>
       <div className="prose prose-lg max-w-none">
         <p>
-          RentGear đang tìm kiếm những người tài năng để cùng xây dựng nền tảng chia sẻ thiết bị hàng đầu Việt Nam.
+        Alpha đang tìm kiếm những người tài năng để cùng xây dựng nền tảng chia sẻ thiết bị hàng đầu Việt Nam.
         </p>
 
         <h2>Vị trí đang tuyển</h2>
@@ -14,7 +14,7 @@ export function Careers() {
           <div className="bg-card p-6 rounded-lg">
             <h3 className="text-xl font-semibold mb-2">Senior Full Stack Developer</h3>
             <p className="text-muted-foreground mb-4">
-              Phát triển và duy trì các tính năng chính của nền tảng RentGear
+              Phát triển và duy trì các tính năng chính của nền tảng Alpha
             </p>
             <div className="flex gap-4">
               <span className="text-sm bg-secondary px-3 py-1 rounded-full">Remote</span>

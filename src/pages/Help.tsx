@@ -1,4 +1,3 @@
-import React from 'react';
 
 export function Help() {
   return (
@@ -34,7 +33,7 @@ export function Help() {
                   Chính sách bảo hiểm như thế nào?
                 </summary>
                 <p className="mt-4 text-muted-foreground">
-                  Mọi giao dịch trên RentGear đều được bảo hiểm 100% giá trị thiết bị.
+                  Mọi giao dịch trên Alpha đều được bảo hiểm 100% giá trị thiết bị.
                   Trong trường hợp xảy ra sự cố, chúng tôi sẽ hỗ trợ giải quyết và bồi thường theo quy định.
                 </p>
               </details>
@@ -49,7 +48,7 @@ export function Help() {
             <div className="mt-6 space-y-4">
               <div>
                 <h3 className="font-medium">Email</h3>
-                <p className="text-muted-foreground">support@rentgear.vn</p>
+                <p className="text-muted-foreground">support@alpha.vn</p>
               </div>
               <div>
                 <h3 className="font-medium">Hotline</h3>
@@ -58,7 +57,20 @@ export function Help() {
               <div>
                 <h3 className="font-medium">Địa chỉ</h3>
                 <p className="text-muted-foreground">
-                  123 Đường ABC, Quận 1, TP HCM
+                  Đại học FPT Quy Nhơn, Bình Định
+                  <div className="mt-4">
+                    <iframe
+                      title="Google Maps"
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.579349611255!2d109.2179062!3d13.8039729!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x316f6bf778c80973%3A0x8a7d0b5aa0af29c7!2sFPT%20University%20Quy%20Nhon%20AI%20Campus!5e0!3m2!1sen!2s!4v1711512345678"
+                      width="100%"
+                      height="350"
+                      style={{ border: 0 }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    ></iframe>
+                  </div>
+
                 </p>
               </div>
             </div>
