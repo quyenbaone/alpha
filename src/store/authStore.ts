@@ -1,7 +1,6 @@
 import { toast } from 'sonner';
 import { create } from 'zustand';
-import { getAuthError } from '../lib/auth';
-import { Database } from '../lib/database.types';
+import type { Database } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
 type Profile = Database['public']['Tables']['users']['Row'];
@@ -15,12 +14,10 @@ interface AuthState {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   setSession: (session: any) => Promise<void>;
-  checkAdminStatus: () => Promise<void>;
-  updateProfile: (data: Partial<Profile>) => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   session: null,
   loading: true,
@@ -33,25 +30,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password: password.trim()
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'Invalid login credentials') {
+          throw new Error('Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại chính tả và đảm bảo bạn đang sử dụng đúng địa chỉ email đã đăng ký.');
+        }
+        if (error.message.includes('Email not confirmed')) {
+          throw new Error('Vui lòng xác nhận email của bạn trước khi đăng nhập. Kiểm tra hộp thư của bạn để tìm email xác nhận.');
+        }
+        throw error;
+      }
 
       if (!data.user || !data.session) {
-        throw new Error('Không thể đăng nhập. Vui lòng thử lại sau.');
+        throw new Error('Không thể đăng nhập. Vui lòng thử lại sau hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp tục.');
       }
 
-      // Check if email is confirmed
-      if (!data.user.email_confirmed_at) {
-        throw new Error('Email not confirmed');
-      }
-
-      // Fetch full user profile
       const { data: profile, error: profileError } = await supabase
         .from('users')
         .select('*')
         .eq('id', data.user.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        throw new Error('Không thể tải thông tin người dùng. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.');
+      }
 
       set({
         user: profile,
@@ -63,8 +64,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       toast.success('Đăng nhập thành công!');
     } catch (error) {
       console.error('Sign in error:', error);
-      const message = error instanceof Error ? getAuthError(error) : 'Đã xảy ra lỗi khi đăng nhập';
-      toast.error(message);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau.');
+      }
       throw error;
     }
   },
@@ -73,10 +77,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
-        password: password.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+        password: password.trim()
       });
 
       if (error) throw error;
@@ -85,15 +86,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error('Không thể tạo tài khoản');
       }
 
-      toast.success(
-        'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.',
-        { duration: 6000 }
-      );
-      return data;
+      toast.success('Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.');
     } catch (error) {
       console.error('Sign up error:', error);
-      const message = error instanceof Error ? getAuthError(error) : 'Đã xảy ra lỗi khi đăng ký';
-      toast.error(message);
+      toast.error('Đã xảy ra lỗi khi đăng ký');
       throw error;
     }
   },
@@ -111,20 +107,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  resetPassword: async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase());
+      if (error) throw error;
+      toast.success('Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn.');
+    } catch (error) {
+      console.error('Reset password error:', error);
+      toast.error('Đã xảy ra lỗi khi gửi yêu cầu đặt lại mật khẩu');
+      throw error;
+    }
+  },
+
   setSession: async (session) => {
     if (session?.user) {
       try {
-        // Check if email is confirmed
-        if (!session.user.email_confirmed_at) {
-          set({
-            session: null,
-            user: null,
-            loading: false,
-            isAdmin: false
-          });
-          return;
-        }
-
         const { data: profile, error } = await supabase
           .from('users')
           .select('*')
@@ -157,86 +154,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     }
   },
-
-  checkAdminStatus: async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (error) throw error;
-
-        set({ user: data, isAdmin: data.is_admin || false });
-      }
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      set({ isAdmin: false });
-    }
-  },
-
-  updateProfile: async (data) => {
-    const { user } = get();
-    if (!user) throw new Error('No user logged in');
-
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update(data)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      const { data: updatedProfile, error: fetchError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      set({ user: updatedProfile });
-      toast.success('Cập nhật thông tin thành công');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Đã xảy ra lỗi khi cập nhật thông tin');
-      throw error;
-    }
-  },
-
-  changePassword: async (currentPassword: string, newPassword: string) => {
-    try {
-      // First verify current password by attempting to sign in
-      const { user } = get();
-      if (!user || !user.email) throw new Error('No user logged in');
-
-      // Verify current password
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword
-      });
-
-      if (verifyError) throw new Error('Current password is incorrect');
-
-      // Update password
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) throw error;
-
-      toast.success('Password updated successfully');
-    } catch (error) {
-      console.error('Error changing password:', error);
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error('Failed to change password');
-      }
-      throw error;
-    }
-  }
 }));

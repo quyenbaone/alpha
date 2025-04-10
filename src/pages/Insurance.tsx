@@ -6,7 +6,7 @@ export function Insurance() {
       <h1 className="text-4xl font-bold mb-8">Thông tin bảo hiểm</h1>
       <div className="prose prose-lg max-w-none">
         <p>
-          Alpha hợp tác với các công ty bảo hiểm hàng đầu để đảm bảo an toàn cho mọi giao dịch trên nền tảng.
+          RentGear hợp tác với các công ty bảo hiểm hàng đầu để đảm bảo an toàn cho mọi giao dịch trên nền tảng.
         </p>
 
         <h2>Phạm vi bảo hiểm</h2>
@@ -71,7 +71,7 @@ export function Insurance() {
             <br />
             Hotline: 1900 1234
             <br />
-            Email: insurance@alpha.vn
+            Email: insurance@rentgear.vn
           </p>
         </div>
       </div>

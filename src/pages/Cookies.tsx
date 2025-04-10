@@ -6,7 +6,7 @@ export function Cookies() {
       <h1 className="text-4xl font-bold mb-8">Cài đặt cookie</h1>
       <div className="prose prose-lg max-w-none">
         <p>
-        Alpha sử dụng cookie để cải thiện trải nghiệm người dùng và cung cấp dịch vụ tốt hơn.
+          RentGear sử dụng cookie để cải thiện trải nghiệm người dùng và cung cấp dịch vụ tốt hơn.
         </p>
 
         <h2>Cookie là gì?</h2>

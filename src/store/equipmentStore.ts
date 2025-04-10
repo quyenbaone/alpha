@@ -1,21 +1,21 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { Database } from '../lib/database.types';
+import type { Equipment, Category } from '../lib/types';
 
-type Equipment = Database['public']['Tables']['equipment']['Row'];
+interface EquipmentFilters {
+  category: Category | null;
+  priceRange: [number, number] | null;
+  location: string | null;
+  search: string | null;
+}
 
 interface EquipmentState {
   items: Equipment[];
   loading: boolean;
   error: string | null;
-  filters: {
-    category: string | null;
-    priceRange: [number, number] | null;
-    location: string | null;
-    search: string | null;
-  };
+  filters: EquipmentFilters;
   fetchEquipment: () => Promise<void>;
-  setFilters: (filters: Partial<EquipmentState['filters']>) => Promise<void>;
+  setFilters: (filters: Partial<EquipmentFilters>) => Promise<void>;
   clearError: () => void;
 }
 

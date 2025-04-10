@@ -131,8 +131,8 @@ export function AddEquipmentModal({ isOpen, onClose, onSuccess }: AddEquipmentMo
               >
                 <option value="Photography">Thiết bị chụp ảnh</option>
                 <option value="Audio Equipment">Thiết bị âm thanh</option>
-                <option value="Camping Gear">Dụng cụ cắm trại</option>
-                <option value="SUP Equipment">SUP</option>
+                <option value="Camping Gear">Đồ cắm trại</option>
+                <option value="SUP Equipment">Thiết bị SUP</option>
               </select>
             </div>
           </div>

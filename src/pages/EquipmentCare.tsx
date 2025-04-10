@@ -25,7 +25,7 @@ export function EquipmentCare() {
           <li>Bảo quản dây cáp đúng cách, tránh gập góc</li>
         </ul>
 
-        <h2>Dụng cụ cắm trại</h2>
+        <h2>Đồ cắm trại</h2>
         <ul>
           <li>Phơi khô hoàn toàn trước khi cất giữ</li>
           <li>Kiểm tra và vá các lỗ thủng nhỏ kịp thời</li>
@@ -33,7 +33,7 @@ export function EquipmentCare() {
           <li>Vệ sinh sạch sẽ sau mỗi lần sử dụng</li>
         </ul>
 
-        <h2>SUP</h2>
+        <h2>Thiết bị SUP</h2>
         <ul>
           <li>Rửa sạch với nước ngọt sau khi sử dụng ở biển</li>
           <li>Để khô hoàn toàn trước khi gấp và cất giữ</li>

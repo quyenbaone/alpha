@@ -28,12 +28,12 @@ export function BecomeLender() {
                 },
                 {
                   icon: Tent,
-                  title: 'Dụng cụ cắm trại',
+                  title: 'Đồ cắm trại',
                   description: 'Lều, túi ngủ, bếp gas...',
                 },
                 {
                   icon: Ship,
-                  title: 'SUP',
+                  title: 'Thiết bị SUP',
                   description: 'Ván SUP, mái chèo, áo phao...',
                 },
               ].map((item) => (

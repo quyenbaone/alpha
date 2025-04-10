@@ -35,43 +35,23 @@ export const LOCATIONS = [
 ] as const;
 
 export const RENTAL_STATUS = {
-  'pending': {
-    label: 'Chờ xác nhận',
-    description: 'Đơn thuê mới, chờ chủ cho thuê duyệt.'
+  pending: {
+    label: 'Chờ duyệt',
+    color: 'yellow',
   },
-  'approved': {
-    label: 'Đã xác nhận',
-    description: 'Chủ cho thuê đã đồng ý cho thuê.'
+  approved: {
+    label: 'Đã duyệt',
+    color: 'green',
   },
-  'delivering': {
-    label: 'Đang giao hàng',
-    description: 'Thiết bị/dụng cụ đang được giao.'
-  },
-  'in_use': {
-    label: 'Đang sử dụng',
-    description: 'Người thuê đang sử dụng sản phẩm.'
-  },
-  'completed': {
-    label: 'Hoàn tất',
-    description: 'Đã trả thiết bị, đơn thuê hoàn thành.'
-  },
-  'cancelled': {
-    label: 'Đã hủy',
-    description: 'Đơn thuê bị hủy do một trong hai bên.'
-  },
-  'returning': {
-    label: 'Đang đổi/trả',
-    description: 'Xử lý yêu cầu đổi hoặc trả sớm.'
-  },
-  'refunded': {
-    label: 'Hoàn tiền thành công',
-    description: 'Đơn bị hủy và hoàn tiền.'
-  },
-  'rejected': {
+  rejected: {
     label: 'Từ chối',
-    description: 'Chủ cho thuê từ chối đơn thuê.'
-  }
-};
+    color: 'red',
+  },
+  completed: {
+    label: 'Hoàn thành',
+    color: 'blue',
+  },
+} as const;
 
 export const PRICE_RANGES = [
   {

@@ -7,7 +7,7 @@ export function Safety() {
       <h1 className="text-4xl font-bold mb-8">An toàn</h1>
       <div className="prose prose-lg max-w-none">
         <p className="lead">
-        Alpha cam kết đảm bảo an toàn cho mọi giao dịch và người dùng trên nền tảng.
+          RentGear cam kết đảm bảo an toàn cho mọi giao dịch và người dùng trên nền tảng.
         </p>
 
         <div className="grid md:grid-cols-3 gap-8 mt-12">
@@ -51,7 +51,7 @@ export function Safety() {
         </p>
         <ul>
           <li>Hotline: 1900 1234</li>
-          <li>Email: safety@alpha.vn</li>
+          <li>Email: safety@rentgear.vn</li>
         </ul>
       </div>
     </div>

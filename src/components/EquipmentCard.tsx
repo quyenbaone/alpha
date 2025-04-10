@@ -1,7 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, Star } from 'lucide-react';
-import { Equipment } from '../store/equipmentStore';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, Heart, ShoppingCart, Star } from 'lucide-react';
+import { Equipment } from '../lib/types';
+import { formatPrice } from '../lib/utils';
+import { useCartStore } from '../store/cartStore';
+import { toast } from 'sonner';
 
 interface EquipmentCardProps {
   item: Equipment;
@@ -9,35 +12,70 @@ interface EquipmentCardProps {
 
 export function EquipmentCard({ item }: EquipmentCardProps) {
   const [isLiked, setIsLiked] = React.useState(false);
+  const navigate = useNavigate();
+  const addItem = useCartStore((state) => state.addItem);
 
-  // Format price to Vietnamese currency
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation when clicking cart button
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    addItem({
+      equipment: item,
+      quantity: 1,
+      startDate: today.toISOString().split('T')[0],
+      endDate: tomorrow.toISOString().split('T')[0],
+    });
+
+    toast.success('Đã thêm vào giỏ hàng');
+  };
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation when clicking like button
+    setIsLiked(!isLiked);
+  };
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default link behavior
+    navigate(`/equipment/${item.id}`);
   };
 
   return (
-    <div className="group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <Link 
+      to={`/equipment/${item.id}`}
+      className="block group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+    >
       <div className="relative overflow-hidden">
         <img 
           src={item.image} 
           alt={item.title} 
           className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-700"
         />
-        <button 
-          onClick={() => setIsLiked(!isLiked)}
-          className="absolute top-2 right-2 p-2 bg-white rounded-full hover:bg-gray-100 transform hover:scale-110 transition-all duration-300 z-10"
-        >
-          <Heart 
-            className={`h-5 w-5 transition-colors duration-300 ${
-              isLiked ? 'text-red-500 fill-current' : 'text-gray-600'
-            }`} 
-          />
-        </button>
+        <div className="absolute top-2 right-2 flex gap-2 z-10">
+          <button 
+            onClick={handleLike}
+            className="p-2 bg-white rounded-full hover:bg-gray-100 transform hover:scale-110 transition-all duration-300"
+          >
+            <Heart 
+              className={`h-5 w-5 transition-colors duration-300 ${
+                isLiked ? 'text-red-500 fill-current' : 'text-gray-600'
+              }`} 
+            />
+          </button>
+          <button
+            onClick={handleViewDetails}
+            className="p-2 bg-white rounded-full hover:bg-gray-100 transform hover:scale-110 transition-all duration-300"
+          >
+            <Eye className="h-5 w-5 text-gray-600" />
+          </button>
+          <button
+            onClick={handleAddToCart}
+            className="p-2 bg-white rounded-full hover:bg-gray-100 transform hover:scale-110 transition-all duration-300"
+          >
+            <ShoppingCart className="h-5 w-5 text-gray-600" />
+          </button>
+        </div>
         <div className="absolute top-2 left-2 px-3 py-1 bg-orange-500 text-white text-xs rounded-full transform -rotate-2 hover:rotate-0 transition-transform duration-300">
           {item.category}
         </div>
@@ -45,11 +83,9 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       <div className="p-4">
-        <Link to={`/equipment/${item.id}`}>
-          <h3 className="font-semibold text-lg mb-2 group-hover:text-orange-500 transition-colors duration-300">
-            {item.title}
-          </h3>
-        </Link>
+        <h3 className="font-semibold text-lg mb-2 group-hover:text-orange-500 transition-colors duration-300">
+          {item.title}
+        </h3>
         <p className="text-gray-600 text-sm mb-2 flex items-center gap-1">
           <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           {item.location}
@@ -75,14 +111,14 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
             {formatPrice(item.price)}
             <span className="text-sm text-gray-500">/ngày</span>
           </p>
-          <Link
-            to={`/equipment/${item.id}`}
+          <button
+            onClick={handleViewDetails}
             className="px-4 py-2 bg-orange-500 text-white rounded-lg transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 hover:bg-orange-600 active:scale-95"
           >
             Thuê ngay
-          </Link>
+          </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
