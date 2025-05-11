@@ -37,7 +37,7 @@ export function Header() {
     try {
       await signOut();
       toast.success('Đăng xuất thành công');
-      navigate('/signin');
+      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Có lỗi xảy ra khi đăng xuất');

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import PaymentForm from '../components/PaymentForm';
 import { useAuthStore } from '../store/authStore';
@@ -47,8 +47,8 @@ export function Cart() {
     }).join(', ');
 
     return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Thanh toán</h1>
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-8">Thanh toán</h1>
         <PaymentForm
           amount={items.reduce((total, item) => {
             const days = Math.ceil(
@@ -66,80 +66,92 @@ export function Cart() {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="bg-white rounded-xl shadow-sm p-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Giỏ hàng trống</h1>
-          <p className="text-gray-600 mb-8">
-            Hãy thêm một số thiết bị vào giỏ hàng của bạn
+          <svg className="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Giỏ hàng trống</h1>
+          <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            Hãy thêm một số thiết bị vào giỏ hàng của bạn để tiếp tục quá trình thuê thiết bị
           </p>
-          <button
-            onClick={() => navigate('/equipment')}
-            className="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600"
+          <Link
+            to="/equipment"
+            className="inline-block bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
           >
             Xem thiết bị
-          </button>
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Giỏ hàng</h1>
+    <>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Giỏ hàng của bạn</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cart Items */}
         <div className="lg:col-span-2">
-          <div className="space-y-4">
-            {items.map((item) => {
-              const days = Math.ceil(
-                (item.endDate.getTime() - item.startDate.getTime()) / (1000 * 60 * 60 * 24)
-              );
-              const total = item.price * days;
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 bg-gray-50 border-b border-gray-200">
+              <h2 className="font-medium text-gray-700">Thiết bị đã chọn ({items.length})</h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {items.map((item) => {
+                const days = Math.ceil(
+                  (item.endDate.getTime() - item.startDate.getTime()) / (1000 * 60 * 60 * 24)
+                );
+                const total = item.price * days;
 
-              return (
-                <div
-                  key={item.id}
-                  className="flex gap-4 bg-white p-4 rounded-lg shadow-sm"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-24 h-24 object-cover rounded-md"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                    <p className="text-gray-600 text-sm">
-                      {item.startDate.toLocaleDateString('vi-VN')} -{' '}
-                      {item.endDate.toLocaleDateString('vi-VN')}
-                    </p>
-                    <p className="text-gray-600 text-sm">
-                      {days} ngày x {item.price.toLocaleString('vi-VN')}đ
-                    </p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="font-semibold text-orange-500">
-                        {total.toLocaleString('vi-VN')}đ
-                      </span>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        Xóa
-                      </button>
+                return (
+                  <div
+                    key={item.id}
+                    className="p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex gap-4">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-24 h-24 object-cover rounded-md"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                          <button
+                            onClick={() => removeFromCart(item.id)}
+                            className="text-red-500 hover:text-red-600 text-sm"
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                        <p className="text-gray-600 text-sm mt-1">
+                          {item.startDate.toLocaleDateString('vi-VN')} -{' '}
+                          {item.endDate.toLocaleDateString('vi-VN')}
+                        </p>
+                        <div className="flex justify-between items-end mt-2">
+                          <p className="text-gray-600 text-sm">
+                            {days} ngày x {item.price.toLocaleString('vi-VN')}đ
+                          </p>
+                          <span className="font-semibold text-orange-500">
+                            {total.toLocaleString('vi-VN')}đ
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* Order Summary */}
         <div className="lg:col-span-1">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Tổng đơn hàng</h2>
-            <div className="space-y-2">
-              <div className="flex justify-between">
+          <div className="bg-white p-6 rounded-xl shadow-sm sticky top-28">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Tổng đơn hàng</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Tạm tính</span>
                 <span>
                   {items
@@ -154,18 +166,18 @@ export function Cart() {
                   đ
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Phí dịch vụ</span>
                 <span>30.000đ</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Phí bảo hiểm</span>
                 <span>50.000đ</span>
               </div>
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between">
-                  <span className="font-semibold">Tổng cộng</span>
-                  <span className="font-semibold text-orange-500">
+              <div className="border-t pt-3 mt-3">
+                <div className="flex justify-between font-semibold">
+                  <span>Tổng cộng</span>
+                  <span className="text-orange-500 text-lg">
                     {(
                       items.reduce((total, item) => {
                         const days = Math.ceil(
@@ -183,13 +195,19 @@ export function Cart() {
 
             <button
               onClick={handleCheckout}
-              className="w-full bg-orange-500 text-white py-3 rounded-md hover:bg-orange-600 mt-6"
+              className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors mt-6 font-medium shadow-sm"
             >
               Thanh toán
             </button>
+
+            <div className="mt-4 text-center">
+              <Link to="/equipment" className="text-blue-600 hover:text-blue-800 text-sm">
+                ← Tiếp tục xem thiết bị
+              </Link>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

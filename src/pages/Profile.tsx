@@ -252,61 +252,61 @@ export function Profile() {
         </button>
       </div>
 
-      {/* <div className="mb-8 flex flex-col items-center">
-        <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center mb-3 relative overflow-hidden group">
-          {userProfile.avatar_url ? (
-            <>
-              <img
-                src={userProfile.avatar_url}
-                alt={userProfile.full_name || user.email}
-                className="w-full h-full object-cover rounded-full"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full">
-                  <Upload className="w-5 h-5 text-gray-800" />
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={uploadAvatar}
-                    disabled={uploading}
-                  />
-                </label>
-              </div>
-            </>
-          ) : (
-            <>
-              <User className="w-16 h-16 text-gray-400" />
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full">
-                  <Upload className="w-5 h-5 text-gray-800" />
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={uploadAvatar}
-                    disabled={uploading}
-                  />
-                </label>
-              </div>
-            </>
-          )}
-        </div>
-        <label className="flex items-center cursor-pointer text-orange-500 hover:text-orange-600">
-          <Upload className="w-4 h-4 mr-1" />
-          Tải ảnh đại diện lên
-          <input
-            type="file"
-            className="hidden"
-            accept="image/*"
-            onChange={uploadAvatar}
-            disabled={uploading}
-          />
-        </label>
-        {uploading && (
-          <p className="text-sm text-gray-500 mt-1">Đang tải lên...</p>
-        )}
-      </div> */}
+                                {/* <div className="mb-8 flex flex-col items-center">
+                                  <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center mb-3 relative overflow-hidden group">
+                                    {userProfile.avatar_url ? (
+                                      <>
+                                        <img
+                                          src={userProfile.avatar_url}
+                                          alt={userProfile.full_name || user.email}
+                                          className="w-full h-full object-cover rounded-full"
+                                        />
+                                        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                          <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full">
+                                            <Upload className="w-5 h-5 text-gray-800" />
+                                            <input
+                                              type="file"
+                                              className="hidden"
+                                              accept="image/*"
+                                              onChange={uploadAvatar}
+                                              disabled={uploading}
+                                            />
+                                          </label>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <User className="w-16 h-16 text-gray-400" />
+                                        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                          <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full">
+                                            <Upload className="w-5 h-5 text-gray-800" />
+                                            <input
+                                              type="file"
+                                              className="hidden"
+                                              accept="image/*"
+                                              onChange={uploadAvatar}
+                                              disabled={uploading}
+                                            />
+                                          </label>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                  <label className="flex items-center cursor-pointer text-orange-500 hover:text-orange-600">
+                                    <Upload className="w-4 h-4 mr-1" />
+                                    Tải ảnh đại diện lên
+                                    <input
+                                      type="file"
+                                      className="hidden"
+                                      accept="image/*"
+                                      onChange={uploadAvatar}
+                                      disabled={uploading}
+                                    />
+                                  </label>
+                                  {uploading && (
+                                    <p className="text-sm text-gray-500 mt-1">Đang tải lên...</p>
+                                  )}
+                                </div> */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
         <div className="flex items-start gap-2">

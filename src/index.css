@@ -125,3 +125,54 @@
     }
   }
 }
+
+/* Range slider thumb styles */
+.range-thumb::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px white;
+  position: relative;
+  z-index: 1;
+}
+
+.range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px white;
+  border: none;
+  position: relative;
+  z-index: 1;
+}
+
+/* Price range slider track */
+.range-thumb::-webkit-slider-runnable-track {
+  height: 1px;
+  background: transparent;
+  border: none;
+}
+
+.range-thumb::-moz-range-track {
+  height: 1px;
+  background: transparent;
+  border: none;
+}
+
+/* Remove focus styles that might affect appearance */
+.range-thumb:focus {
+  outline: none;
+}
+
+/* Turn off default browser styling */
+.range-thumb {
+  background: transparent;
+}
