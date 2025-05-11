@@ -1,4 +1,4 @@
-import { Ban, Bell, Check, Edit, Search, Shield, Trash2, User, X } from 'lucide-react';
+import { Ban, Bell, CheckCircle, Edit, Search, Shield, ShieldCheck, SlidersHorizontal, Trash2, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
@@ -46,11 +46,61 @@ interface NotificationType {
 
 // Filter type
 interface FilterType {
-    role: string;
-    activeStatus: string;
-    verifiedStatus: string;
-    bannedStatus: string;
+    role: string[];
+    activeStatus: string[];
+    verifiedStatus: string[];
+    bannedStatus: string[];
 }
+
+// Tooltip component
+const Tooltip = ({ content, children }: { content: string, children: React.ReactNode }) => {
+    const [show, setShow] = useState(false);
+
+    return (
+        <div className="relative"
+            onMouseEnter={() => setShow(true)}
+            onMouseLeave={() => setShow(false)}
+            onClick={() => setShow(false)}
+        >
+            {children}
+            {show && (
+                <div className="absolute z-10 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded-md shadow-sm -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                    {content}
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Status Badge component
+const StatusBadge = ({
+    active,
+    icon: Icon,
+    activeColor,
+    inactiveColor,
+    text,
+    onClick,
+    tooltip
+}: {
+    active: boolean,
+    icon: React.ElementType,
+    activeColor: string,
+    inactiveColor: string,
+    text: string,
+    onClick: () => void,
+    tooltip: string
+}) => (
+    <button
+        onClick={onClick}
+        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+            ${active ? activeColor : inactiveColor}`}
+        title={tooltip}
+    >
+        <Icon className={`h-3.5 w-3.5 mr-1.5 ${active ? 'opacity-100' : 'opacity-50'}`} />
+        <span>{text}</span>
+    </button>
+);
 
 export function AdminUsers() {
     const { user } = useAuthStore();
@@ -69,10 +119,16 @@ export function AdminUsers() {
     // New filter states
     const [filterMenuOpen, setFilterMenuOpen] = useState(false);
     const [filters, setFilters] = useState<FilterType>({
-        role: 'all',
-        activeStatus: 'all',
-        verifiedStatus: 'all',
-        bannedStatus: 'all'
+        role: [],
+        activeStatus: [],
+        verifiedStatus: [],
+        bannedStatus: []
+    });
+    const [tempFilters, setTempFilters] = useState<FilterType>({
+        role: [],
+        activeStatus: [],
+        verifiedStatus: [],
+        bannedStatus: []
     });
 
     // Selected users for batch operations
@@ -382,25 +438,25 @@ export function AdminUsers() {
             (user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()));
 
         // Role filter
-        const matchesRole = filters.role === 'all' || user.role === filters.role;
+        const matchesRole = filters.role.length === 0 || filters.role.includes(user.role || '');
 
         // Active status filter
         const matchesActiveStatus =
-            filters.activeStatus === 'all' ||
-            (filters.activeStatus === 'active' && user.is_active !== false) ||
-            (filters.activeStatus === 'inactive' && user.is_active === false);
+            filters.activeStatus.length === 0 ||
+            (filters.activeStatus.includes('active') && user.is_active !== false) ||
+            (filters.activeStatus.includes('inactive') && user.is_active === false);
 
         // Verified status filter
         const matchesVerifiedStatus =
-            filters.verifiedStatus === 'all' ||
-            (filters.verifiedStatus === 'verified' && user.verified === true) ||
-            (filters.verifiedStatus === 'unverified' && user.verified !== true);
+            filters.verifiedStatus.length === 0 ||
+            (filters.verifiedStatus.includes('verified') && user.verified === true) ||
+            (filters.verifiedStatus.includes('unverified') && user.verified !== true);
 
         // Banned status filter
         const matchesBannedStatus =
-            filters.bannedStatus === 'all' ||
-            (filters.bannedStatus === 'banned' && user.is_banned === true) ||
-            (filters.bannedStatus === 'not_banned' && user.is_banned !== true);
+            filters.bannedStatus.length === 0 ||
+            (filters.bannedStatus.includes('banned') && user.is_banned === true) ||
+            (filters.bannedStatus.includes('not_banned') && user.is_banned !== true);
 
         return matchesSearch && matchesRole && matchesActiveStatus && matchesVerifiedStatus && matchesBannedStatus;
     });
@@ -410,6 +466,54 @@ export function AdminUsers() {
         (currentPage - 1) * usersPerPage,
         currentPage * usersPerPage
     );
+
+    // Handle filter reset
+    const handleResetFilters = () => {
+        setTempFilters({
+            role: [],
+            activeStatus: [],
+            verifiedStatus: [],
+            bannedStatus: []
+        });
+
+        if (!filterMenuOpen) {
+            // Reset filters immediately if called from badge click
+            setFilters({
+                role: [],
+                activeStatus: [],
+                verifiedStatus: [],
+                bannedStatus: []
+            });
+        }
+    };
+
+    // Handle filter apply
+    const handleApplyFilters = () => {
+        setFilters({ ...tempFilters });
+        setFilterMenuOpen(false);
+    };
+
+    // Toggle filter checkbox
+    const toggleFilter = (type: keyof FilterType, value: string) => {
+        const currentFilters = [...tempFilters[type]];
+        if (currentFilters.includes(value)) {
+            setTempFilters({
+                ...tempFilters,
+                [type]: currentFilters.filter(item => item !== value)
+            });
+        } else {
+            setTempFilters({
+                ...tempFilters,
+                [type]: [...currentFilters, value]
+            });
+        }
+    };
+
+    // Open filter menu
+    const openFilterMenu = () => {
+        setTempFilters({ ...filters });
+        setFilterMenuOpen(true);
+    };
 
     if (loading) {
         return (
@@ -480,74 +584,234 @@ export function AdminUsers() {
 
                         <div className="flex gap-2">
                             <button
-                                onClick={() => setFilterMenuOpen(!filterMenuOpen)}
-                                className={`flex items-center gap-2 px-4 py-2 border rounded-lg ${filterMenuOpen ? 'bg-gray-100' : ''}`}
+                                onClick={openFilterMenu}
+                                className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
                             >
                                 <SlidersHorizontal size={16} />
                                 <span>Bộ lọc</span>
-                                <ChevronDown size={16} className={`transition-transform ${filterMenuOpen ? 'rotate-180' : ''}`} />
+                                {(filters.role.length > 0 || filters.activeStatus.length > 0 ||
+                                    filters.verifiedStatus.length > 0 || filters.bannedStatus.length > 0) && (
+                                        <span className="flex items-center justify-center bg-blue-500 text-white rounded-full w-5 h-5 text-xs">
+                                            {filters.role.length + filters.activeStatus.length +
+                                                filters.verifiedStatus.length + filters.bannedStatus.length}
+                                        </span>
+                                    )}
                             </button>
                         </div>
                     </div>
 
-                    {/* Expanded filters menu */}
-                    {filterMenuOpen && (
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3 pt-3 border-t">
-                            <div>
-                                <label className="block text-xs text-gray-500 mb-1">Vai trò</label>
-                                <select
-                                    className="w-full px-2 py-1.5 border rounded-lg text-sm"
-                                    value={filters.role}
-                                    onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+                    {/* Active filter badges */}
+                    {(filters.role.length > 0 || filters.activeStatus.length > 0 ||
+                        filters.verifiedStatus.length > 0 || filters.bannedStatus.length > 0) && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {filters.role.map(role => (
+                                    <span key={role} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                        {role === 'admin' ? 'Quản trị viên' :
+                                            role === 'owner' ? 'Người cho thuê' : 'Người thuê'}
+                                        <X
+                                            size={14}
+                                            className="ml-1 cursor-pointer"
+                                            onClick={() => setFilters({
+                                                ...filters,
+                                                role: filters.role.filter(r => r !== role)
+                                            })}
+                                        />
+                                    </span>
+                                ))}
+                                {filters.activeStatus.map(status => (
+                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                        {status === 'active' ? 'Đang hoạt động' : 'Không hoạt động'}
+                                        <X
+                                            size={14}
+                                            className="ml-1 cursor-pointer"
+                                            onClick={() => setFilters({
+                                                ...filters,
+                                                activeStatus: filters.activeStatus.filter(s => s !== status)
+                                            })}
+                                        />
+                                    </span>
+                                ))}
+                                {filters.verifiedStatus.map(status => (
+                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                                        {status === 'verified' ? 'Đã xác thực' : 'Chưa xác thực'}
+                                        <X
+                                            size={14}
+                                            className="ml-1 cursor-pointer"
+                                            onClick={() => setFilters({
+                                                ...filters,
+                                                verifiedStatus: filters.verifiedStatus.filter(s => s !== status)
+                                            })}
+                                        />
+                                    </span>
+                                ))}
+                                {filters.bannedStatus.map(status => (
+                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                                        {status === 'banned' ? 'Bị cấm' : 'Không bị cấm'}
+                                        <X
+                                            size={14}
+                                            className="ml-1 cursor-pointer"
+                                            onClick={() => setFilters({
+                                                ...filters,
+                                                bannedStatus: filters.bannedStatus.filter(s => s !== status)
+                                            })}
+                                        />
+                                    </span>
+                                ))}
+                                {(filters.role.length > 0 || filters.activeStatus.length > 0 ||
+                                    filters.verifiedStatus.length > 0 || filters.bannedStatus.length > 0) && (
+                                        <button
+                                            onClick={handleResetFilters}
+                                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800"
+                                        >
+                                            Xóa bộ lọc
+                                        </button>
+                                    )}
+                            </div>
+                        )}
+                </div>
+
+                {/* Filter Modal */}
+                {filterMenuOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-start justify-center pt-20 z-50">
+                        <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-medium">Lọc người dùng</h3>
+                                <button
+                                    onClick={() => setFilterMenuOpen(false)}
+                                    className="text-gray-500 hover:text-gray-700"
                                 >
-                                    <option value="all">Tất cả vai trò</option>
-                                    <option value="admin">Quản trị viên</option>
-                                    <option value="owner">Người cho thuê</option>
-                                    <option value="renter">Người thuê</option>
-                                </select>
+                                    <X size={20} />
+                                </button>
                             </div>
 
-                            <div>
-                                <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
-                                <select
-                                    className="w-full px-2 py-1.5 border rounded-lg text-sm"
-                                    value={filters.activeStatus}
-                                    onChange={(e) => setFilters({ ...filters, activeStatus: e.target.value })}
-                                >
-                                    <option value="all">Tất cả trạng thái</option>
-                                    <option value="active">Đang hoạt động</option>
-                                    <option value="inactive">Không hoạt động</option>
-                                </select>
+                            <div className="space-y-5">
+                                {/* Role Filter */}
+                                <div>
+                                    <h4 className="font-medium mb-2">Vai trò</h4>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.role.includes('admin')}
+                                                onChange={() => toggleFilter('role', 'admin')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Quản trị viên</span>
+                                        </label>
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.role.includes('owner')}
+                                                onChange={() => toggleFilter('role', 'owner')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Người cho thuê</span>
+                                        </label>
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.role.includes('renter')}
+                                                onChange={() => toggleFilter('role', 'renter')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Người thuê</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Active Status Filter */}
+                                <div>
+                                    <h4 className="font-medium mb-2">Trạng thái</h4>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.activeStatus.includes('active')}
+                                                onChange={() => toggleFilter('activeStatus', 'active')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Đang hoạt động</span>
+                                        </label>
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.activeStatus.includes('inactive')}
+                                                onChange={() => toggleFilter('activeStatus', 'inactive')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Không hoạt động</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Verified Status Filter */}
+                                <div>
+                                    <h4 className="font-medium mb-2">Xác thực</h4>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.verifiedStatus.includes('verified')}
+                                                onChange={() => toggleFilter('verifiedStatus', 'verified')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Đã xác thực</span>
+                                        </label>
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.verifiedStatus.includes('unverified')}
+                                                onChange={() => toggleFilter('verifiedStatus', 'unverified')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Chưa xác thực</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Banned Status Filter */}
+                                <div>
+                                    <h4 className="font-medium mb-2">Bị cấm</h4>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.bannedStatus.includes('banned')}
+                                                onChange={() => toggleFilter('bannedStatus', 'banned')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Bị cấm</span>
+                                        </label>
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.bannedStatus.includes('not_banned')}
+                                                onChange={() => toggleFilter('bannedStatus', 'not_banned')}
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            />
+                                            <span>Không bị cấm</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div>
-                                <label className="block text-xs text-gray-500 mb-1">Xác thực</label>
-                                <select
-                                    className="w-full px-2 py-1.5 border rounded-lg text-sm"
-                                    value={filters.verifiedStatus}
-                                    onChange={(e) => setFilters({ ...filters, verifiedStatus: e.target.value })}
+                            <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                    onClick={handleResetFilters}
+                                    className="px-4 py-2 border rounded hover:bg-gray-50"
                                 >
-                                    <option value="all">Tất cả</option>
-                                    <option value="verified">Đã xác thực</option>
-                                    <option value="unverified">Chưa xác thực</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs text-gray-500 mb-1">Bị cấm</label>
-                                <select
-                                    className="w-full px-2 py-1.5 border rounded-lg text-sm"
-                                    value={filters.bannedStatus}
-                                    onChange={(e) => setFilters({ ...filters, bannedStatus: e.target.value })}
+                                    Đặt lại
+                                </button>
+                                <button
+                                    onClick={handleApplyFilters}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                                 >
-                                    <option value="all">Tất cả</option>
-                                    <option value="banned">Bị cấm</option>
-                                    <option value="not_banned">Không bị cấm</option>
-                                </select>
+                                    Áp dụng
+                                </button>
                             </div>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
 
                 <div className="bg-white rounded-lg shadow overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
@@ -569,7 +833,7 @@ export function AdminUsers() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {paginatedUsers.map((user) => (
-                                <tr key={user.id} className={!user.is_active ? 'bg-gray-100' : ''}>
+                                <tr key={user.id} className={`${!user.is_active ? 'bg-gray-50' : ''} group hover:bg-gray-50 transition-colors`}>
                                     <td className="px-3 py-4">
                                         {/* Don't allow selecting admin users if current user is not an admin */}
                                         {(user.role !== 'admin' || user.id === user.id) && (
@@ -660,31 +924,30 @@ export function AdminUsers() {
                                             </select>
                                         ) : (
                                             <div>
-                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                                                <span className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium
                                                     ${user.role === 'admin'
-                                                        ? 'bg-purple-100 text-purple-600'
+                                                        ? 'bg-purple-100 text-purple-700'
                                                         : user.role === 'owner'
-                                                            ? 'bg-blue-100 text-blue-600'
+                                                            ? 'bg-blue-100 text-blue-700'
                                                             : 'bg-gray-100 text-gray-700'}`}
                                                 >
-                                                    {user.role === 'admin' && <Shield className="h-3.5 w-3.5 mr-1" />}
-                                                    {user.role === 'owner' && <User className="h-3.5 w-3.5 mr-1" />}
-                                                    {user.role !== 'admin' && user.role !== 'owner' && <User className="h-3.5 w-3.5 mr-1" />}
+                                                    {user.role === 'admin' && <Shield className="h-3.5 w-3.5 mr-1.5" />}
+                                                    {user.role === 'owner' && <User className="h-3.5 w-3.5 mr-1.5" />}
+                                                    {user.role !== 'admin' && user.role !== 'owner' && <User className="h-3.5 w-3.5 mr-1.5" />}
 
                                                     {user.role === 'admin' ? 'Quản trị viên' :
                                                         user.role === 'owner' ? 'Người cho thuê' : 'Người thuê'}
                                                 </span>
 
                                                 {!editingItem && user.role !== 'admin' && (
-                                                    <div className="flex gap-1 mt-2">
+                                                    <Tooltip content={user.role === 'owner' ? "Đã là người cho thuê" : "Cấp quyền người cho thuê"}>
                                                         <button
                                                             onClick={() => handleUpdateUserRole(user.id, 'owner')}
-                                                            className={`p-1 rounded-full ${user.role === 'owner' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-blue-600'}`}
-                                                            title="Cấp quyền người cho thuê"
+                                                            className={`mt-2 p-1.5 rounded-full ${user.role === 'owner' ? 'bg-blue-100 text-blue-700' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
                                                         >
                                                             <User className="h-4 w-4" />
                                                         </button>
-                                                    </div>
+                                                    </Tooltip>
                                                 )}
                                             </div>
                                         )}
@@ -722,59 +985,35 @@ export function AdminUsers() {
                                             </div>
                                         ) : (
                                             <div className="space-y-2">
-                                                <div className="flex items-center" title={user.is_active !== false ? 'Đang hoạt động' : 'Không hoạt động'}>
-                                                    {user.is_active !== false ? (
-                                                        <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
-                                                    ) : (
-                                                        <X className="h-4 w-4 text-gray-400 mr-1.5" />
-                                                    )}
-                                                    <span className="text-sm">
-                                                        {user.is_active !== false ? 'Đang hoạt động' : 'Không hoạt động'}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => handleToggleUserStatus(user.id, 'is_active', user.is_active === false)}
-                                                        className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                                                        title={user.is_active !== false ? 'Vô hiệu hóa' : 'Kích hoạt lại'}
-                                                    >
-                                                        {user.is_active !== false ? <X size={14} /> : <Check size={14} />}
-                                                    </button>
-                                                </div>
+                                                <StatusBadge
+                                                    active={user.is_active !== false}
+                                                    icon={CheckCircle}
+                                                    activeColor="bg-green-100 text-green-700 hover:bg-green-200"
+                                                    inactiveColor="bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                                    text={user.is_active !== false ? 'Đang hoạt động' : 'Không hoạt động'}
+                                                    onClick={() => handleToggleUserStatus(user.id, 'is_active', user.is_active === false)}
+                                                    tooltip={user.is_active !== false ? 'Click để vô hiệu hóa' : 'Click để kích hoạt'}
+                                                />
 
-                                                <div className="flex items-center" title={user.verified ? 'Đã xác thực' : 'Chưa xác thực'}>
-                                                    {user.verified ? (
-                                                        <ShieldCheck className="h-4 w-4 text-blue-500 mr-1.5" />
-                                                    ) : (
-                                                        <Shield className="h-4 w-4 text-gray-400 mr-1.5" />
-                                                    )}
-                                                    <span className="text-sm">
-                                                        {user.verified ? 'Đã xác thực' : 'Chưa xác thực'}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => handleToggleUserStatus(user.id, 'verified', !user.verified)}
-                                                        className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                                                        title={user.verified ? 'Hủy xác thực' : 'Xác thực'}
-                                                    >
-                                                        {user.verified ? <X size={14} /> : <Check size={14} />}
-                                                    </button>
-                                                </div>
+                                                <StatusBadge
+                                                    active={user.verified === true}
+                                                    icon={ShieldCheck}
+                                                    activeColor="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                                    inactiveColor="bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                                    text={user.verified ? 'Đã xác thực' : 'Chưa xác thực'}
+                                                    onClick={() => handleToggleUserStatus(user.id, 'verified', !user.verified)}
+                                                    tooltip={user.verified ? 'Click để hủy xác thực' : 'Click để xác thực'}
+                                                />
 
-                                                <div className="flex items-center" title={user.is_banned ? 'Đã bị cấm' : 'Không bị cấm'}>
-                                                    {user.is_banned ? (
-                                                        <Ban className="h-4 w-4 text-red-500 mr-1.5" />
-                                                    ) : (
-                                                        <Ban className="h-4 w-4 text-gray-400 mr-1.5" />
-                                                    )}
-                                                    <span className="text-sm">
-                                                        {user.is_banned ? 'Bị cấm' : 'Không bị cấm'}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => handleToggleUserStatus(user.id, 'is_banned', !user.is_banned)}
-                                                        className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                                                        title={user.is_banned ? 'Bỏ cấm' : 'Cấm'}
-                                                    >
-                                                        {user.is_banned ? <X size={14} /> : <Ban size={14} />}
-                                                    </button>
-                                                </div>
+                                                <StatusBadge
+                                                    active={user.is_banned === true}
+                                                    icon={Ban}
+                                                    activeColor="bg-red-100 text-red-700 hover:bg-red-200"
+                                                    inactiveColor="bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                                    text={user.is_banned ? 'Đã bị cấm' : 'Không bị cấm'}
+                                                    onClick={() => handleToggleUserStatus(user.id, 'is_banned', !user.is_banned)}
+                                                    tooltip={user.is_banned ? 'Click để bỏ cấm' : 'Click để cấm'}
+                                                />
                                             </div>
                                         )}
                                     </td>
@@ -797,38 +1036,64 @@ export function AdminUsers() {
                                         ) : (
                                             <div className="relative flex items-center">
                                                 <div className="flex gap-2 items-center">
-                                                    <button
-                                                        onClick={() => handleEditUser(user.id)}
-                                                        className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50"
-                                                        title="Chỉnh sửa thông tin người dùng"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => openNotificationModal(user.id)}
-                                                        className="text-orange-500 hover:text-orange-700 p-1 rounded-full hover:bg-orange-50"
-                                                        title="Gửi thông báo hệ thống"
-                                                    >
-                                                        <Bell className="h-4 w-4" />
-                                                    </button>
+                                                    <Tooltip content="Chỉnh sửa thông tin người dùng">
+                                                        <button
+                                                            onClick={() => handleEditUser(user.id)}
+                                                            className="text-blue-500 hover:text-blue-700 p-1.5 rounded-full hover:bg-blue-50"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </button>
+                                                    </Tooltip>
+
+                                                    <Tooltip content="Gửi thông báo hệ thống">
+                                                        <button
+                                                            onClick={() => openNotificationModal(user.id)}
+                                                            className="text-orange-500 hover:text-orange-700 p-1.5 rounded-full hover:bg-orange-50"
+                                                        >
+                                                            <Bell className="h-4 w-4" />
+                                                        </button>
+                                                    </Tooltip>
 
                                                     {/* Don't show delete/ban options for admin users */}
-                                                    {user.role !== 'admin' && (
+                                                    {user.role !== 'admin' ? (
                                                         <>
-                                                            <button
-                                                                onClick={() => handleDeleteUser(user.id)}
-                                                                className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50"
-                                                                title="Vô hiệu hóa tài khoản"
-                                                            >
-                                                                <Ban className="h-4 w-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handlePermanentDelete(user.id)}
-                                                                className="text-red-700 hover:text-red-900 p-1 rounded-full hover:bg-red-50"
-                                                                title="Xóa vĩnh viễn (cẩn thận)"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </button>
+                                                            <Tooltip content={user.is_banned ? "Bỏ chặn người dùng" : "Chặn người dùng"}>
+                                                                <button
+                                                                    onClick={() => handleToggleUserStatus(user.id, 'is_banned', !user.is_banned)}
+                                                                    className="text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50"
+                                                                >
+                                                                    <Ban className="h-4 w-4" />
+                                                                </button>
+                                                            </Tooltip>
+
+                                                            <Tooltip content="Vô hiệu hóa tài khoản">
+                                                                <button
+                                                                    onClick={() => handleDeleteUser(user.id)}
+                                                                    className="text-red-700 hover:text-red-900 p-1.5 rounded-full hover:bg-red-50"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </Tooltip>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Tooltip content="Không thể chặn quản trị viên">
+                                                                <button
+                                                                    disabled
+                                                                    className="text-gray-300 p-1.5 rounded-full cursor-not-allowed"
+                                                                >
+                                                                    <Ban className="h-4 w-4" />
+                                                                </button>
+                                                            </Tooltip>
+
+                                                            <Tooltip content="Không thể xóa quản trị viên">
+                                                                <button
+                                                                    disabled
+                                                                    className="text-gray-300 p-1.5 rounded-full cursor-not-allowed"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </Tooltip>
                                                         </>
                                                     )}
                                                 </div>
