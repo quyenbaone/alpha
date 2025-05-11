@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from './supabase';
 import { useAuthStore } from '../store/authStore';
+import { supabase } from './supabase';
 import type { Equipment, Message, Notification, Rental } from './types';
 
 export function useEquipment(id?: string) {
@@ -9,7 +9,11 @@ export function useEquipment(id?: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setError('Không tìm thấy ID thiết bị');
+      setLoading(false);
+      return;
+    }
 
     const fetchEquipment = async () => {
       try {
@@ -19,11 +23,21 @@ export function useEquipment(id?: string) {
           .eq('id', id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === 'PGRST116') {
+            throw new Error('Không tìm thấy thiết bị');
+          }
+          throw error;
+        }
+
+        if (!data) {
+          throw new Error('Không tìm thấy thiết bị');
+        }
+
         setEquipment(data);
       } catch (error) {
         console.error('Error fetching equipment:', error);
-        setError('Failed to load equipment details');
+        setError(error instanceof Error ? error.message : 'Không thể tải thông tin thiết bị. Vui lòng thử lại sau.');
       } finally {
         setLoading(false);
       }

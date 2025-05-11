@@ -1,146 +1,244 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { FcGoogle } from 'react-icons/fc';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInSchema, type SignInSchema } from '../lib/auth';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 
+const signInSchema = z.object({
+  email: z.string().email('Email không hợp lệ'),
+  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+});
+
 export function SignIn() {
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [isResetting, setIsResetting] = React.useState(false);
   const navigate = useNavigate();
-  const { signIn, resetPassword } = useAuthStore();
+  const { signIn } = useAuthStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-    getValues,
-  } = useForm<SignInSchema>({
-    resolver: zodResolver(signInSchema),
-  });
-
-  const onSubmit = async (data: SignInSchema) => {
+  const validateForm = () => {
     try {
-      await signIn(data.email, data.password);
-      navigate('/');
+      signInSchema.parse({ email, password });
+      setErrors({});
+      return true;
     } catch (error) {
-      if (error instanceof Error) {
-        setError('root', { message: error.message });
+      if (error instanceof z.ZodError) {
+        const newErrors: { email?: string; password?: string } = {};
+        error.errors.forEach((err) => {
+          if (err.path[0] === 'email') newErrors.email = err.message;
+          if (err.path[0] === 'password') newErrors.password = err.message;
+        });
+        setErrors(newErrors);
       }
+      return false;
     }
   };
 
-  const handleResetPassword = async () => {
-    const email = getValues('email');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const { error } = await signIn(email, password);
+      if (error) throw error;
+
+      toast.success('Đăng nhập thành công!');
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing in:', error);
+      toast.error('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      toast.error('Không thể đăng nhập bằng Google. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!email) {
-      setError('email', { message: 'Vui lòng nhập email để đặt lại mật khẩu' });
+      setErrors({ email: 'Vui lòng nhập email để đặt lại mật khẩu' });
       return;
     }
 
+    setLoading(true);
+
     try {
-      setIsResetting(true);
-      await resetPassword(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Vui lòng kiểm tra email để đặt lại mật khẩu.');
+      setShowForgotPassword(false);
     } catch (error) {
-      if (error instanceof Error) {
-        setError('root', { message: error.message });
-      }
+      console.error('Error resetting password:', error);
+      toast.error('Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại sau.');
     } finally {
-      setIsResetting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container py-12">
-      <div className="max-w-md mx-auto">
-        <div className="bg-card rounded-lg shadow-lg p-8">
-          <h1 className="text-2xl font-bold mb-6">Đăng nhập</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            {showForgotPassword ? 'Quên mật khẩu' : 'Đăng nhập'}
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            {showForgotPassword ? (
+              'Nhập email của bạn để nhận liên kết đặt lại mật khẩu'
+            ) : (
+              <>
+                Hoặc{' '}
+                <Link
+                  to="/signup"
+                  className="font-medium text-orange-500 hover:text-orange-600"
+                >
+                  đăng ký tài khoản mới
+                </Link>
+              </>
+            )}
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {!showForgotPassword && (
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+          >
+            <FcGoogle className="h-5 w-5" />
+            Đăng nhập bằng Google
+          </button>
+        )}
+
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-50 text-gray-500">
+                {showForgotPassword ? 'Hoặc' : 'Hoặc đăng nhập bằng email'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <form
+          className="mt-8 space-y-6"
+          onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit}
+        >
+          <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label htmlFor="email" className="sr-only">
                 Email
               </label>
               <input
+                id="email"
+                name="email"
                 type="email"
-                {...register('email')}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-                placeholder="Nhập địa chỉ email"
+                required
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
+                placeholder="Email"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-destructive">{errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium">
+            {!showForgotPassword && (
+              <div>
+                <label htmlFor="password" className="sr-only">
                   Mật khẩu
                 </label>
-                <button
-                  type="button"
-                  onClick={handleResetPassword}
-                  disabled={isResetting}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Quên mật khẩu?
-                </button>
-              </div>
-              <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('password')}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary pr-10"
-                  placeholder="Nhập mật khẩu"
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
+                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'
+                    } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
+                  placeholder="Mật khẩu"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-destructive">{errors.password.message}</p>
-              )}
-            </div>
-
-            {errors.root && (
-              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm text-destructive">{errors.root.message}</p>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
             )}
+          </div>
 
+          {!showForgotPassword && (
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm font-medium text-orange-500 hover:text-orange-600"
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
+          )}
+
+          <div className="flex gap-4">
+            {showForgotPassword && (
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(false)}
+                className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                Quay lại
+              </button>
+            )}
             <button
               type="submit"
-              disabled={isSubmitting || isResetting}
-              className="w-full bg-primary text-primary-foreground py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Đang đăng nhập...
-                </>
-              ) : (
-                'Đăng nhập'
-              )}
+              {loading
+                ? 'Đang xử lý...'
+                : showForgotPassword
+                  ? 'Gửi email'
+                  : 'Đăng nhập'}
             </button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Chưa có tài khoản?{' '}
-              <Link to="/signup" className="text-primary hover:underline">
-                Đăng ký ngay
-              </Link>
-            </p>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

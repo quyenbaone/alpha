@@ -1,13 +1,35 @@
-import { Check, Edit, Plus, Save, Search, Shield, Trash2, User, X, XCircle } from 'lucide-react';
+import {
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+} from 'chart.js';
+import { BarChart2, Check, DollarSign, Edit, Package, Plus, Save, Search, Shield, Trash2, User, Users, X, XCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { formatPrice } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
 export default function AdminDashboard() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [equipment, setEquipment] = useState([]);
   const [rentals, setRentals] = useState([]);
@@ -16,6 +38,14 @@ export default function AdminDashboard() {
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [showNewEquipmentForm, setShowNewEquipmentForm] = useState(false);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalEquipment: 0,
+    totalRentals: 0,
+    totalRevenue: 0,
+    recentRentals: [],
+    popularEquipment: []
+  });
   const [newEquipment, setNewEquipment] = useState({
     title: '',
     description: '',
@@ -29,6 +59,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (user) {
       fetchData();
+      fetchStats();
     }
   }, [user, activeTab]);
 
@@ -83,6 +114,67 @@ export default function AdminDashboard() {
       toast.error('Lỗi khi tải dữ liệu');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      // Fetch total users
+      const { count: userCount } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch total equipment
+      const { count: equipmentCount } = await supabase
+        .from('equipment')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch total rentals and revenue
+      const { data: rentalData } = await supabase
+        .from('rentals')
+        .select('*');
+
+      const totalRevenue = rentalData?.reduce((sum, rental) => sum + (rental.total_amount || 0), 0) || 0;
+
+      // Fetch recent rentals
+      const { data: recentRentals } = await supabase
+        .from('rentals')
+        .select(`
+          *,
+          equipment:equipment_id (
+            title,
+            image
+          ),
+          renter:renter_id (
+            email
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      // Fetch popular equipment
+      const { data: popularEquipment } = await supabase
+        .from('equipment')
+        .select(`
+          *,
+          rentals:rentals (
+            id
+          )
+        `)
+        .order('rentals.count', { ascending: false })
+        .limit(5);
+
+      setStats({
+        totalUsers: userCount || 0,
+        totalEquipment: equipmentCount || 0,
+        totalRentals: rentalData?.length || 0,
+        totalRevenue,
+        recentRentals: recentRentals || [],
+        popularEquipment: popularEquipment || []
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      toast.error('Lỗi khi tải thống kê');
     }
   };
 
@@ -297,7 +389,116 @@ export default function AdminDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Quản lý hệ thống</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`px-4 py-2 rounded-lg ${activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+              }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 rounded-lg ${activeTab === 'users' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+              }`}
+          >
+            Users
+          </button>
+          <button
+            onClick={() => setActiveTab('equipment')}
+            className={`px-4 py-2 rounded-lg ${activeTab === 'equipment' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+              }`}
+          >
+            Equipment
+          </button>
+          <button
+            onClick={() => setActiveTab('rentals')}
+            className={`px-4 py-2 rounded-lg ${activeTab === 'rentals' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+              }`}
+          >
+            Rentals
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'dashboard' && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              icon={<Users className="w-6 h-6" />}
+              title="Total Users"
+              value={stats.totalUsers.toString()}
+            />
+            <StatCard
+              icon={<Package className="w-6 h-6" />}
+              title="Total Equipment"
+              value={stats.totalEquipment.toString()}
+            />
+            <StatCard
+              icon={<BarChart2 className="w-6 h-6" />}
+              title="Total Rentals"
+              value={stats.totalRentals.toString()}
+            />
+            <StatCard
+              icon={<DollarSign className="w-6 h-6" />}
+              title="Total Revenue"
+              value={formatPrice(stats.totalRevenue)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4">Recent Rentals</h2>
+              <div className="space-y-4">
+                {stats.recentRentals.map((rental) => (
+                  <div key={rental.id} className="flex items-center space-x-4">
+                    <img
+                      src={rental.equipment?.image}
+                      alt={rental.equipment?.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div>
+                      <p className="font-medium">{rental.equipment?.title}</p>
+                      <p className="text-sm text-gray-600">
+                        Rented by: {rental.renter?.email}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Amount: {formatPrice(rental.total_amount)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4">Popular Equipment</h2>
+              <div className="space-y-4">
+                {stats.popularEquipment.map((item) => (
+                  <div key={item.id} className="flex items-center space-x-4">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div>
+                      <p className="font-medium">{item.title}</p>
+                      <p className="text-sm text-gray-600">
+                        Rentals: {item.rentals?.length || 0}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Price: {formatPrice(item.price)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="mb-6">

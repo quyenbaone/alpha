@@ -1,21 +1,30 @@
-import { Calendar, Clock, Heart, MapPin, Shield, ShoppingCart, Star } from 'lucide-react';
-import { useState } from 'react';
+import { Calendar, Heart, MapPin, ShoppingCart, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import EquipmentCalendar from '../components/EquipmentCalendar';
+import LocationMap from '../components/LocationMap';
 import { useEquipment } from '../lib/hooks';
 import { formatPrice } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
 
 export function EquipmentDetail() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { equipment, loading, error } = useEquipment(id);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isLiked, setIsLiked] = useState(false);
-  const addToCart = useCartStore((state) => state.addItem);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const addToCart = useCartStore((state) => state.addToCart);
+
+  useEffect(() => {
+    if (!id) {
+      navigate('/equipment');
+    }
+  }, [id, navigate]);
 
   const handleAddToCart = () => {
     if (!equipment) return;
@@ -25,10 +34,12 @@ export function EquipmentDetail() {
     }
 
     addToCart({
-      equipment,
-      quantity: 1,
-      startDate,
-      endDate,
+      id: equipment.id,
+      title: equipment.title,
+      price: equipment.price,
+      image: equipment.image,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
     });
 
     toast.success('Đã thêm vào giỏ hàng');
@@ -97,8 +108,15 @@ export function EquipmentDetail() {
   if (error || !equipment) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          Không thể tải thông tin thiết bị. Vui lòng thử lại sau.
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <h2 className="text-xl font-semibold text-red-700 mb-2">Đã xảy ra lỗi</h2>
+          <p className="text-red-600 mb-4">{error || 'Không tìm thấy thông tin thiết bị'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Thử lại
+          </button>
         </div>
       </div>
     );
@@ -151,7 +169,6 @@ export function EquipmentDetail() {
                   value={startDate}
                   onChange={(e) => {
                     setStartDate(e.target.value);
-                    // Reset end date if it's before the new start date
                     if (endDate && new Date(e.target.value) > new Date(endDate)) {
                       setEndDate('');
                     }
@@ -171,6 +188,26 @@ export function EquipmentDetail() {
                 />
               </div>
             </div>
+
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="mt-4 text-orange-500 hover:text-orange-600 flex items-center"
+            >
+              <Calendar className="h-5 w-5 mr-2" />
+              {showCalendar ? 'Ẩn lịch' : 'Xem lịch khả dụng'}
+            </button>
+
+            {showCalendar && (
+              <div className="mt-4">
+                <EquipmentCalendar
+                  equipmentId={id}
+                  onDateSelect={(start, end) => {
+                    setStartDate(start.toISOString().split('T')[0]);
+                    setEndDate(end.toISOString().split('T')[0]);
+                  }}
+                />
+              </div>
+            )}
 
             <div className="mt-4">
               <div className="flex justify-between items-center mb-2">
@@ -198,43 +235,37 @@ export function EquipmentDetail() {
             <div className="flex gap-4 mt-6">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 flex items-center justify-center gap-2 bg-white border-2 border-orange-500 text-orange-500 py-3 rounded-lg hover:bg-orange-50 transition-colors duration-300"
+                className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center"
               >
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-5 w-5 mr-2" />
                 Thêm vào giỏ
               </button>
               <button
                 onClick={handleRentNow}
-                className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors duration-300"
+                className="flex-1 bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors"
               >
                 Thuê ngay
               </button>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Mô tả</h2>
-              <p className="text-gray-600">{equipment.description}</p>
-            </div>
+          {/* Location Map */}
+          <div className="bg-gray-50 p-6 rounded-lg mb-6">
+            <h2 className="text-xl font-semibold mb-4">Vị trí</h2>
+            <LocationMap
+              location={{
+                lat: 10.762622, // Default to Ho Chi Minh City coordinates
+                lng: 106.660172,
+                address: equipment.location
+              }}
+              height="300px"
+            />
+          </div>
 
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Bao gồm</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-gray-600" />
-                  <span>Hỗ trợ 24/7</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-gray-600" />
-                  <span>Bảo hiểm thiết bị</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-gray-600" />
-                  <span>Linh hoạt ngày thuê</span>
-                </div>
-              </div>
-            </div>
+          {/* Description */}
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <h2 className="text-xl font-semibold mb-4">Mô tả</h2>
+            <p className="text-gray-600 whitespace-pre-line">{equipment.description}</p>
           </div>
         </div>
       </div>

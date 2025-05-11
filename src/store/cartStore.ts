@@ -1,19 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Equipment } from '../lib/types';
 
-interface CartItem {
-  equipment: Equipment;
-  quantity: number;
-  startDate: string;
-  endDate: string;
+export interface CartItem {
+  id: string;
+  title: string;
+  price: number;
+  image: string;
+  startDate: Date;
+  endDate: Date;
 }
 
 interface CartState {
   items: CartItem[];
-  addItem: (item: CartItem) => void;
-  removeItem: (equipmentId: string) => void;
-  updateQuantity: (equipmentId: string, quantity: number) => void;
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (id: string) => void;
   clearCart: () => void;
 }
 
@@ -21,33 +21,13 @@ export const useCartStore = create<CartState>()(
   persist(
     (set) => ({
       items: [],
-      addItem: (item) =>
-        set((state) => {
-          const existingItem = state.items.find(
-            (i) => i.equipment.id === item.equipment.id
-          );
-
-          if (existingItem) {
-            return {
-              items: state.items.map((i) =>
-                i.equipment.id === item.equipment.id
-                  ? { ...i, quantity: i.quantity + item.quantity }
-                  : i
-              ),
-            };
-          }
-
-          return { items: [...state.items, item] };
-        }),
-      removeItem: (equipmentId) =>
+      addToCart: (item) =>
         set((state) => ({
-          items: state.items.filter((i) => i.equipment.id !== equipmentId),
+          items: [...state.items, item],
         })),
-      updateQuantity: (equipmentId, quantity) =>
+      removeFromCart: (id) =>
         set((state) => ({
-          items: state.items.map((i) =>
-            i.equipment.id === equipmentId ? { ...i, quantity } : i
-          ),
+          items: state.items.filter((item) => item.id !== id),
         })),
       clearCart: () => set({ items: [] }),
     }),
