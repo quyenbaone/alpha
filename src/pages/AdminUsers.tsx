@@ -938,17 +938,6 @@ export function AdminUsers() {
                                                     {user.role === 'admin' ? 'Quản trị viên' :
                                                         user.role === 'owner' ? 'Người cho thuê' : 'Người thuê'}
                                                 </span>
-
-                                                {!editingItem && user.role !== 'admin' && (
-                                                    <Tooltip content={user.role === 'owner' ? "Đã là người cho thuê" : "Cấp quyền người cho thuê"}>
-                                                        <button
-                                                            onClick={() => handleUpdateUserRole(user.id, 'owner')}
-                                                            className={`mt-2 p-1.5 rounded-full ${user.role === 'owner' ? 'bg-blue-100 text-blue-700' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
-                                                        >
-                                                            <User className="h-4 w-4" />
-                                                        </button>
-                                                    </Tooltip>
-                                                )}
                                             </div>
                                         )}
                                     </td>
