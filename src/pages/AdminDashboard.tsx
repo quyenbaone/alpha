@@ -12,6 +12,7 @@ import {
 import { BarChart2, Check, DollarSign, Edit, Package, Plus, Save, Search, Shield, Trash2, User, Users, X, XCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { AdminLayout } from '../components/AdminLayout';
 import { supabase } from '../lib/supabase';
 import { formatPrice } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
@@ -384,508 +385,266 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+    return (
+      <AdminLayout>
+        <div className="container mx-auto px-4 py-8">Loading...</div>
+      </AdminLayout>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-2 rounded-lg ${activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'bg-gray-200'
-              }`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`px-4 py-2 rounded-lg ${activeTab === 'users' ? 'bg-blue-600 text-white' : 'bg-gray-200'
-              }`}
-          >
-            Users
-          </button>
-          <button
-            onClick={() => setActiveTab('equipment')}
-            className={`px-4 py-2 rounded-lg ${activeTab === 'equipment' ? 'bg-blue-600 text-white' : 'bg-gray-200'
-              }`}
-          >
-            Equipment
-          </button>
-          <button
-            onClick={() => setActiveTab('rentals')}
-            className={`px-4 py-2 rounded-lg ${activeTab === 'rentals' ? 'bg-blue-600 text-white' : 'bg-gray-200'
-              }`}
-          >
-            Rentals
-          </button>
-        </div>
-      </div>
+    <AdminLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
 
-      {activeTab === 'dashboard' && (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              icon={<Users className="w-6 h-6" />}
-              title="Total Users"
-              value={stats.totalUsers.toString()}
-            />
-            <StatCard
-              icon={<Package className="w-6 h-6" />}
-              title="Total Equipment"
-              value={stats.totalEquipment.toString()}
-            />
-            <StatCard
-              icon={<BarChart2 className="w-6 h-6" />}
-              title="Total Rentals"
-              value={stats.totalRentals.toString()}
-            />
-            <StatCard
-              icon={<DollarSign className="w-6 h-6" />}
-              title="Total Revenue"
-              value={formatPrice(stats.totalRevenue)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">Recent Rentals</h2>
-              <div className="space-y-4">
-                {stats.recentRentals.map((rental) => (
-                  <div key={rental.id} className="flex items-center space-x-4">
-                    <img
-                      src={rental.equipment?.image}
-                      alt={rental.equipment?.title}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div>
-                      <p className="font-medium">{rental.equipment?.title}</p>
-                      <p className="text-sm text-gray-600">
-                        Rented by: {rental.renter?.email}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Amount: {formatPrice(rental.total_amount)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">Popular Equipment</h2>
-              <div className="space-y-4">
-                {stats.popularEquipment.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div>
-                      <p className="font-medium">{item.title}</p>
-                      <p className="text-sm text-gray-600">
-                        Rentals: {item.rentals?.length || 0}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Price: {formatPrice(item.price)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Cải tiến tabs */}
+          <div className="border-b border-gray-200 hidden">
+            <nav className="flex -mb-px space-x-8">
+              {/* Tabs đã bị ẩn theo yêu cầu, nhưng vẫn giữ lại logic */}
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`hidden py-2 px-1 font-medium text-sm border-b-2 ${activeTab === 'dashboard'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`hidden py-2 px-1 font-medium text-sm border-b-2 ${activeTab === 'users'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Users
+              </button>
+              <button
+                onClick={() => setActiveTab('equipment')}
+                className={`hidden py-2 px-1 font-medium text-sm border-b-2 ${activeTab === 'equipment'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Equipment
+              </button>
+              <button
+                onClick={() => setActiveTab('rentals')}
+                className={`hidden py-2 px-1 font-medium text-sm border-b-2 ${activeTab === 'rentals'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Rentals
+              </button>
+            </nav>
           </div>
         </div>
-      )}
 
-      {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Tìm kiếm..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg pl-10"
-          />
-          <Search className="absolute left-3 top-3 text-gray-400" />
-        </div>
-      </div>
+        {activeTab === 'dashboard' && (
+          <div className="space-y-8">
+            {/* Cải tiến stats cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                icon={<Users className="w-6 h-6 text-blue-600" />}
+                title="Tổng người dùng"
+                value={stats.totalUsers.toString()}
+              />
+              <StatCard
+                icon={<Package className="w-6 h-6 text-indigo-600" />}
+                title="Tổng thiết bị"
+                value={stats.totalEquipment.toString()}
+              />
+              <StatCard
+                icon={<BarChart2 className="w-6 h-6 text-green-600" />}
+                title="Tổng đơn thuê"
+                value={stats.totalRentals.toString()}
+              />
+              <StatCard
+                icon={<DollarSign className="w-6 h-6 text-yellow-600" />}
+                title="Tổng doanh thu"
+                value={formatPrice(stats.totalRevenue)}
+              />
+            </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setActiveTab('users')}
-          className={`px-4 py-2 rounded-lg ${activeTab === 'users' ? 'bg-orange-500 text-white' : 'bg-gray-100'
-            }`}
-        >
-          Người dùng
-        </button>
-        <button
-          onClick={() => setActiveTab('equipment')}
-          className={`px-4 py-2 rounded-lg ${activeTab === 'equipment' ? 'bg-orange-500 text-white' : 'bg-gray-100'
-            }`}
-        >
-          Thiết bị
-        </button>
-        <button
-          onClick={() => setActiveTab('rentals')}
-          className={`px-4 py-2 rounded-lg ${activeTab === 'rentals' ? 'bg-orange-500 text-white' : 'bg-gray-100'
-            }`}
-        >
-          Đơn thuê
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        {activeTab === 'users' && (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên doanh nghiệp</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa chỉ</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quyền</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredData.users.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingItem === user.id ? (
-                      <input
-                        type="text"
-                        value={editForm.business_name || ''}
-                        onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })}
-                        className="border rounded px-2 py-1"
+            {/* Recent Rentals và Popular Equipment */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow h-full">
+                <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Đơn thuê gần đây</h2>
+                <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                  {stats.recentRentals.map((rental) => (
+                    <div key={rental.id} className="flex items-center p-3 rounded-md hover:bg-gray-50 transition-colors border border-gray-100">
+                      <img
+                        src={rental.equipment?.image || '/placeholder.png'}
+                        alt={rental.equipment?.title}
+                        className="w-12 h-12 object-cover rounded"
                       />
-                    ) : (
-                      user.business_name || '-'
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingItem === user.id ? (
-                      <input
-                        type="text"
-                        value={editForm.business_address || ''}
-                        onChange={(e) => setEditForm({ ...editForm, business_address: e.target.value })}
-                        className="border rounded px-2 py-1"
-                      />
-                    ) : (
-                      user.business_address || '-'
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                        user.role === 'owner' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                        {user.role === 'admin' ? 'Quản trị viên' :
-                          user.role === 'owner' ? 'Chủ thiết bị' :
-                            'Người thuê'}
-                      </span>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleUpdateUserRole(user.id, 'admin')}
-                          className={`p-1 rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'text-gray-400 hover:text-purple-600'
-                            }`}
-                          title="Cấp quyền quản trị viên"
-                        >
-                          <Shield className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleUpdateUserRole(user.id, 'owner')}
-                          className={`p-1 rounded-full ${user.role === 'owner' ? 'bg-blue-100 text-blue-800' : 'text-gray-400 hover:text-blue-600'
-                            }`}
-                          title="Cấp quyền chủ thiết bị"
-                        >
-                          <User className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleUpdateUserRole(user.id, 'renter')}
-                          className={`p-1 rounded-full ${user.role === 'renter' ? 'bg-gray-100 text-gray-800' : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                          title="Cấp quyền người thuê"
-                        >
-                          <User className="h-4 w-4" />
-                        </button>
+                      <div className="ml-3 flex-1">
+                        <p className="font-medium text-gray-900">{rental.equipment?.title}</p>
+                        <p className="text-sm text-gray-600">
+                          {rental.renter?.email}
+                        </p>
+                        <p className="text-sm font-medium text-blue-600">
+                          {formatPrice(rental.total_amount)}
+                        </p>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingItem === user.id ? (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleSaveEdit}
-                          className="text-green-500 hover:text-green-700"
-                        >
-                          <Save className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <XCircle className="h-5 w-5" />
-                        </button>
+                  ))}
+                  {stats.recentRentals.length === 0 && (
+                    <div className="text-center py-6 text-gray-500">Chưa có đơn thuê nào</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow h-full">
+                <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Thiết bị phổ biến</h2>
+                <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                  {stats.popularEquipment.map((item) => (
+                    <div key={item.id} className="flex items-center p-3 rounded-md hover:bg-gray-50 transition-colors border border-gray-100">
+                      <img
+                        src={item.image || '/placeholder.png'}
+                        alt={item.title}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                      <div className="ml-3 flex-1">
+                        <p className="font-medium text-gray-900">{item.title}</p>
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-600">
+                            Đã thuê: <span className="font-medium">{item.rentals?.length || 0}</span>
+                          </p>
+                          <p className="text-sm font-medium text-blue-600">
+                            {formatPrice(item.price)}
+                          </p>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditUser(user.id)}
-                          className="text-blue-500 hover:text-blue-700"
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </div>
+                  ))}
+                  {stats.popularEquipment.length === 0 && (
+                    <div className="text-center py-6 text-gray-500">Chưa có thiết bị nào</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
-        {activeTab === 'equipment' && (
-          <>
-            <div className="p-4 border-b">
-              <button
-                onClick={() => setShowNewEquipmentForm(!showNewEquipmentForm)}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-              >
-                <Plus className="h-5 w-5" />
-                Thêm thiết bị mới
-              </button>
+        {/* Cải tiến phần tabs nhỏ gọn trong các tabs khác */}
+        {activeTab !== 'dashboard' && (
+          <div className="mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Tìm kiếm..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <Search className="absolute left-3 top-3 text-gray-400" />
             </div>
+          </div>
+        )}
 
-            {showNewEquipmentForm && (
-              <div className="p-4 border-b">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tên thiết bị <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={newEquipment.title}
-                      onChange={(e) => setNewEquipment({ ...newEquipment, title: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Nhập tên thiết bị"
-                    />
-                  </div>
+        {/* Navigation Tabs - Cải tiến phần thứ 2 */}
+        {activeTab !== 'dashboard' && (
+          <div className="bg-white p-3 mb-6 shadow-sm rounded-lg">
+            <div className="flex space-x-1">
+              {/* Đã xóa các buttons theo yêu cầu */}
+            </div>
+          </div>
+        )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Thể loại <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={newEquipment.category}
-                      onChange={(e) => setNewEquipment({ ...newEquipment, category: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    >
-                      <option value="">Chọn thể loại</option>
-                      <option value="camera">Camera</option>
-                      <option value="lighting">Đèn chiếu sáng</option>
-                      <option value="audio">Thiết bị âm thanh</option>
-                      <option value="other">Khác</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Giá thuê/ngày <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={newEquipment.price}
-                      onChange={(e) => setNewEquipment({ ...newEquipment, price: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Nhập giá thuê"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Số lượng <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={newEquipment.quantity}
-                      onChange={(e) => setNewEquipment({ ...newEquipment, quantity: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Nhập số lượng"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Link hình ảnh
-                    </label>
-                    <input
-                      type="text"
-                      value={newEquipment.image}
-                      onChange={(e) => setNewEquipment({ ...newEquipment, image: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Nhập link hình ảnh"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mô tả
-                    </label>
-                    <textarea
-                      value={newEquipment.description}
-                      onChange={(e) => setNewEquipment({ ...newEquipment, description: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Nhập mô tả thiết bị"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    onClick={() => setShowNewEquipmentForm(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    onClick={handleCreateEquipment}
-                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                  >
-                    Thêm thiết bị
-                  </button>
-                </div>
-              </div>
-            )}
-
+        {/* Giữ nguyên code phần content của các tabs */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          {activeTab === 'users' && (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chủ sở hữu</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên doanh nghiệp</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa chỉ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quyền</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.equipment.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <img
-                            className="h-10 w-10 rounded-lg object-cover"
-                            src={item.image || '/placeholder.png'}
-                            alt={item.title}
-                          />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {editingItem === item.id ? (
-                              <input
-                                type="text"
-                                value={editForm.title}
-                                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                placeholder="Tên thiết bị"
-                              />
-                            ) : (
-                              item.title
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {editingItem === item.id ? (
-                              <select
-                                value={editForm.category}
-                                onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                              >
-                                <option value="camera">Camera</option>
-                                <option value="lighting">Đèn chiếu sáng</option>
-                                <option value="audio">Thiết bị âm thanh</option>
-                                <option value="other">Khác</option>
-                              </select>
-                            ) : (
-                              item.category
-                            )}
-                          </div>
-                          {editingItem === item.id && (
-                            <div className="mt-2">
-                              <input
-                                type="text"
-                                value={editForm.image}
-                                onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                placeholder="Link hình ảnh"
-                              />
-                              <textarea
-                                value={editForm.description}
-                                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                                className="w-full mt-2 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                placeholder="Mô tả thiết bị"
-                                rows={2}
-                              />
-                            </div>
-                          )}
+                {filteredData.users.map((user) => (
+                  <tr key={user.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {editingItem === user.id ? (
+                        <input
+                          type="text"
+                          value={editForm.business_name || ''}
+                          onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })}
+                          className="border rounded px-2 py-1"
+                        />
+                      ) : (
+                        user.business_name || '-'
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {editingItem === user.id ? (
+                        <input
+                          type="text"
+                          value={editForm.business_address || ''}
+                          onChange={(e) => setEditForm({ ...editForm, business_address: e.target.value })}
+                          className="border rounded px-2 py-1"
+                        />
+                      ) : (
+                        user.business_address || '-'
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                          user.role === 'owner' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                          {user.role === 'admin' ? 'Quản trị viên' :
+                            user.role === 'owner' ? 'Chủ thiết bị' :
+                              'Người thuê'}
+                        </span>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleUpdateUserRole(user.id, 'admin')}
+                            className={`p-1 rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'text-gray-400 hover:text-purple-600'
+                              }`}
+                            title="Cấp quyền quản trị viên"
+                          >
+                            <Shield className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleUpdateUserRole(user.id, 'owner')}
+                            className={`p-1 rounded-full ${user.role === 'owner' ? 'bg-blue-100 text-blue-800' : 'text-gray-400 hover:text-blue-600'
+                              }`}
+                            title="Cấp quyền chủ thiết bị"
+                          >
+                            <User className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleUpdateUserRole(user.id, 'renter')}
+                            className={`p-1 rounded-full ${user.role === 'renter' ? 'bg-gray-100 text-gray-800' : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                            title="Cấp quyền người thuê"
+                          >
+                            <User className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{item.owner?.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {editingItem === item.id ? (
-                        <input
-                          type="number"
-                          value={editForm.price}
-                          onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          placeholder="Giá thuê"
-                        />
-                      ) : (
-                        formatPrice(item.price)
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingItem === item.id ? (
-                        <input
-                          type="number"
-                          value={editForm.quantity}
-                          onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
-                          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          placeholder="Số lượng"
-                        />
-                      ) : (
-                        item.quantity
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingItem === item.id ? (
+                      {editingItem === user.id ? (
                         <div className="flex gap-2">
                           <button
                             onClick={handleSaveEdit}
-                            className="p-2 text-green-500 hover:text-green-700 rounded-lg hover:bg-green-50"
-                            title="Lưu thay đổi"
+                            className="text-green-500 hover:text-green-700"
                           >
                             <Save className="h-5 w-5" />
                           </button>
                           <button
                             onClick={handleCancelEdit}
-                            className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50"
-                            title="Hủy thay đổi"
+                            className="text-red-500 hover:text-red-700"
                           >
                             <XCircle className="h-5 w-5" />
                           </button>
@@ -893,16 +652,14 @@ export default function AdminDashboard() {
                       ) : (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleEditEquipment(item.id)}
-                            className="p-2 text-blue-500 hover:text-blue-700 rounded-lg hover:bg-blue-50"
-                            title="Chỉnh sửa thiết bị"
+                            onClick={() => handleEditUser(user.id)}
+                            className="text-blue-500 hover:text-blue-700"
                           >
                             <Edit className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => handleDeleteEquipment(item.id)}
-                            className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50"
-                            title="Xóa thiết bị"
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="text-red-500 hover:text-red-700"
                           >
                             <Trash2 className="h-5 w-5" />
                           </button>
@@ -913,89 +670,347 @@ export default function AdminDashboard() {
                 ))}
               </tbody>
             </table>
-          </>
-        )}
+          )}
 
-        {activeTab === 'rentals' && (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người thuê</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredData.rentals.map((rental) => (
-                <tr key={rental.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {rental.equipment?.title}
+          {activeTab === 'equipment' && (
+            <>
+              <div className="p-4 border-b">
+                <button
+                  onClick={() => setShowNewEquipmentForm(!showNewEquipmentForm)}
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                >
+                  <Plus className="h-5 w-5" />
+                  Thêm thiết bị mới
+                </button>
+              </div>
+
+              {showNewEquipmentForm && (
+                <div className="p-4 border-b">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tên thiết bị <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={newEquipment.title}
+                        onChange={(e) => setNewEquipment({ ...newEquipment, title: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="Nhập tên thiết bị"
+                      />
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {formatPrice(rental.equipment?.price)}/ngày
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Thể loại <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={newEquipment.category}
+                        onChange={(e) => setNewEquipment({ ...newEquipment, category: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      >
+                        <option value="">Chọn thể loại</option>
+                        <option value="camera">Camera</option>
+                        <option value="lighting">Đèn chiếu sáng</option>
+                        <option value="audio">Thiết bị âm thanh</option>
+                        <option value="other">Khác</option>
+                      </select>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {rental.renter?.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {new Date(rental.start_date).toLocaleDateString()} -{' '}
-                    {new Date(rental.end_date).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs ${rental.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      rental.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        rental.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-blue-100 text-blue-800'
-                      }`}>
-                      {rental.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {rental.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleUpdateRentalStatus(rental.id, 'approved')}
-                          className="text-green-500 hover:text-green-700"
-                        >
-                          <Check className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleUpdateRentalStatus(rental.id, 'rejected')}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <X className="h-5 w-5" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Giá thuê/ngày <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={newEquipment.price}
+                        onChange={(e) => setNewEquipment({ ...newEquipment, price: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="Nhập giá thuê"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Số lượng <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={newEquipment.quantity}
+                        onChange={(e) => setNewEquipment({ ...newEquipment, quantity: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="Nhập số lượng"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Link hình ảnh
+                      </label>
+                      <input
+                        type="text"
+                        value={newEquipment.image}
+                        onChange={(e) => setNewEquipment({ ...newEquipment, image: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="Nhập link hình ảnh"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Mô tả
+                      </label>
+                      <textarea
+                        value={newEquipment.description}
+                        onChange={(e) => setNewEquipment({ ...newEquipment, description: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="Nhập mô tả thiết bị"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button
+                      onClick={() => setShowNewEquipmentForm(false)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      onClick={handleCreateEquipment}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                    >
+                      Thêm thiết bị
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chủ sở hữu</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredData.equipment.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            <img
+                              className="h-10 w-10 rounded-lg object-cover"
+                              src={item.image || '/placeholder.png'}
+                              alt={item.title}
+                            />
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {editingItem === item.id ? (
+                                <input
+                                  type="text"
+                                  value={editForm.title}
+                                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  placeholder="Tên thiết bị"
+                                />
+                              ) : (
+                                item.title
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {editingItem === item.id ? (
+                                <select
+                                  value={editForm.category}
+                                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                >
+                                  <option value="camera">Camera</option>
+                                  <option value="lighting">Đèn chiếu sáng</option>
+                                  <option value="audio">Thiết bị âm thanh</option>
+                                  <option value="other">Khác</option>
+                                </select>
+                              ) : (
+                                item.category
+                              )}
+                            </div>
+                            {editingItem === item.id && (
+                              <div className="mt-2">
+                                <input
+                                  type="text"
+                                  value={editForm.image}
+                                  onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  placeholder="Link hình ảnh"
+                                />
+                                <textarea
+                                  value={editForm.description}
+                                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                  className="w-full mt-2 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                  placeholder="Mô tả thiết bị"
+                                  rows={2}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{item.owner?.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {editingItem === item.id ? (
+                          <input
+                            type="number"
+                            value={editForm.price}
+                            onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Giá thuê"
+                          />
+                        ) : (
+                          formatPrice(item.price)
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {editingItem === item.id ? (
+                          <input
+                            type="number"
+                            value={editForm.quantity}
+                            onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Số lượng"
+                          />
+                        ) : (
+                          item.quantity
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {editingItem === item.id ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSaveEdit}
+                              className="p-2 text-green-500 hover:text-green-700 rounded-lg hover:bg-green-50"
+                              title="Lưu thay đổi"
+                            >
+                              <Save className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50"
+                              title="Hủy thay đổi"
+                            >
+                              <XCircle className="h-5 w-5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditEquipment(item.id)}
+                              className="p-2 text-blue-500 hover:text-blue-700 rounded-lg hover:bg-blue-50"
+                              title="Chỉnh sửa thiết bị"
+                            >
+                              <Edit className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEquipment(item.id)}
+                              className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50"
+                              title="Xóa thiết bị"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+
+          {activeTab === 'rentals' && (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người thuê</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredData.rentals.map((rental) => (
+                  <tr key={rental.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {rental.equipment?.title}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {formatPrice(rental.equipment?.price)}/ngày
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {rental.renter?.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {new Date(rental.start_date).toLocaleDateString()} -{' '}
+                      {new Date(rental.end_date).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-full text-xs ${rental.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        rental.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          rental.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                        }`}>
+                        {rental.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {rental.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleUpdateRentalStatus(rental.id, 'approved')}
+                            className="text-green-500 hover:text-green-700"
+                          >
+                            <Check className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleUpdateRentalStatus(rental.id, 'rejected')}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
 
 function StatCard({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center">
-        <div className="p-2 bg-orange-50 rounded-lg">
-          {icon}
-        </div>
-        <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-semibold text-gray-900">{value}</p>
-        </div>
+    <div className="bg-white rounded-lg shadow p-6 h-full flex items-center">
+      <div className="p-3 rounded-lg mr-4 flex-shrink-0" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-500">{title}</p>
+        <p className="text-2xl font-semibold text-gray-900">{value}</p>
       </div>
     </div>
   );
 }
 
 export { AdminDashboard };
+

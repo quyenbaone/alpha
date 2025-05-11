@@ -4,6 +4,11 @@ import { Toaster } from 'sonner';
 import { Layout } from './components/Layout';
 import { supabase } from './lib/supabase';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminEquipment } from './pages/AdminEquipment';
+import { AdminRentals } from './pages/AdminRentals';
+import { AdminReports } from './pages/AdminReports';
+import { AdminSettings } from './pages/AdminSettings';
+import { AdminUsers } from './pages/AdminUsers';
 import { AuthCallback } from './pages/AuthCallback';
 import { Cart } from './pages/Cart';
 import { Equipment } from './pages/Equipment';
@@ -104,11 +109,39 @@ export default function App() {
                 <Messages />
               </ProtectedRoute>
             } />
+
+            {/* Admin Routes */}
             <Route path="/admin" element={
               <AdminRoute>
                 <AdminDashboard />
               </AdminRoute>
             } />
+            <Route path="/admin/reports" element={
+              <AdminRoute>
+                <AdminReports />
+              </AdminRoute>
+            } />
+            <Route path="/admin/users" element={
+              <AdminRoute>
+                <AdminUsers />
+              </AdminRoute>
+            } />
+            <Route path="/admin/equipment" element={
+              <AdminRoute>
+                <AdminEquipment />
+              </AdminRoute>
+            } />
+            <Route path="/admin/rentals" element={
+              <AdminRoute>
+                <AdminRentals />
+              </AdminRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <AdminRoute>
+                <AdminSettings />
+              </AdminRoute>
+            } />
+
             <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
         </main>
