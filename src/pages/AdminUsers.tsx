@@ -1,4 +1,4 @@
-import { Ban, Bell, CheckCircle, Edit, Search, Shield, ShieldCheck, SlidersHorizontal, Trash2, User, X } from 'lucide-react';
+import { Ban, Bell, CheckCircle, Edit, Search, ShieldCheck, SlidersHorizontal, Trash2, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
@@ -219,11 +219,10 @@ export function AdminUsers() {
             full_name: userData.full_name,
             email: userData.email,
             role: userData.role,
-            is_active: userData.is_active !== false, // Default to true if undefined
-            is_banned: userData.is_banned === true,
             verified: userData.verified === true,
             phone_number: userData.phone_number,
             address: userData.address
+            // Các trường is_active và is_banned đã được xóa vì không tồn tại trong schema
         });
     };
 
@@ -246,23 +245,25 @@ export function AdminUsers() {
     const handleToggleUserStatus = async (userId: string, field: string, value: boolean) => {
         try {
             const updateData: Record<string, boolean> = {};
-            updateData[field] = value;
 
-            const { error } = await supabase
-                .from('users')
-                .update(updateData)
-                .eq('id', userId);
+            // Chỉ xử lý cho trường verified vì is_active và is_banned không tồn tại trong schema
+            if (field === 'verified') {
+                updateData[field] = value;
 
-            if (error) throw error;
+                const { error } = await supabase
+                    .from('users')
+                    .update(updateData)
+                    .eq('id', userId);
 
-            const statusMessages: Record<string, string> = {
-                is_active: value ? 'Đã kích hoạt' : 'Đã vô hiệu hóa',
-                is_banned: value ? 'Đã cấm' : 'Đã bỏ cấm',
-                verified: value ? 'Đã xác thực' : 'Đã hủy xác thực'
-            };
+                if (error) throw error;
 
-            toast.success(`${statusMessages[field]} người dùng`);
-            fetchUsers();
+                toast.success(value ? 'Đã xác thực người dùng' : 'Đã hủy xác thực người dùng');
+                fetchUsers();
+            } else {
+                // Hiển thị thông báo là các trường này không thể cập nhật
+                console.warn(`Trường "${field}" không tồn tại trong database schema`);
+                toast.error(`Không thể cập nhật trạng thái ${field}. Trường này không tồn tại trong database.`);
+            }
         } catch (error) {
             console.error(`Error toggling ${field}:`, error);
             toast.error(`Lỗi khi cập nhật trạng thái ${field}`);
@@ -275,21 +276,19 @@ export function AdminUsers() {
         try {
             console.log("Saving edit for user:", editingItem, "with data:", editForm);
 
-            // Kiểm tra xem bảng 'users' có tồn tại không
-            const { error: tableCheckError } = await supabase
-                .from('users')
-                .select('id')
-                .limit(1);
+            // Xóa các trường không tồn tại trong schema database
+            const validFormData = { ...editForm };
 
-            if (tableCheckError) {
-                console.error('Error checking users table:', tableCheckError);
-                throw new Error('Không thể kết nối đến bảng users');
-            }
+            // Loại bỏ các trường không tồn tại trong cơ sở dữ liệu
+            if ('is_active' in validFormData) delete validFormData.is_active;
+            if ('is_banned' in validFormData) delete validFormData.is_banned;
+
+            console.log("Clean form data to update:", validFormData);
 
             // Thực hiện cập nhật thông tin
             const { data, error } = await supabase
                 .from('users')
-                .update(editForm)
+                .update(validFormData)
                 .eq('id', editingItem)
                 .select();
 
@@ -910,6 +909,15 @@ export function AdminUsers() {
                                                         className="border rounded px-2 py-1 w-full"
                                                     />
                                                 </div>
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-sm">Đã xác thực</label>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={editForm.verified}
+                                                        onChange={(e) => setEditForm({ ...editForm, verified: e.target.checked })}
+                                                        className="form-checkbox h-4 w-4 text-green-600"
+                                                    />
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="flex items-center">
@@ -968,34 +976,14 @@ export function AdminUsers() {
                                     </td>
                                     <td className="px-6 py-4">
                                         {editingItem === user.id ? (
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-sm">Kích hoạt</label>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={editForm.is_active}
-                                                        onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
-                                                        className="form-checkbox h-4 w-4 text-blue-600"
-                                                    />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-sm">Đã xác thực</label>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={editForm.verified}
-                                                        onChange={(e) => setEditForm({ ...editForm, verified: e.target.checked })}
-                                                        className="form-checkbox h-4 w-4 text-green-600"
-                                                    />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-sm">Bị cấm</label>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={editForm.is_banned}
-                                                        onChange={(e) => setEditForm({ ...editForm, is_banned: e.target.checked })}
-                                                        className="form-checkbox h-4 w-4 text-red-600"
-                                                    />
-                                                </div>
+                                            <div className="flex items-center gap-2">
+                                                <label className="text-sm">Đã xác thực</label>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editForm.verified}
+                                                    onChange={(e) => setEditForm({ ...editForm, verified: e.target.checked })}
+                                                    className="form-checkbox h-4 w-4 text-green-600"
+                                                />
                                             </div>
                                         ) : (
                                             <div className="space-y-2">
