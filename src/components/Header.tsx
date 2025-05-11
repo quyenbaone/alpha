@@ -1,215 +1,127 @@
-import { BarChart2, Briefcase, Handshake, Heart, Home, List, LogIn, LogOut, MessageCircle, PlusCircle, Search, ShoppingCart, Star, User, UserPlus } from 'lucide-react';
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Camera, LogIn, Menu, Search, ShoppingCart, User, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
-import { useEquipmentStore } from '../store/equipmentStore';
 
 export function Header() {
-  const { user, signOut } = useAuthStore();
-  const { setFilters } = useEquipmentStore();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { user } = useAuthStore();
   const { items } = useCartStore();
-  const navigate = useNavigate();
   const location = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [accountOpen, setAccountOpen] = useState(false);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 0);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await setFilters({ search: searchQuery.trim() || null });
-    if (location.pathname !== '/') {
-      navigate('/');
-    }
-  };
-
-  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
-
-  // Helper: xác định vai trò
-  const role = user?.role || (user?.is_admin ? 'admin' : null);
-
-  // Menu động
-  let menuItems: { label: string; icon: React.ReactNode; to: string; highlight?: boolean }[] = [];
-  let accountMenu: { label: string; icon: React.ReactNode; to?: string; onClick?: () => void }[] = [];
-
-  if (!user) {
-    menuItems = [
-      { label: 'Trang chủ', icon: <Home className="h-5 w-5" />, to: '/' },
-      { label: 'Danh mục', icon: <List className="h-5 w-5" />, to: '/equipment' },
-    ];
-  } else if (role === 'renter') {
-    menuItems = [
-      { label: 'Trang chủ', icon: <Home className="h-5 w-5" />, to: '/' },
-      { label: 'Tìm thiết bị', icon: <Search className="h-5 w-5" />, to: '/equipment', highlight: true },
-      { label: 'Đơn thuê của tôi', icon: <Briefcase className="h-5 w-5" />, to: '/orders' },
-      { label: 'Trò chuyện', icon: <MessageCircle className="h-5 w-5" />, to: '/messages' },
-    ];
-    accountMenu = [
-      { label: 'Hồ sơ cá nhân', icon: <User className="h-5 w-5" />, to: '/profile' },
-      { label: 'Sản phẩm yêu thích', icon: <Heart className="h-5 w-5" />, to: '/favorites' },
-      { label: 'Đăng xuất', icon: <LogOut className="h-5 w-5" />, onClick: handleSignOut },
-    ];
-  } else if (role === 'owner') {
-    menuItems = [
-      { label: 'Trang chủ', icon: <Home className="h-5 w-5" />, to: '/' },
-      { label: 'Thiết bị của tôi', icon: <List className="h-5 w-5" />, to: '/my-equipment' },
-      { label: 'Đơn thuê', icon: <Briefcase className="h-5 w-5" />, to: '/orders' },
-      { label: 'Doanh thu', icon: <BarChart2 className="h-5 w-5" />, to: '/revenue' },
-    ];
-    accountMenu = [
-      { label: 'Cập nhật hồ sơ', icon: <User className="h-5 w-5" />, to: '/profile' },
-      { label: 'Tạo thiết bị mới', icon: <PlusCircle className="h-5 w-5" />, to: '/my-equipment/new' },
-      { label: 'Đăng xuất', icon: <LogOut className="h-5 w-5" />, onClick: handleSignOut },
-    ];
-  } else if (role === 'admin') {
-    menuItems = [
-      { label: 'Quản trị hệ thống', icon: <Star className="h-5 w-5" />, to: '/admin' },
-    ];
-  }
+  const menuItems = [
+    { to: '/equipment', label: 'Thiết bị', icon: <Camera className="h-5 w-5" /> },
+    { to: '/bookings', label: 'Đặt lịch', icon: <CalendarIcon /> },
+    { to: '/reviews', label: 'Đánh giá', icon: <StarIcon /> },
+  ];
 
   return (
-    <header className="bg-primary text-primary-foreground sticky top-0 z-50 shadow-lg">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-8">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="bg-primary-foreground rounded-lg p-2 group-hover:scale-105 transition-transform duration-300 shadow-lg">
-              <Handshake className="h-8 w-8 text-primary" />
-            </div>
-            <span className="brand-text">Alpha</span>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-[#1e293b] shadow-lg backdrop-blur-md' : 'bg-[#1e293b]'} font-sans`}>
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 select-none">
+            <Camera className={`h-8 w-8 text-blue-400`} />
+            <span className={`text-2xl font-extrabold tracking-tight text-white`}>RentHub</span>
           </Link>
 
-          {/* Menu chính */}
-          <nav className="flex-1 flex gap-2 md:gap-6 items-center">
+          {/* Desktop Menu */}
+          <nav className="hidden md:flex items-center gap-8">
             {menuItems.map((item) => (
               <Link
-                key={item.label}
+                key={item.to}
                 to={item.to}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium hover:bg-primary-foreground/10 transition-colors ${item.highlight ? 'bg-orange-500 text-white hover:bg-orange-600' : ''}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${location.pathname === item.to ? 'bg-blue-800 text-white' : 'text-blue-100 hover:text-blue-400 hover:bg-blue-800/60'}`}
               >
                 {item.icon}
-                <span className="hidden sm:inline">{item.label}</span>
+                <span>{item.label}</span>
               </Link>
             ))}
           </nav>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden md:flex">
-            <div className="flex w-full">
+          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
+            <div className="relative w-full">
               <input
                 type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm kiếm thiết bị..."
-                className="input w-full rounded-r-none focus:ring-0 glass-effect"
+                className={`w-full pl-10 pr-4 py-2 rounded-full border bg-blue-900 border-blue-800 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm transition-all duration-200`}
               />
-              <button
-                type="submit"
-                className="btn bg-primary-foreground text-primary hover:bg-primary-foreground/90 rounded-l-none hover:shadow-lg hover:-translate-y-0.5"
-              >
-                <Search className="h-5 w-5" />
-              </button>
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-300`} />
             </div>
-          </form>
+          </div>
 
-          {/* Tài khoản & Giỏ hàng */}
-          <div className="flex items-center gap-2 md:gap-4 relative">
-            {/* Shopping Cart */}
-            {role !== 'admin' && (
-              <Link
-                to="/cart"
-                className="relative p-2 hover:bg-primary-foreground/10 rounded-lg transition-colors hover-scale"
-              >
-                <ShoppingCart className="h-6 w-6" />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
-                    {cartItemCount}
-                  </span>
-                )}
+          {/* User Actions */}
+          <div className="flex items-center gap-4">
+            <Link to="/cart" className={`relative p-2 rounded-full transition-colors duration-200 text-blue-100 hover:bg-blue-800/60`}>
+              <ShoppingCart className="h-6 w-6" />
+              {items.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
+                  {items.length}
+                </span>
+              )}
+            </Link>
+            {user ? (
+              <Link to="/profile" className={`p-2 rounded-full text-blue-100 hover:bg-blue-800/60`}>
+                <User className="h-6 w-6" />
+              </Link>
+            ) : (
+              <Link to="/signin" className="px-5 py-2 rounded-full font-semibold bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 flex items-center gap-2">
+                <LogIn className="h-5 w-5" /> Đăng nhập
               </Link>
             )}
-
-            {/* Đăng nhập/Đăng ký hoặc Dropdown tài khoản */}
-            {!user ? (
-              <>
-                <button
-                  onClick={() => navigate('/signin')}
-                  className="btn glass-effect hover:bg-primary-foreground/20 nav-link"
-                >
-                  <LogIn className="h-5 w-5 mr-2" />
-                  <span className="heading-highlight">Đăng nhập</span>
-                </button>
-                <button
-                  onClick={() => navigate('/signup')}
-                  className="btn bg-primary-foreground text-primary hover:bg-primary-foreground/90 hover:shadow-lg hover:-translate-y-0.5"
-                >
-                  <UserPlus className="h-5 w-5 mr-2" />
-                  <span className="heading-highlight">Đăng ký</span>
-                </button>
-              </>
-            ) : (role !== 'admin' ? (
-              <div className="relative">
-                <button
-                  onClick={() => setAccountOpen((v) => !v)}
-                  className="btn glass-effect hover:bg-primary-foreground/20 nav-link flex items-center"
-                >
-                  <User className="h-5 w-5 mr-2" />
-                  <span className="heading-highlight">Tài khoản</span>
-                  <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                </button>
-                {accountOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-lg shadow-lg z-50 py-2">
-                    {accountMenu.map((item) => (
-                      item.to ? (
-                        <Link
-                          key={item.label}
-                          to={item.to}
-                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition-colors"
-                          onClick={() => setAccountOpen(false)}
-                        >
-                          {item.icon}
-                          {item.label}
-                        </Link>
-                      ) : (
-                        <button
-                          key={item.label}
-                          onClick={() => { item.onClick && item.onClick(); setAccountOpen(false); }}
-                          className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-gray-100 transition-colors"
-                        >
-                          {item.icon}
-                          {item.label}
-                        </button>
-                      )
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : null)}
-          </div>
-        </div>
-
-        {/* Mobile Search */}
-        <form onSubmit={handleSearch} className="mt-4 md:hidden">
-          <div className="flex">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm thiết bị..."
-              className="input w-full rounded-r-none glass-effect"
-            />
-            <button
-              type="submit"
-              className="btn bg-primary-foreground text-primary hover:bg-primary-foreground/90 rounded-l-none hover:shadow-lg hover:-translate-y-0.5"
-            >
-              <Search className="h-5 w-5" />
+            {/* Mobile menu button */}
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`md:hidden p-2 rounded-full text-blue-100 hover:bg-blue-800/60`}>
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
-        </form>
+        </div>
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-[#1e293b] shadow-lg rounded-b-xl mt-2 py-4 animate-fade-in-down">
+            <nav className="px-4 flex flex-col gap-2">
+              {menuItems.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+              <Link to="/cart" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                <ShoppingCart className="h-5 w-5" /> Giỏ hàng
+              </Link>
+              {user ? (
+                <Link to="/profile" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                  <User className="h-5 w-5" /> Tài khoản
+                </Link>
+              ) : (
+                <Link to="/signin" className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold shadow-lg">
+                  <LogIn className="h-5 w-5" /> Đăng nhập
+                </Link>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );
+}
+
+function CalendarIcon() {
+  return <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>;
+}
+function StarIcon() {
+  return <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5 12 2" /></svg>;
 }

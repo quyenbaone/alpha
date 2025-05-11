@@ -1,165 +1,183 @@
-import { supabase } from './supabase';
-import type { Equipment, Rental, Message, Notification } from './types';
+import { toast } from 'sonner';
 
-export const api = {
-  equipment: {
-    list: async () => {
-      const { data, error } = await supabase
-        .from('equipment')
-        .select('*')
-        .order('created_at', { ascending: false });
+interface ApiConfig {
+  baseURL: string;
+  timeout?: number;
+  maxRetries?: number;
+}
 
-      if (error) throw error;
-      return data;
-    },
+interface ApiError extends Error {
+  status?: number;
+  data?: any;
+}
 
-    get: async (id: string) => {
-      const { data, error } = await supabase
-        .from('equipment')
-        .select('*')
-        .eq('id', id)
-        .single();
+class ApiService {
+  private baseURL: string;
+  private timeout: number;
+  private maxRetries: number;
 
-      if (error) throw error;
-      return data;
-    },
+  constructor(config: ApiConfig) {
+    this.baseURL = config.baseURL;
+    this.timeout = config.timeout || 30000;
+    this.maxRetries = config.maxRetries || 3;
+  }
 
-    create: async (equipment: Partial<Equipment>) => {
-      const { data, error } = await supabase
-        .from('equipment')
-        .insert(equipment)
-        .select()
-        .single();
+  private async fetchWithTimeout(
+    url: string,
+    options: RequestInit,
+    timeout: number
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
 
-      if (error) throw error;
-      return data;
-    },
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      return response;
+    } catch (error) {
+      clearTimeout(id);
+      throw error;
+    }
+  }
 
-    update: async (id: string, equipment: Partial<Equipment>) => {
-      const { data, error } = await supabase
-        .from('equipment')
-        .update(equipment)
-        .eq('id', id)
-        .select()
-        .single();
+  private async retryRequest(
+    url: string,
+    options: RequestInit,
+    retries: number
+  ): Promise<Response> {
+    try {
+      return await this.fetchWithTimeout(url, options, this.timeout);
+    } catch (error) {
+      if (retries > 0 && error instanceof Error && error.name === 'AbortError') {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return this.retryRequest(url, options, retries - 1);
+      }
+      throw error;
+    }
+  }
 
-      if (error) throw error;
-      return data;
-    },
+  private async handleResponse(response: Response): Promise<any> {
+    if (!response.ok) {
+      const error: ApiError = new Error('API request failed');
+      error.status = response.status;
+      try {
+        error.data = await response.json();
+      } catch {
+        error.data = await response.text();
+      }
+      throw error;
+    }
 
-    delete: async (id: string) => {
-      const { error } = await supabase
-        .from('equipment')
-        .delete()
-        .eq('id', id);
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+      return response.json();
+    }
+    return response.text();
+  }
 
-      if (error) throw error;
-    },
-  },
+  private getHeaders(): HeadersInit {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }
 
-  rentals: {
-    list: async () => {
-      const { data, error } = await supabase
-        .from('rentals')
-        .select(`
-          *,
-          equipment:equipment_id (
-            title,
-            price,
-            image
-          ),
-          renter:renter_id (
-            email
-          )
-        `)
-        .order('created_at', { ascending: false });
+  async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+    const url = new URL(`${this.baseURL}${endpoint}`);
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.append(key, value);
+      });
+    }
 
-      if (error) throw error;
-      return data;
-    },
+    try {
+      const response = await this.retryRequest(url.toString(), {
+        method: 'GET',
+        headers: this.getHeaders(),
+      }, this.maxRetries);
 
-    create: async (rental: Partial<Rental>) => {
-      const { data, error } = await supabase
-        .from('rentals')
-        .insert(rental)
-        .select()
-        .single();
+      return this.handleResponse(response);
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
 
-      if (error) throw error;
-      return data;
-    },
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    try {
+      const response = await this.retryRequest(`${this.baseURL}${endpoint}`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+      }, this.maxRetries);
 
-    updateStatus: async (id: string, status: string) => {
-      const { data, error } = await supabase
-        .from('rentals')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
+      return this.handleResponse(response);
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
 
-      if (error) throw error;
-      return data;
-    },
-  },
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    try {
+      const response = await this.retryRequest(`${this.baseURL}${endpoint}`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+      }, this.maxRetries);
 
-  messages: {
-    list: async (partnerId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      return this.handleResponse(response);
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
 
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          sender:sender_id (email)
-        `)
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`)
-        .order('created_at', { ascending: true });
+  async delete<T>(endpoint: string): Promise<T> {
+    try {
+      const response = await this.retryRequest(`${this.baseURL}${endpoint}`, {
+        method: 'DELETE',
+        headers: this.getHeaders(),
+      }, this.maxRetries);
 
-      if (error) throw error;
-      return data;
-    },
+      return this.handleResponse(response);
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
 
-    send: async (receiverId: string, content: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+  private handleError(error: unknown): void {
+    if (error instanceof Error) {
+      const apiError = error as ApiError;
 
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: user.id,
-          receiver_id: receiverId,
-          content,
-        })
-        .select()
-        .single();
+      // Handle specific error cases
+      if (apiError.status === 401) {
+        // Handle unauthorized
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      } else if (apiError.status === 403) {
+        toast.error('Bạn không có quyền thực hiện hành động này.');
+      } else if (apiError.status === 404) {
+        toast.error('Không tìm thấy tài nguyên yêu cầu.');
+      } else if (apiError.status === 500) {
+        toast.error('Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau.');
+      } else {
+        toast.error(apiError.message || 'Đã xảy ra lỗi. Vui lòng thử lại sau.');
+      }
+    } else {
+      toast.error('Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.');
+    }
+  }
+}
 
-      if (error) throw error;
-      return data;
-    },
-  },
-
-  notifications: {
-    list: async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-
-    markAsRead: async (id: string) => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  },
-};
+export const api = new ApiService({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  timeout: 30000,
+  maxRetries: 3,
+});

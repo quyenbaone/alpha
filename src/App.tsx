@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { Footer } from './components/Footer';
-import { Header } from './components/Header';
-import Layout from './components/Layout';
+import { Layout } from './components/Layout';
 import { supabase } from './lib/supabase';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AuthCallback } from './pages/AuthCallback';
@@ -39,7 +37,6 @@ export default function App() {
     <Router>
       <Toaster position="top-right" />
       <div className="min-h-screen flex flex-col bg-background">
-        <Header />
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Layout />}>
@@ -57,7 +54,6 @@ export default function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
         </main>
-        <Footer />
       </div>
     </Router>
   );

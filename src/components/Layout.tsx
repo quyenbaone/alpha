@@ -1,11 +1,17 @@
 import { Outlet } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { Footer } from './Footer';
+import { Header } from './Header';
 
-export default function Layout() {
+export function Layout() {
     return (
-        <div className="min-h-screen bg-gray-50">
-            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            <Header />
+            <main className="flex-grow container mx-auto px-4 py-8">
                 <Outlet />
             </main>
+            <Footer />
+            <Toaster position="top-right" richColors />
         </div>
     );
 } 

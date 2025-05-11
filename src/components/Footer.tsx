@@ -1,133 +1,136 @@
-import { Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
+import { Facebook, Instagram, Mail, MapPin, Phone, Twitter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
-    <footer className="bg-primary text-primary-foreground relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/90 to-primary opacity-20"></div>
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGM2LjYyNyAwIDEyLTUuMzczIDEyLTEyUzQyLjYyNyAxMCAzNiAxMGMtNi42MjggMC0xMiA1LjM3My0xMiAxMnM1LjM3MiAxMiAxMiAxMnoiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-10"></div>
-
-      <div className="container mx-auto px-4 py-12 relative">
+    <footer className="bg-gray-900 text-gray-300">
+      <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Company Info */}
           <div>
-            <h3 className="text-lg heading-highlight mb-6">Về RentGear</h3>
-            <ul className="space-y-3">
+            <Link to="/" className="flex items-center space-x-2 mb-4">
+              <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-white">RentHub</span>
+            </Link>
+            <p className="text-sm mb-4">
+              Nền tảng cho thuê thiết bị chuyên nghiệp, đáng tin cậy và tiết kiệm chi phí.
+            </p>
+            <div className="flex space-x-4">
+              <a href="#" className="text-gray-400 hover:text-white">
+                <Facebook className="h-5 w-5" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white">
+                <Twitter className="h-5 w-5" />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white">
+                <Instagram className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Liên kết nhanh</h3>
+            <ul className="space-y-2">
               <li>
-                <Link to="/about" className="nav-link">
+                <Link to="/equipment" className="text-sm hover:text-white">
+                  Thiết bị
+                </Link>
+              </li>
+              <li>
+                <Link to="/categories" className="text-sm hover:text-white">
+                  Danh mục
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="text-sm hover:text-white">
                   Giới thiệu
                 </Link>
               </li>
               <li>
-                <Link to="/careers" className="nav-link">
-                  Tuyển dụng
-                </Link>
-              </li>
-              <li>
-                <Link to="/press" className="nav-link">
-                  Trung tâm báo chí
-                </Link>
-              </li>
-              <li>
-                <Link to="/blog" className="nav-link">
-                  Blog
+                <Link to="/contact" className="text-sm hover:text-white">
+                  Liên hệ
                 </Link>
               </li>
             </ul>
           </div>
 
+          {/* Support */}
           <div>
-            <h3 className="text-lg heading-highlight mb-6">Hỗ trợ</h3>
-            <ul className="space-y-3">
+            <h3 className="text-white font-semibold mb-4">Hỗ trợ</h3>
+            <ul className="space-y-2">
               <li>
-                <Link to="/help" className="nav-link">
-                  Trung tâm trợ giúp
+                <Link to="/faq" className="text-sm hover:text-white">
+                  Câu hỏi thường gặp
                 </Link>
               </li>
               <li>
-                <Link to="/safety" className="nav-link">
-                  An toàn
+                <Link to="/terms" className="text-sm hover:text-white">
+                  Điều khoản sử dụng
                 </Link>
               </li>
               <li>
-                <Link to="/equipment-care" className="nav-link">
-                  Bảo quản thiết bị
-                </Link>
-              </li>
-              <li>
-                <Link to="/insurance" className="nav-link">
-                  Thông tin bảo hiểm
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-lg heading-highlight mb-6">Pháp lý</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/terms" className="nav-link">
-                  Điều khoản dịch vụ
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="nav-link">
+                <Link to="/privacy" className="text-sm hover:text-white">
                   Chính sách bảo mật
                 </Link>
               </li>
               <li>
-                <Link to="/cookies" className="nav-link">
-                  Cài đặt cookie
-                </Link>
-              </li>
-              <li>
-                <Link to="/rental-agreement" className="nav-link">
-                  Hợp đồng thuê
+                <Link to="/help" className="text-sm hover:text-white">
+                  Trung tâm trợ giúp
                 </Link>
               </li>
             </ul>
           </div>
 
+          {/* Contact */}
           <div>
-            <h3 className="text-lg heading-highlight mb-6">Theo dõi chúng tôi</h3>
-            <div className="flex gap-4">
-              <a
-                href="#"
-                className="p-2 glass-effect rounded-lg hover:bg-primary-foreground/20 hover-scale"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Facebook className="h-6 w-6" />
-              </a>
-              <a
-                href="#"
-                className="p-2 glass-effect rounded-lg hover:bg-primary-foreground/20 hover-scale"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Instagram className="h-6 w-6" />
-              </a>
-              <a
-                href="#"
-                className="p-2 glass-effect rounded-lg hover:bg-primary-foreground/20 hover-scale"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Twitter className="h-6 w-6" />
-              </a>
-              <a
-                href="#"
-                className="p-2 glass-effect rounded-lg hover:bg-primary-foreground/20 hover-scale"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Youtube className="h-6 w-6" />
-              </a>
-            </div>
-            <div className="mt-6">
-              <p className="text-sm text-primary-foreground/60">
-                © {new Date().getFullYear()} RentGear. Đã đăng ký bản quyền.
-              </p>
+            <h3 className="text-white font-semibold mb-4">Liên hệ</h3>
+            <ul className="space-y-2">
+              <li className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4" />
+                <span className="text-sm">
+                  123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh
+                </span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <Phone className="h-4 w-4" />
+                <span className="text-sm">(84) 123 456 789</span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <Mail className="h-4 w-4" />
+                <span className="text-sm">contact@renthub.com</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-sm">
+              © {new Date().getFullYear()} RentHub. Tất cả quyền được bảo lưu.
+            </p>
+            <div className="flex space-x-4 mt-4 md:mt-0">
+              <img
+                src="/payment/visa.png"
+                alt="Visa"
+                className="h-6 w-auto"
+              />
+              <img
+                src="/payment/mastercard.png"
+                alt="Mastercard"
+                className="h-6 w-auto"
+              />
+              <img
+                src="/payment/momo.png"
+                alt="MoMo"
+                className="h-6 w-auto"
+              />
+              <img
+                src="/payment/vnpay.png"
+                alt="VNPay"
+                className="h-6 w-auto"
+              />
             </div>
           </div>
         </div>

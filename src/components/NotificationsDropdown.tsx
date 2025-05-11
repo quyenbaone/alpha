@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
+import { Bell, Check, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 interface Notification {
   id: string;
@@ -13,7 +13,11 @@ interface Notification {
   related_id: string;
 }
 
-export function NotificationsDropdown() {
+interface NotificationsDropdownProps {
+  onClose: () => void;
+}
+
+export function NotificationsDropdown({ onClose }: NotificationsDropdownProps) {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -72,7 +76,7 @@ export function NotificationsDropdown() {
         .eq('id', notificationId);
 
       if (error) throw error;
-      
+
       setNotifications(prev =>
         prev.map(n =>
           n.id === notificationId ? { ...n, read: true } : n
@@ -86,15 +90,27 @@ export function NotificationsDropdown() {
 
   const handleNotificationClick = async (notification: Notification) => {
     await markAsRead(notification.id);
-    
+
     // Navigate based on notification type
     if (notification.type === 'message') {
       navigate('/messages');
     } else if (notification.type === 'rental_status') {
       navigate('/profile');
     }
-    
+
     setIsOpen(false);
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(
+      notifications.map((notification) => ({ ...notification, read: true }))
+    );
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(
+      notifications.filter((notification) => notification.id !== id)
+    );
   };
 
   return (
@@ -113,30 +129,68 @@ export function NotificationsDropdown() {
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold">Notifications</h3>
+          <div className="px-4 py-2 border-b flex justify-between items-center">
+            <h3 className="font-semibold text-gray-900">Thông báo</h3>
+            <button
+              onClick={markAllAsRead}
+              className="text-sm text-orange-500 hover:text-orange-600"
+            >
+              Đánh dấu đã đọc
+            </button>
           </div>
+
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No notifications
+              <div className="px-4 py-8 text-center text-gray-500">
+                <Bell className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                <p>Không có thông báo mới</p>
               </div>
             ) : (
-              notifications.map(notification => (
-                <button
+              notifications.map((notification) => (
+                <div
                   key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`w-full p-4 text-left border-b hover:bg-gray-50 ${
-                    !notification.read ? 'bg-orange-50' : ''
-                  }`}
+                  className={`px-4 py-3 hover:bg-gray-50 ${!notification.read ? 'bg-orange-50' : ''
+                    }`}
                 >
-                  <p className="text-sm">{notification.content}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(notification.created_at).toLocaleString()}
-                  </p>
-                </button>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">
+                        {notification.content}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(notification.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      {!notification.read && (
+                        <button
+                          onClick={() => markAsRead(notification.id)}
+                          className="text-gray-400 hover:text-green-500"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => deleteNotification(notification.id)}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))
             )}
+          </div>
+
+          <div className="px-4 py-2 border-t">
+            <Link
+              to="/notifications"
+              className="block text-center text-sm text-orange-500 hover:text-orange-600"
+              onClick={onClose}
+            >
+              Xem tất cả thông báo
+            </Link>
           </div>
         </div>
       )}
