@@ -1,4 +1,4 @@
-import { Ban, Bell, CheckCircle, Edit, Search, ShieldCheck, SlidersHorizontal, Trash2, User, X } from 'lucide-react';
+import { Ban, Bell, Check, CheckCircle, Edit, Search, Shield, ShieldCheck, SlidersHorizontal, Trash2, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
