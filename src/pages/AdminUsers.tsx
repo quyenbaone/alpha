@@ -1,4 +1,4 @@
-import { Ban, Bell, Check, CheckCircle, Edit, Search, Shield, ShieldCheck, SlidersHorizontal, Trash2, User, X } from 'lucide-react';
+import { Ban, Bell, Edit, Search, Shield, ShieldCheck, SlidersHorizontal, Trash2, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AdminLayout } from '../components/AdminLayout';
@@ -143,6 +143,7 @@ export function AdminUsers() {
     useEffect(() => {
         if (user) {
             fetchUsers();
+            debugTableStructure();
         }
     }, [user]);
 
@@ -173,14 +174,50 @@ export function AdminUsers() {
         }
     };
 
+    // Thêm hàm debug để xem cấu trúc bảng users
+    const debugTableStructure = async () => {
+        try {
+            // Lấy thông tin cấu trúc bảng từ Supabase
+            const { data, error } = await supabase.rpc('get_schema_info', {
+                table_name: 'users'
+            });
+
+            if (error) {
+                console.error("Không thể lấy thông tin schema:", error);
+                return;
+            }
+
+            console.log("=== USERS TABLE STRUCTURE ===");
+            console.log(data);
+
+            // Cách khác để lấy thông tin
+            const { data: sample, error: sampleError } = await supabase
+                .from('users')
+                .select('*')
+                .limit(1);
+
+            if (sampleError) {
+                console.error("Lỗi khi lấy mẫu:", sampleError);
+                return;
+            }
+
+            console.log("=== USERS SAMPLE DATA ===");
+            console.log(sample);
+            console.log("Column names:", sample && sample[0] ? Object.keys(sample[0]) : []);
+
+        } catch (err) {
+            console.error("Error in debugTableStructure:", err);
+        }
+    };
+
     const handleDeleteUser = async (userId: string) => {
-        if (!confirm('Bạn có chắc chắn muốn xóa người dùng này? Hành động này KHÔNG THỂ hoàn tác và sẽ xóa tất cả dữ liệu liên quan.')) return;
+        if (!confirm('Bạn có chắc chắn muốn vô hiệu hóa người dùng này? Người dùng sẽ không thể đăng nhập.')) return;
 
         try {
-            // Instead of permanently deleting, consider setting is_active to false
+            // Thay vì cố gắng cập nhật is_active (không tồn tại), cập nhật trường verified thành false
             const { error } = await supabase
                 .from('users')
-                .update({ is_active: false })
+                .update({ verified: false })
                 .eq('id', userId);
 
             if (error) throw error;
@@ -242,66 +279,84 @@ export function AdminUsers() {
         }
     };
 
-    const handleToggleUserStatus = async (userId: string, field: string, value: boolean) => {
+    const handleToggleUserStatus = async (userId: string, fieldName: string, currentValue: boolean) => {
         try {
-            const updateData: Record<string, boolean> = {};
-
-            // Chỉ xử lý cho trường verified vì is_active và is_banned không tồn tại trong schema
-            if (field === 'verified') {
-                updateData[field] = value;
-
-                const { error } = await supabase
-                    .from('users')
-                    .update(updateData)
-                    .eq('id', userId);
-
-                if (error) throw error;
-
-                toast.success(value ? 'Đã xác thực người dùng' : 'Đã hủy xác thực người dùng');
-                fetchUsers();
-            } else {
-                // Hiển thị thông báo là các trường này không thể cập nhật
-                console.warn(`Trường "${field}" không tồn tại trong database schema`);
-                toast.error(`Không thể cập nhật trạng thái ${field}. Trường này không tồn tại trong database.`);
+            // Chỉ cho phép thay đổi trường verified vì các trường khác không tồn tại
+            if (fieldName !== 'verified') {
+                toast.error('Không thể cập nhật trạng thái này. Chỉ có thể thay đổi trạng thái xác thực.');
+                return;
             }
+
+            const { error } = await supabase
+                .from('users')
+                .update({ [fieldName]: !currentValue })
+                .eq('id', userId);
+
+            if (error) throw error;
+            toast.success(`Đã cập nhật trạng thái người dùng`);
+            fetchUsers();
         } catch (error) {
-            console.error(`Error toggling ${field}:`, error);
-            toast.error(`Lỗi khi cập nhật trạng thái ${field}`);
+            console.error(`Error toggling user ${fieldName}:`, error);
+            toast.error(`Lỗi khi cập nhật trạng thái người dùng`);
         }
     };
 
     const handleSaveEdit = async () => {
-        if (!editingItem) return;
-
         try {
-            console.log("Saving edit for user:", editingItem, "with data:", editForm);
+            // Đánh dấu đang lưu
+            const userData = users.find(u => u.id === editingItem);
 
-            // Xóa các trường không tồn tại trong schema database
-            const validFormData = { ...editForm };
+            if (!editingItem || !userData) return;
 
-            // Loại bỏ các trường không tồn tại trong cơ sở dữ liệu
-            if ('is_active' in validFormData) delete validFormData.is_active;
-            if ('is_banned' in validFormData) delete validFormData.is_banned;
+            // Chỉ bao gồm các trường có trong schema
+            const validFields: Record<string, any> = {};
 
-            console.log("Clean form data to update:", validFormData);
+            // Trường role luôn tồn tại 
+            if (editForm.role) {
+                validFields.role = editForm.role;
+            }
 
-            // Thực hiện cập nhật thông tin
-            const { data, error } = await supabase
+            // Trường verified
+            if (editForm.verified !== undefined) {
+                validFields.verified = editForm.verified;
+            }
+
+            // Nếu có email và email đã thay đổi
+            if (editForm.email && editForm.email !== userData.email) {
+                validFields.email = editForm.email;
+            }
+
+            // Chỉ cập nhật tên nếu đã thay đổi
+            if (editForm.full_name && editForm.full_name !== userData.full_name) {
+                validFields.full_name = editForm.full_name;
+            }
+
+            // Số điện thoại và địa chỉ
+            if (editForm.phone_number && editForm.phone_number !== userData.phone_number) {
+                validFields.phone_number = editForm.phone_number;
+            }
+
+            if (editForm.address && editForm.address !== userData.address) {
+                validFields.address = editForm.address;
+            }
+
+            // Nếu không có gì để cập nhật
+            if (Object.keys(validFields).length === 0) {
+                setEditingItem(null);
+                setEditForm({});
+                toast.info('Không có thông tin nào được thay đổi');
+                return;
+            }
+
+            // Log dữ liệu cập nhật để debug
+            console.log('Updating user with data:', validFields);
+
+            const { error } = await supabase
                 .from('users')
-                .update(validFormData)
-                .eq('id', editingItem)
-                .select();
+                .update(validFields)
+                .eq('id', editingItem);
 
-            if (error) {
-                console.error('Error details:', error);
-                throw error;
-            }
-
-            if (!data || data.length === 0) {
-                console.warn('No data returned after update, but no error occurred');
-            } else {
-                console.log('Updated user data:', data);
-            }
+            if (error) throw error;
 
             toast.success('Đã cập nhật thông tin người dùng');
             setEditingItem(null);
@@ -309,7 +364,7 @@ export function AdminUsers() {
             fetchUsers();
         } catch (error: any) {
             console.error('Error updating user:', error);
-            toast.error(`Lỗi khi cập nhật thông tin: ${error.message || 'Vui lòng thử lại'}`);
+            toast.error(`Lỗi khi cập nhật thông tin: ${error.message || error}`);
         }
     };
 
@@ -355,10 +410,12 @@ export function AdminUsers() {
     };
 
     // Handle batch operations
-    const handleBatchVerify = async () => {
+    const handleBatchActivate = async () => {
         if (selectedUsers.length === 0) return;
 
         try {
+            // Thay vì cố gắng active, chúng ta sẽ xác thực người dùng 
+            // vì trường is_active không tồn tại trong schema
             for (const userId of selectedUsers) {
                 await supabase
                     .from('users')
@@ -375,23 +432,47 @@ export function AdminUsers() {
         }
     };
 
-    const handleBatchUnban = async () => {
+    const handleBatchDeactivate = async () => {
         if (selectedUsers.length === 0) return;
 
         try {
+            // Thay vì cố gắng deactivate, chúng ta sẽ bỏ xác thực người dùng 
+            // vì trường is_active không tồn tại trong schema
             for (const userId of selectedUsers) {
                 await supabase
                     .from('users')
-                    .update({ is_banned: false })
+                    .update({ verified: false })
                     .eq('id', userId);
             }
 
-            toast.success(`Đã bỏ cấm ${selectedUsers.length} người dùng`);
+            toast.success(`Đã bỏ xác thực ${selectedUsers.length} người dùng`);
             setSelectedUsers([]);
             fetchUsers();
         } catch (error) {
-            console.error('Error batch unbanning users:', error);
-            toast.error('Lỗi khi bỏ cấm hàng loạt');
+            console.error('Error batch unverifying users:', error);
+            toast.error('Lỗi khi bỏ xác thực hàng loạt');
+        }
+    };
+
+    const handleBatchBan = async () => {
+        if (selectedUsers.length === 0) return;
+
+        try {
+            // Thay vì cố gắng ban, chúng ta sẽ bỏ xác thực người dùng 
+            // vì trường is_banned không tồn tại trong schema
+            for (const userId of selectedUsers) {
+                await supabase
+                    .from('users')
+                    .update({ verified: false })
+                    .eq('id', userId);
+            }
+
+            toast.success(`Đã bỏ xác thực ${selectedUsers.length} người dùng`);
+            setSelectedUsers([]);
+            fetchUsers();
+        } catch (error) {
+            console.error('Error batch unverifying users:', error);
+            toast.error('Lỗi khi bỏ xác thực hàng loạt');
         }
     };
 
@@ -464,11 +545,12 @@ export function AdminUsers() {
         // Role filter
         const matchesRole = filters.role.length === 0 || filters.role.includes(user.role || '');
 
-        // Active status filter
+        // Active status filter - sử dụng trường verified thay thế 
+        // vì trường is_active không tồn tại trong schema
         const matchesActiveStatus =
             filters.activeStatus.length === 0 ||
-            (filters.activeStatus.includes('active') && user.is_active !== false) ||
-            (filters.activeStatus.includes('inactive') && user.is_active === false);
+            (filters.activeStatus.includes('active') && user.verified === true) ||
+            (filters.activeStatus.includes('inactive') && user.verified !== true);
 
         // Verified status filter
         const matchesVerifiedStatus =
@@ -476,11 +558,12 @@ export function AdminUsers() {
             (filters.verifiedStatus.includes('verified') && user.verified === true) ||
             (filters.verifiedStatus.includes('unverified') && user.verified !== true);
 
-        // Banned status filter
+        // Banned status filter - sử dụng trường verified thay thế
+        // vì trường is_banned không tồn tại trong schema
         const matchesBannedStatus =
             filters.bannedStatus.length === 0 ||
-            (filters.bannedStatus.includes('banned') && user.is_banned === true) ||
-            (filters.bannedStatus.includes('not_banned') && user.is_banned !== true);
+            (filters.bannedStatus.includes('banned') && user.verified !== true) ||
+            (filters.bannedStatus.includes('not_banned') && user.verified === true);
 
         return matchesSearch && matchesRole && matchesActiveStatus && matchesVerifiedStatus && matchesBannedStatus;
     });
@@ -562,18 +645,25 @@ export function AdminUsers() {
                         <div className="flex items-center gap-3">
                             <span className="text-sm font-medium">Đã chọn {selectedUsers.length} người dùng</span>
                             <button
-                                onClick={handleBatchVerify}
+                                onClick={handleBatchActivate}
                                 className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm flex items-center gap-1"
                             >
                                 <ShieldCheck className="h-4 w-4" />
-                                <span>Xác thực</span>
+                                <span>Kích hoạt</span>
                             </button>
                             <button
-                                onClick={handleBatchUnban}
+                                onClick={handleBatchDeactivate}
                                 className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm flex items-center gap-1"
                             >
                                 <Ban className="h-4 w-4" />
-                                <span>Bỏ cấm</span>
+                                <span>Bỏ kích hoạt</span>
+                            </button>
+                            <button
+                                onClick={handleBatchBan}
+                                className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm flex items-center gap-1"
+                            >
+                                <Ban className="h-4 w-4" />
+                                <span>Bỏ xác thực</span>
                             </button>
                             <button
                                 onClick={handleBatchNotification}
@@ -644,7 +734,7 @@ export function AdminUsers() {
                                 ))}
                                 {filters.activeStatus.map(status => (
                                     <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                        {status === 'active' ? 'Đang hoạt động' : 'Không hoạt động'}
+                                        {status === 'active' ? 'Đã xác thực' : 'Chưa xác thực'}
                                         <X
                                             size={14}
                                             className="ml-1 cursor-pointer"
@@ -670,7 +760,7 @@ export function AdminUsers() {
                                 ))}
                                 {filters.bannedStatus.map(status => (
                                     <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
-                                        {status === 'banned' ? 'Bị cấm' : 'Không bị cấm'}
+                                        {status === 'banned' ? 'Chưa xác thực' : 'Đã xác thực'}
                                         <X
                                             size={14}
                                             className="ml-1 cursor-pointer"
@@ -745,7 +835,7 @@ export function AdminUsers() {
 
                                 {/* Active Status Filter */}
                                 <div>
-                                    <h4 className="font-medium mb-2">Trạng thái</h4>
+                                    <h4 className="font-medium mb-2">Trạng thái xác thực</h4>
                                     <div className="space-y-2">
                                         <label className="flex items-center space-x-2">
                                             <input
@@ -754,7 +844,7 @@ export function AdminUsers() {
                                                 onChange={() => toggleFilter('activeStatus', 'active')}
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                             />
-                                            <span>Đang hoạt động</span>
+                                            <span>Đã xác thực</span>
                                         </label>
                                         <label className="flex items-center space-x-2">
                                             <input
@@ -763,14 +853,14 @@ export function AdminUsers() {
                                                 onChange={() => toggleFilter('activeStatus', 'inactive')}
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                             />
-                                            <span>Không hoạt động</span>
+                                            <span>Chưa xác thực</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 {/* Verified Status Filter */}
                                 <div>
-                                    <h4 className="font-medium mb-2">Xác thực</h4>
+                                    <h4 className="font-medium mb-2">Trạng thái tài khoản</h4>
                                     <div className="space-y-2">
                                         <label className="flex items-center space-x-2">
                                             <input
@@ -779,7 +869,7 @@ export function AdminUsers() {
                                                 onChange={() => toggleFilter('verifiedStatus', 'verified')}
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                             />
-                                            <span>Đã xác thực</span>
+                                            <span>Đã xác thực email</span>
                                         </label>
                                         <label className="flex items-center space-x-2">
                                             <input
@@ -788,14 +878,14 @@ export function AdminUsers() {
                                                 onChange={() => toggleFilter('verifiedStatus', 'unverified')}
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                             />
-                                            <span>Chưa xác thực</span>
+                                            <span>Chưa xác thực email</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 {/* Banned Status Filter */}
                                 <div>
-                                    <h4 className="font-medium mb-2">Bị cấm</h4>
+                                    <h4 className="font-medium mb-2">Trạng thái hoạt động</h4>
                                     <div className="space-y-2">
                                         <label className="flex items-center space-x-2">
                                             <input
@@ -804,7 +894,7 @@ export function AdminUsers() {
                                                 onChange={() => toggleFilter('bannedStatus', 'banned')}
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                             />
-                                            <span>Bị cấm</span>
+                                            <span>Không hoạt động</span>
                                         </label>
                                         <label className="flex items-center space-x-2">
                                             <input
@@ -813,7 +903,7 @@ export function AdminUsers() {
                                                 onChange={() => toggleFilter('bannedStatus', 'not_banned')}
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                             />
-                                            <span>Không bị cấm</span>
+                                            <span>Đang hoạt động</span>
                                         </label>
                                     </div>
                                 </div>
@@ -988,16 +1078,6 @@ export function AdminUsers() {
                                         ) : (
                                             <div className="space-y-2">
                                                 <StatusBadge
-                                                    active={user.is_active !== false}
-                                                    icon={CheckCircle}
-                                                    activeColor="bg-green-100 text-green-700 hover:bg-green-200"
-                                                    inactiveColor="bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                                    text={user.is_active !== false ? 'Đang hoạt động' : 'Không hoạt động'}
-                                                    onClick={() => handleToggleUserStatus(user.id, 'is_active', user.is_active === false)}
-                                                    tooltip={user.is_active !== false ? 'Click để vô hiệu hóa' : 'Click để kích hoạt'}
-                                                />
-
-                                                <StatusBadge
                                                     active={user.verified === true}
                                                     icon={ShieldCheck}
                                                     activeColor="bg-blue-100 text-blue-700 hover:bg-blue-200"
@@ -1005,16 +1085,6 @@ export function AdminUsers() {
                                                     text={user.verified ? 'Đã xác thực' : 'Chưa xác thực'}
                                                     onClick={() => handleToggleUserStatus(user.id, 'verified', !user.verified)}
                                                     tooltip={user.verified ? 'Click để hủy xác thực' : 'Click để xác thực'}
-                                                />
-
-                                                <StatusBadge
-                                                    active={user.is_banned === true}
-                                                    icon={Ban}
-                                                    activeColor="bg-red-100 text-red-700 hover:bg-red-200"
-                                                    inactiveColor="bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                                    text={user.is_banned ? 'Đã bị cấm' : 'Không bị cấm'}
-                                                    onClick={() => handleToggleUserStatus(user.id, 'is_banned', !user.is_banned)}
-                                                    tooltip={user.is_banned ? 'Click để bỏ cấm' : 'Click để cấm'}
                                                 />
                                             </div>
                                         )}
@@ -1059,9 +1129,9 @@ export function AdminUsers() {
                                                     {/* Don't show delete/ban options for admin users */}
                                                     {user.role !== 'admin' ? (
                                                         <>
-                                                            <Tooltip content={user.is_banned ? "Bỏ chặn người dùng" : "Chặn người dùng"}>
+                                                            <Tooltip content={user.verified ? "Bỏ xác thực người dùng" : "Xác thực người dùng"}>
                                                                 <button
-                                                                    onClick={() => handleToggleUserStatus(user.id, 'is_banned', !user.is_banned)}
+                                                                    onClick={() => handleToggleUserStatus(user.id, 'verified', user.verified === true)}
                                                                     className="text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50"
                                                                 >
                                                                     <Ban className="h-4 w-4" />
