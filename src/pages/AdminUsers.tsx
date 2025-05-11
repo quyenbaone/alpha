@@ -273,19 +273,44 @@ export function AdminUsers() {
         if (!editingItem) return;
 
         try {
-            const { error } = await supabase
+            console.log("Saving edit for user:", editingItem, "with data:", editForm);
+
+            // Kiểm tra xem bảng 'users' có tồn tại không
+            const { error: tableCheckError } = await supabase
+                .from('users')
+                .select('id')
+                .limit(1);
+
+            if (tableCheckError) {
+                console.error('Error checking users table:', tableCheckError);
+                throw new Error('Không thể kết nối đến bảng users');
+            }
+
+            // Thực hiện cập nhật thông tin
+            const { data, error } = await supabase
                 .from('users')
                 .update(editForm)
-                .eq('id', editingItem);
+                .eq('id', editingItem)
+                .select();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error details:', error);
+                throw error;
+            }
+
+            if (!data || data.length === 0) {
+                console.warn('No data returned after update, but no error occurred');
+            } else {
+                console.log('Updated user data:', data);
+            }
+
             toast.success('Đã cập nhật thông tin người dùng');
             setEditingItem(null);
             setEditForm({});
             fetchUsers();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating user:', error);
-            toast.error('Lỗi khi cập nhật thông tin');
+            toast.error(`Lỗi khi cập nhật thông tin: ${error.message || 'Vui lòng thử lại'}`);
         }
     };
 
