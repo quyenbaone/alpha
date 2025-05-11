@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { Layout } from './components/Layout';
 import { supabase } from './lib/supabase';
@@ -16,14 +16,56 @@ import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 import { useAuthStore } from './store/authStore';
 
+// Protected route component
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const { user, loading } = useAuthStore();
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-xl font-semibold text-gray-700">Đang tải...</h2>
+      </div>
+    </div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  return children;
+};
+
+// Admin route component
+const AdminRoute = ({ children }: { children: JSX.Element }) => {
+  const { isAdmin, loading } = useAuthStore();
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-xl font-semibold text-gray-700">Đang tải...</h2>
+      </div>
+    </div>;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
 export default function App() {
   const { setSession } = useAuthStore();
 
   useEffect(() => {
+    // Check for existing session on initial load
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+      if (session) {
+        setSession(session);
+      }
     });
 
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -43,14 +85,30 @@ export default function App() {
               <Route index element={<Home />} />
               <Route path="equipment" element={<Equipment />} />
               <Route path="equipment/:id" element={<EquipmentDetail />} />
-              <Route path="cart" element={<Cart />} />
-              <Route path="profile" element={<Profile />} />
+              <Route path="cart" element={
+                <ProtectedRoute>
+                  <Cart />
+                </ProtectedRoute>
+              } />
+              <Route path="profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
             </Route>
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } />
             <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
         </main>

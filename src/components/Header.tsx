@@ -1,21 +1,54 @@
-import { Camera, LogIn, Menu, Search, ShoppingCart, User, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Camera, ChevronDown, LogIn, LogOut, Menu, Search, ShoppingCart, User, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user } = useAuthStore();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, signOut, isAdmin } = useAuthStore();
   const { items } = useCartStore();
   const location = useLocation();
+  const navigate = useNavigate();
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Đăng xuất thành công');
+      navigate('/signin');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Có lỗi xảy ra khi đăng xuất');
+    }
+  };
+
+  const getUserRole = () => {
+    if (isAdmin) return 'Admin';
+    if (user?.role === 'owner') return 'Chủ nhà';
+    return 'Người thuê';
+  };
 
   const menuItems = [
     { to: '/equipment', label: 'Thiết bị', icon: <Camera className="h-5 w-5" /> },
@@ -70,9 +103,52 @@ export function Header() {
               )}
             </Link>
             {user ? (
-              <Link to="/profile" className={`p-2 rounded-full text-blue-100 hover:bg-blue-800/60`}>
-                <User className="h-6 w-6" />
-              </Link>
+              <div ref={userMenuRef} className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-800/60 transition-all duration-200"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="hidden md:inline text-sm font-medium">{getUserRole()}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden z-10 border border-gray-200">
+                    <div className="p-3 border-b border-gray-200">
+                      <p className="text-sm font-medium text-gray-900">{user.email}</p>
+                      <p className="text-xs text-gray-500">{getUserRole()}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Tài khoản của tôi
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          to="/admin"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Quản trị viên
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <div className="flex items-center">
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Đăng xuất
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link to="/signin" className="px-5 py-2 rounded-full font-semibold bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 flex items-center gap-2">
                 <LogIn className="h-5 w-5" /> Đăng nhập
@@ -103,9 +179,17 @@ export function Header() {
                 <ShoppingCart className="h-5 w-5" /> Giỏ hàng
               </Link>
               {user ? (
-                <Link to="/profile" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
-                  <User className="h-5 w-5" /> Tài khoản
-                </Link>
+                <>
+                  <Link to="/profile" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                    <User className="h-5 w-5" /> Tài khoản ({getUserRole()})
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-3 text-red-300 hover:text-red-400 hover:bg-blue-800/60 rounded-lg font-semibold"
+                  >
+                    <LogOut className="h-5 w-5" /> Đăng xuất
+                  </button>
+                </>
               ) : (
                 <Link to="/signin" className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold shadow-lg">
                   <LogIn className="h-5 w-5" /> Đăng nhập
