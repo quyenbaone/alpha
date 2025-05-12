@@ -16,27 +16,62 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [password, setPassword] = React.useState('');
   const [name, setName] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
-  const { signIn, signUp } = useAuthStore();
+  const [error, setError] = React.useState('');
+  const { signIn, signUp, signInWithGoogle } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
       if (mode === 'signin') {
-        await signIn(email, password);
+        const { error } = await signIn(email, password);
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            setError('Email hoặc mật khẩu không đúng');
+          } else if (error.message.includes('connection')) {
+            setError('Lỗi kết nối. Vui lòng kiểm tra mạng của bạn');
+          } else {
+            setError(error.message || 'Đăng nhập thất bại');
+          }
+          return;
+        }
         toast.success('Đăng nhập thành công');
+        onClose();
       } else {
-        await signUp(email, password, name);
-        toast.success('Đăng ký thành công');
+        const { error } = await signUp(email, password, name);
+        if (error) {
+          if (error.message.includes('already registered')) {
+            setError('Email này đã được đăng ký');
+          } else if (error.message.includes('connection')) {
+            setError('Lỗi kết nối. Vui lòng kiểm tra mạng của bạn');
+          } else {
+            setError(error.message || 'Đăng ký thất bại');
+          }
+          return;
+        }
+        toast.success('Đăng ký thành công, vui lòng kiểm tra email để xác nhận tài khoản');
+        onClose();
       }
-      onClose();
-    } catch (error) {
-      toast.error(
-        mode === 'signin'
-          ? 'Đăng nhập thất bại'
-          : 'Đăng ký thất bại'
-      );
+    } catch (error: any) {
+      setError(error.message || (mode === 'signin' ? 'Đăng nhập thất bại' : 'Đăng ký thất bại'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        setError(error.message || 'Đăng nhập với Google thất bại');
+      }
+    } catch (error: any) {
+      setError(error.message || 'Đăng nhập với Google thất bại');
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +93,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             <X className="h-6 w-6" />
           </button>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 border border-red-200 rounded-md text-sm">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
@@ -142,7 +183,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
             >
               <img
                 className="h-5 w-5"
@@ -154,7 +197,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
 
             <button
               type="button"
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              disabled
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 opacity-50 cursor-not-allowed"
             >
               <img
                 className="h-5 w-5"

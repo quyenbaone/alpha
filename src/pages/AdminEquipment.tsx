@@ -746,8 +746,8 @@ export function AdminEquipment() {
                                         {formatPrice(item.deposit_amount || 0)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={parseInt(item.quantity) > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                                            {parseInt(item.quantity) || 0}
+                                        <span className={(item.quantity && parseInt(item.quantity.toString()) > 0) ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                                            {(item.quantity && parseInt(item.quantity.toString())) || 0}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">

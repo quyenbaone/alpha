@@ -1,9 +1,15 @@
-import { ArrowRight, Calendar, Camera, Clock, Lightbulb, Music, Shield, Star, Video } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, Calendar, Camera, Clock, MapPin, Music, Shield, Star, Umbrella } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
 export function Home() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (categoryName: string) => {
+    console.log(`Navigating to category: ${categoryName}`);
+    navigate(`/equipment?category=${encodeURIComponent(categoryName)}`);
+  };
 
   return (
     <div className="min-h-screen font-sans">
@@ -12,9 +18,11 @@ export function Home() {
         <div className="absolute inset-0 bg-[url('/hero-bg.jpg')] bg-cover bg-center opacity-20" />
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10 container mx-auto px-4 py-24 flex flex-col items-center text-center animate-fade-in-up">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-6 drop-shadow-lg animate-fade-in-up">Thuê thiết bị chuyên nghiệp với giá tốt nhất</h1>
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-6 drop-shadow-lg animate-fade-in-up">
+            Thuê thiết bị chuyên nghiệp với giá tốt nhất
+          </h1>
           <p className="text-xl md:text-2xl text-blue-100 mb-10 animate-fade-in-up animation-delay-200 max-w-2xl mx-auto">
-            Khám phá kho thiết bị đa dạng của chúng tôi. Từ máy ảnh, máy quay đến thiết bị âm thanh, ánh sáng - tất cả đều có sẵn cho bạn.
+            Khám phá kho thiết bị đa dạng của chúng tôi. Từ máy ảnh, máy quay đến thiết bị âm thanh, cắm trại, SUP, chèo - tất cả đều có sẵn cho bạn.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-400 justify-center">
             <Link to="/equipment" className="inline-flex items-center justify-center px-8 py-4 bg-white text-blue-700 font-bold rounded-full shadow-lg hover:scale-105 hover:shadow-xl transition-all text-lg">
@@ -34,10 +42,41 @@ export function Home() {
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-16 text-blue-900">Danh mục thiết bị</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <CategoryCard icon={<Camera className="h-12 w-12 text-blue-400" />} title="Máy ảnh" desc="Máy ảnh chuyên nghiệp cho mọi nhu cầu" bg="from-blue-600 to-blue-900" />
-            <CategoryCard icon={<Video className="h-12 w-12 text-blue-400" />} title="Máy quay" desc="Thiết bị quay phim chất lượng cao" bg="from-blue-500 to-blue-800" />
-            <CategoryCard icon={<Music className="h-12 w-12 text-blue-400" />} title="Âm thanh" desc="Hệ thống âm thanh chuyên nghiệp" bg="from-blue-400 to-blue-700" />
-            <CategoryCard icon={<Lightbulb className="h-12 w-12 text-blue-400" />} title="Ánh sáng" desc="Thiết bị chiếu sáng chuyên dụng" bg="from-blue-300 to-blue-600" />
+            <div onClick={() => handleCategoryClick("Máy ảnh")} className="cursor-pointer">
+              <CategoryCard
+                icon={<Camera className="h-12 w-12 text-blue-400" />}
+                title="Máy ảnh"
+                desc="Máy ảnh chuyên nghiệp cho mọi nhu cầu"
+                bg="from-blue-600 to-blue-900"
+              />
+            </div>
+
+            <div onClick={() => handleCategoryClick("Loa")} className="cursor-pointer">
+              <CategoryCard
+                icon={<Music className="h-12 w-12 text-blue-400" />}
+                title="Loa"
+                desc="Hệ thống âm thanh chuyên nghiệp"
+                bg="from-blue-400 to-blue-700"
+              />
+            </div>
+
+            <div onClick={() => handleCategoryClick("Dụng cụ cắm trại")} className="cursor-pointer">
+              <CategoryCard
+                icon={<Umbrella className="h-12 w-12 text-blue-400" />}
+                title="Dụng cụ cắm trại"
+                desc="Thiết bị và dụng cụ dã ngoại tiện dụng"
+                bg="from-blue-300 to-blue-600"
+              />
+            </div>
+
+            <div onClick={() => handleCategoryClick("Sub")} className="cursor-pointer">
+              <CategoryCard
+                icon={<MapPin className="h-12 w-12 text-blue-400" />}
+                title="Sub"
+                desc="Ván chèo đứng và thiết bị thể thao dưới nước"
+                bg="from-blue-200 to-blue-500"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -92,6 +131,9 @@ function CategoryCard({ icon, title, desc, bg }: { icon: React.ReactNode; title:
       <div className="mb-4 bg-white/20 rounded-full p-4 group-hover:scale-110 transition-transform">{icon}</div>
       <h3 className="text-2xl font-bold mb-2 drop-shadow-lg">{title}</h3>
       <p className="text-blue-100 text-base">{desc}</p>
+      <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        <ArrowRight className="h-6 w-6 text-white" />
+      </div>
     </div>
   );
 }

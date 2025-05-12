@@ -8,10 +8,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+// Standard fetch without custom settings that might cause issues
+const standardFetch = (...args: Parameters<typeof fetch>) => {
+  return fetch(...args);
+};
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
-  }
+    detectSessionInUrl: true,
+    storageKey: 'supabase-auth',
+    flowType: 'pkce',
+  },
+  // No custom fetch to avoid CORS issues
 });

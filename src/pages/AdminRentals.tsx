@@ -10,19 +10,21 @@ interface Rental {
     equipment: {
         id: string;
         title: string;
-        price: number;
-        image: string;
+        price_per_day: number;
+        images: string[];
     };
     renter: {
         id: string;
         email: string;
+        full_name: string;
+        is_business: boolean;
         business_name: string;
     };
     equipment_id: string;
     renter_id: string;
     start_date: string;
     end_date: string;
-    total_amount: number;
+    total_price: number;
     status: 'pending' | 'approved' | 'rejected' | 'completed';
     created_at: string;
 }
@@ -41,6 +43,11 @@ export function AdminRentals() {
     const fetchRentals = async () => {
         setLoading(true);
         try {
+            // Check if supabase client is properly initialized
+            if (!supabase) {
+                throw new Error('Supabase client is not initialized');
+            }
+
             let query = supabase
                 .from('rentals')
                 .select(`
@@ -49,18 +56,20 @@ export function AdminRentals() {
           renter_id,
           start_date,
           end_date,
-          total_amount,
+          total_price,
           status,
           created_at,
           equipment:equipment_id (
             id,
             title,
-            price,
-            image
+            price_per_day,
+            images
           ),
           renter:renter_id (
             id,
             email,
+            full_name,
+            is_business,
             business_name
           )
         `)
@@ -96,11 +105,26 @@ export function AdminRentals() {
 
             const { data, error } = await query;
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase error details:', error);
+                throw error;
+            }
+
+            if (!data) {
+                setRentals([]);
+                return;
+            }
+
             setRentals(data as Rental[]);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching rentals:', error);
-            toast.error('Lỗi khi tải danh sách đơn thuê');
+
+            // More descriptive error message
+            const errorMessage = error.message || 'Lỗi khi tải danh sách đơn thuê';
+            toast.error(errorMessage);
+
+            // Reset rentals to empty array on error
+            setRentals([]);
         } finally {
             setLoading(false);
         }
@@ -143,6 +167,7 @@ export function AdminRentals() {
     const filteredRentals = rentals.filter(rental =>
         rental.equipment?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rental.renter?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rental.renter?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rental.renter?.business_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -280,8 +305,9 @@ export function AdminRentals() {
                                                             <div className="h-10 w-10 flex-shrink-0">
                                                                 <img
                                                                     className="h-10 w-10 rounded-md object-cover"
-                                                                    src={rental.equipment?.image || '/placeholder.png'}
+                                                                    src={(rental.equipment?.images && rental.equipment.images.length > 0) ? rental.equipment.images[0] : '/placeholder.png'}
                                                                     alt={rental.equipment?.title}
+                                                                    onError={(e) => e.currentTarget.src = '/placeholder.png'}
                                                                 />
                                                             </div>
                                                             <div className="ml-4">
@@ -289,14 +315,14 @@ export function AdminRentals() {
                                                                     {rental.equipment?.title}
                                                                 </div>
                                                                 <div className="text-sm text-gray-500">
-                                                                    {formatPrice(rental.equipment?.price)}/ngày
+                                                                    {formatPrice(rental.equipment?.price_per_day)}/ngày
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm text-gray-900">
-                                                            {rental.renter?.business_name || 'N/A'}
+                                                            {rental.renter?.business_name || rental.renter?.full_name || 'N/A'}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
                                                             {rental.renter?.email}
@@ -315,7 +341,7 @@ export function AdminRentals() {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900">
-                                                            {formatPrice(rental.total_amount)}
+                                                            {formatPrice(rental.total_price)}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">

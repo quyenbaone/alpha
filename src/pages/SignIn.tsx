@@ -115,24 +115,50 @@ export function SignIn() {
     setErrors({});
 
     try {
+      toast.info('Đang đăng nhập...', { id: 'login', duration: 2000 });
+
+      // Check connection first
+      try {
+        await fetch(import.meta.env.VITE_SUPABASE_URL, {
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-cache'
+        });
+      } catch (networkErr) {
+        console.error('Network check failed:', networkErr);
+        throw new Error('network_error');
+      }
+
       const { error } = await signIn(email, password);
+
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+        if (error.message?.includes('Invalid login credentials')) {
           setErrors({ general: 'Email hoặc mật khẩu không chính xác.' });
-        } else if (error.message.includes('Email not confirmed')) {
+        } else if (error.message?.includes('Email not confirmed')) {
           setErrors({ general: 'Email chưa được xác nhận. Vui lòng kiểm tra hộp thư của bạn.' });
+        } else if (error.message?.includes('connection') || error.message?.includes('network')) {
+          setErrors({ general: 'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet của bạn.' });
         } else {
           setErrors({ general: error.message || 'Đăng nhập thất bại. Vui lòng thử lại sau.' });
         }
-        throw error;
+        toast.dismiss('login');
+        toast.error('Đăng nhập thất bại');
+        return;
       }
 
+      toast.dismiss('login');
       toast.success('Đăng nhập thành công!');
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in:', error);
-      if (!errors.general) {
+      toast.dismiss('login');
+
+      if (error.message === 'network_error' || error.message?.includes('fetch') || error.message?.includes('Failed to fetch')) {
+        setErrors({ general: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.' });
+        toast.error('Lỗi kết nối');
+      } else if (!errors.general) {
         setErrors({ general: 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.' });
+        toast.error('Đăng nhập thất bại');
       }
     } finally {
       setLoading(false);
@@ -141,7 +167,23 @@ export function SignIn() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    setErrors({});
+
     try {
+      toast.info('Đang chuyển hướng đến trang đăng nhập Google...', { id: 'google-login' });
+
+      // Check connection first
+      try {
+        await fetch(import.meta.env.VITE_SUPABASE_URL, {
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-cache'
+        });
+      } catch (networkErr) {
+        console.error('Network check failed:', networkErr);
+        throw new Error('network_error');
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -150,9 +192,16 @@ export function SignIn() {
       });
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in with Google:', error);
-      toast.error('Không thể đăng nhập bằng Google. Vui lòng thử lại sau.');
+      toast.dismiss('google-login');
+
+      if (error.message === 'network_error' || error.message?.includes('fetch') || error.message?.includes('Failed to fetch')) {
+        setErrors({ general: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.' });
+        toast.error('Lỗi kết nối');
+      } else {
+        toast.error('Không thể đăng nhập bằng Google. Vui lòng thử lại sau.');
+      }
     } finally {
       setLoading(false);
     }
@@ -166,19 +215,30 @@ export function SignIn() {
     }
 
     setLoading(true);
+    setErrors({});
 
     try {
+      toast.info('Đang gửi email đặt lại mật khẩu...', { id: 'reset-password' });
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) throw error;
 
+      toast.dismiss('reset-password');
       toast.success('Vui lòng kiểm tra email để đặt lại mật khẩu.');
       setShowForgotPassword(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error resetting password:', error);
-      toast.error('Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại sau.');
+      toast.dismiss('reset-password');
+
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setErrors({ general: 'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet của bạn.' });
+        toast.error('Lỗi kết nối');
+      } else {
+        toast.error('Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại sau.');
+      }
     } finally {
       setLoading(false);
     }

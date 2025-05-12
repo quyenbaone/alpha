@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 type Equipment = {
@@ -62,6 +62,9 @@ export function Equipment() {
         { value: 'all', label: 'Tất cả danh mục' }
     ]);
 
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
+
     const categoryDropdownRef = useRef<HTMLDivElement>(null);
     const sortDropdownRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
@@ -120,6 +123,27 @@ export function Equipment() {
         fetchCategories();
         fetchEquipment();
     }, []);
+
+    // Apply category filter from URL parameters when categories are loaded
+    useEffect(() => {
+        const categoryParam = searchParams.get('category');
+        console.log('URL category parameter:', categoryParam);
+        console.log('Available categories:', categories);
+
+        if (categoryParam && categories.length > 1) {
+            // Check if the category exists in our options (by label)
+            const categoryOption = categories.find(cat => cat.label === categoryParam);
+            console.log('Found category option:', categoryOption);
+
+            if (categoryOption) {
+                setSelectedCategory(categoryOption.value);
+            } else {
+                // If exact match not found, set it directly (it might be the name)
+                setSelectedCategory(categoryParam);
+                console.log('Setting category name directly:', categoryParam);
+            }
+        }
+    }, [searchParams, categories]);
 
     const fetchEquipment = async () => {
         try {

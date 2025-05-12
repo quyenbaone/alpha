@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { Layout } from './components/Layout';
 import { ScrollToTop } from './components/ScrollToTop';
 import { supabase } from './lib/supabase';
@@ -21,6 +21,7 @@ import { ResetPassword } from './pages/ResetPassword';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 import { useAuthStore } from './store/authStore';
+import { useSettingsStore } from './store/settingsStore';
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -28,7 +29,8 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-3"></div>
         <h2 className="text-xl font-semibold text-gray-700">Đang tải...</h2>
       </div>
     </div>;
@@ -47,7 +49,8 @@ const AdminRoute = ({ children }: { children: JSX.Element }) => {
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-3"></div>
         <h2 className="text-xl font-semibold text-gray-700">Đang tải...</h2>
       </div>
     </div>;
@@ -61,25 +64,64 @@ const AdminRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 export default function App() {
-  const { setSession } = useAuthStore();
+  const { setSession, loading } = useAuthStore();
+  const { fetchSettings } = useSettingsStore();
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    // Check for existing session on initial load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
+    async function initializeAuth() {
+      try {
+        // Check for existing session on initial load
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session retrieval error:', error);
+          toast.error('Lỗi kết nối với dịch vụ xác thực');
+        } else if (data.session) {
+          await setSession(data.session);
+        }
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+      } finally {
+        setInitializing(false);
       }
-    });
+    }
+
+    // Initialize auth
+    initializeAuth();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      try {
+        if (session) {
+          await setSession(session);
+        }
+      } catch (err) {
+        console.error('Auth state change error:', err);
+      }
+    });
+
+    // Load application settings
+    fetchSettings().catch(err => {
+      console.error('Error fetching settings:', err);
     });
 
     return () => subscription.unsubscribe();
-  }, [setSession]);
+  }, [setSession, fetchSettings]);
+
+  // Show loading screen while initializing auth
+  if (initializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-700">Đang khởi tạo ứng dụng...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>

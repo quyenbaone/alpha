@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
+import { useSettingsStore } from '../store/settingsStore';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +12,7 @@ export function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, signOut, isAdmin } = useAuthStore();
   const { items } = useCartStore();
+  const { settings, fetchSettings } = useSettingsStore();
   const location = useLocation();
   const navigate = useNavigate();
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -26,12 +28,13 @@ export function Header() {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+    fetchSettings();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [fetchSettings]);
 
   const handleLogout = async () => {
     try {
@@ -62,8 +65,23 @@ export function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 select-none" onClick={() => window.scrollTo(0, 0)}>
-            <Camera className={`h-8 w-8 text-blue-400`} />
-            <span className={`text-2xl font-extrabold tracking-tight text-white`}>RentHub</span>
+            {settings.site_logo ? (
+              <img
+                src={settings.site_logo}
+                alt={settings.site_name || "Logo"}
+                className="h-8 w-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null; // Prevent infinite loop
+                  target.src = '/logo.png';
+                }}
+              />
+            ) : (
+              <Camera className="h-8 w-8 text-blue-400" />
+            )}
+            <span className="text-2xl font-extrabold tracking-tight text-white">
+              {settings.site_name || 'Alpha'}
+            </span>
           </Link>
 
           {/* Desktop Menu */}

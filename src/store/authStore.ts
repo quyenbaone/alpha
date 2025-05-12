@@ -15,11 +15,17 @@ interface AuthState {
   userRole: 'admin' | 'owner' | 'renter' | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   setSession: (session: any) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
+
+// Helper function to handle network errors
+const handleNetworkError = (err: any) => {
+  console.error('Network error:', err);
+  return { error: { message: 'Lỗi kết nối. Vui lòng kiểm tra kết nối mạng.' } };
+};
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -31,12 +37,17 @@ export const useAuthStore = create<AuthState>()(
       userRole: null,
 
       signIn: async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
-        if (!error) {
+          if (error) {
+            console.error('Sign in error:', error);
+            return { error };
+          }
+
           // Set basic user info immediately from auth response
           set({ user: data.user });
 
@@ -62,43 +73,63 @@ export const useAuthStore = create<AuthState>()(
           } catch (profileError) {
             console.error('Error fetching user profile:', profileError);
           }
-        }
 
-        return { error };
+          return { error: null };
+        } catch (err) {
+          return handleNetworkError(err);
+        }
       },
 
       signInWithGoogle: async () => {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
+        try {
+          const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: `${window.location.origin}/auth/callback`,
+            },
+          });
 
-        return { error };
+          return { error };
+        } catch (err) {
+          return handleNetworkError(err);
+        }
       },
 
-      signUp: async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+      signUp: async (email: string, password: string, name?: string) => {
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: name
+              }
+            }
+          });
 
-        if (!error) {
-          set({ user: data.user });
+          if (!error) {
+            set({ user: data.user });
+          }
+
+          return { error };
+        } catch (err) {
+          return handleNetworkError(err);
         }
-
-        return { error };
       },
 
       signOut: async () => {
-        await supabase.auth.signOut();
-        set({
-          user: null,
-          session: null,
-          isAdmin: false,
-          userRole: null
-        });
+        try {
+          await supabase.auth.signOut();
+        } catch (err) {
+          console.error('Sign out error:', err);
+        } finally {
+          set({
+            user: null,
+            session: null,
+            isAdmin: false,
+            userRole: null
+          });
+        }
       },
 
       resetPassword: async (email: string) => {
