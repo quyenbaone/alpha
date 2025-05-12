@@ -784,124 +784,187 @@ export function AdminUsers() {
                         )}
                 </div>
 
-                {/* Filter Modal */}
                 {filterMenuOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-start justify-center pt-20 z-50">
-                        <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-medium">Lọc người dùng</h3>
+                    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                        <div className="bg-white w-full max-w-lg p-6 mx-auto rounded-xl shadow-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in">
+                            <div className="flex justify-between items-center mb-5">
+                                <h3 className="text-lg font-semibold">Lọc người dùng</h3>
                                 <button
                                     onClick={() => setFilterMenuOpen(false)}
-                                    className="text-gray-500 hover:text-gray-700"
+                                    className="text-gray-400 hover:text-gray-700"
                                 >
                                     <X size={20} />
                                 </button>
                             </div>
 
-                            <div className="space-y-5">
-                                {/* Role Filter */}
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-8 text-sm text-gray-800">
+                                {/* Group 1: Vai trò */}
                                 <div>
-                                    <h4 className="font-medium mb-2">Vai trò</h4>
-                                    <div className="space-y-2">
-                                        <label className="flex items-center space-x-2">
+                                    <div className="flex justify-between items-center font-medium mb-2">
+                                        <h4>Vai trò <span className="text-gray-400">({tempFilters.role.length})</span></h4>
+                                        <div className="flex gap-2 text-xs">
+                                            <button
+                                                onClick={() => setTempFilters({ ...tempFilters, role: ['admin', 'owner', 'renter'] })}
+                                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                Chọn tất cả
+                                            </button>
+                                            <button
+                                                onClick={() => setTempFilters({ ...tempFilters, role: [] })}
+                                                className="text-gray-600 hover:text-gray-800 font-medium"
+                                            >
+                                                Bỏ chọn
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.role.includes('admin')}
                                                 onChange={() => toggleFilter('role', 'admin')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Quản trị viên</span>
                                         </label>
-                                        <label className="flex items-center space-x-2">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.role.includes('owner')}
                                                 onChange={() => toggleFilter('role', 'owner')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Người cho thuê</span>
                                         </label>
-                                        <label className="flex items-center space-x-2">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.role.includes('renter')}
                                                 onChange={() => toggleFilter('role', 'renter')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Người thuê</span>
                                         </label>
                                     </div>
                                 </div>
 
-                                {/* Active Status Filter */}
+                                {/* Group 2: Trạng thái xác thực */}
                                 <div>
-                                    <h4 className="font-medium mb-2">Trạng thái xác thực</h4>
-                                    <div className="space-y-2">
-                                        <label className="flex items-center space-x-2">
+                                    <div className="flex justify-between items-center font-medium mb-2">
+                                        <h4>Trạng thái xác thực <span className="text-gray-400">({tempFilters.activeStatus.length})</span></h4>
+                                        <div className="flex gap-2 text-xs">
+                                            <button
+                                                onClick={() => setTempFilters({ ...tempFilters, activeStatus: ['active', 'inactive'] })}
+                                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                Chọn tất cả
+                                            </button>
+                                            <button
+                                                onClick={() => setTempFilters({ ...tempFilters, activeStatus: [] })}
+                                                className="text-gray-600 hover:text-gray-800 font-medium"
+                                            >
+                                                Bỏ chọn
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.activeStatus.includes('active')}
                                                 onChange={() => toggleFilter('activeStatus', 'active')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Đã xác thực</span>
                                         </label>
-                                        <label className="flex items-center space-x-2">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.activeStatus.includes('inactive')}
                                                 onChange={() => toggleFilter('activeStatus', 'inactive')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Chưa xác thực</span>
                                         </label>
                                     </div>
                                 </div>
 
-                                {/* Verified Status Filter */}
+                                {/* Group 3: Trạng thái tài khoản */}
                                 <div>
-                                    <h4 className="font-medium mb-2">Trạng thái tài khoản</h4>
-                                    <div className="space-y-2">
-                                        <label className="flex items-center space-x-2">
+                                    <div className="flex justify-between items-center font-medium mb-2">
+                                        <h4>Trạng thái tài khoản <span className="text-gray-400">({tempFilters.verifiedStatus.length})</span></h4>
+                                        <div className="flex gap-2 text-xs">
+                                            <button
+                                                onClick={() => setTempFilters({ ...tempFilters, verifiedStatus: ['verified', 'unverified'] })}
+                                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                Chọn tất cả
+                                            </button>
+                                            <button
+                                                onClick={() => setTempFilters({ ...tempFilters, verifiedStatus: [] })}
+                                                className="text-gray-600 hover:text-gray-800 font-medium"
+                                            >
+                                                Bỏ chọn
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.verifiedStatus.includes('verified')}
                                                 onChange={() => toggleFilter('verifiedStatus', 'verified')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Đã xác thực email</span>
                                         </label>
-                                        <label className="flex items-center space-x-2">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.verifiedStatus.includes('unverified')}
                                                 onChange={() => toggleFilter('verifiedStatus', 'unverified')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Chưa xác thực email</span>
                                         </label>
                                     </div>
                                 </div>
 
-                                {/* Banned Status Filter */}
+                                {/* Group 4: Trạng thái hoạt động */}
                                 <div>
-                                    <h4 className="font-medium mb-2">Trạng thái hoạt động</h4>
-                                    <div className="space-y-2">
-                                        <label className="flex items-center space-x-2">
+                                    <div className="flex justify-between items-center font-medium mb-2">
+                                        <h4>Trạng thái hoạt động <span className="text-gray-400">({tempFilters.bannedStatus.length})</span></h4>
+                                        <div className="flex gap-2 text-xs">
+                                            <button
+                                                onClick={() => setTempFilters({ ...tempFilters, bannedStatus: ['banned', 'not_banned'] })}
+                                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                Chọn tất cả
+                                            </button>
+                                            <button
+                                                onClick={() => setTempFilters({ ...tempFilters, bannedStatus: [] })}
+                                                className="text-gray-600 hover:text-gray-800 font-medium"
+                                            >
+                                                Bỏ chọn
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.bannedStatus.includes('banned')}
                                                 onChange={() => toggleFilter('bannedStatus', 'banned')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Không hoạt động</span>
                                         </label>
-                                        <label className="flex items-center space-x-2">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.bannedStatus.includes('not_banned')}
                                                 onChange={() => toggleFilter('bannedStatus', 'not_banned')}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                                             />
                                             <span>Đang hoạt động</span>
                                         </label>
@@ -909,16 +972,16 @@ export function AdminUsers() {
                                 </div>
                             </div>
 
-                            <div className="flex justify-end space-x-3 mt-6">
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
                                 <button
                                     onClick={handleResetFilters}
-                                    className="px-4 py-2 border rounded hover:bg-gray-50"
+                                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50 transition-colors"
                                 >
                                     Đặt lại
                                 </button>
                                 <button
                                     onClick={handleApplyFilters}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold shadow-sm"
                                 >
                                     Áp dụng
                                 </button>
@@ -926,6 +989,7 @@ export function AdminUsers() {
                         </div>
                     </div>
                 )}
+
 
                 <div className="bg-white rounded-lg shadow overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
