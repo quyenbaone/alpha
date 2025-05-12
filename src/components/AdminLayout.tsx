@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { Footer } from './Footer';
 import { Header } from './Header';
+import { ScrollToTop } from './ScrollToTop';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -18,37 +19,34 @@ interface SidebarItemProps {
     badge?: string | number;
 }
 
-function SidebarItem({ icon, label, path, isActive, isSidebarOpen, badge }: SidebarItemProps) {
+const SidebarItem = ({ icon, label, path, isActive, isSidebarOpen, badge }: SidebarItemProps) => {
     return (
         <Link
             to={path}
-            title={!isSidebarOpen ? label : undefined}
-            className={`flex items-center p-2 rounded-md transition-all duration-200 ${isActive
-                ? 'bg-blue-100 text-blue-800 font-medium shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            onClick={() => window.scrollTo(0, 0)}
+            className={`flex items-center px-3 py-2 rounded-lg transition-all whitespace-nowrap ${isActive
+                    ? 'bg-blue-50 text-blue-600 font-medium'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
         >
-            <div className={`flex items-center justify-center w-6 h-6 ${isSidebarOpen ? 'mr-3' : 'mx-auto'}`}>
-                {icon}
-            </div>
-            {isSidebarOpen && (
-                <div className="flex-1 flex items-center justify-between">
-                    <span className="whitespace-nowrap">{label}</span>
-                    {badge && (
-                        <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 font-medium">
-                            {badge}
-                        </span>
-                    )}
-                </div>
-            )}
-            {!isSidebarOpen && badge && (
-                <span className="absolute top-0 right-0 -mt-1 -mr-1 px-1.5 py-0.5 text-xs rounded-full bg-blue-500 text-white font-medium">
+            <div className="flex-shrink-0">{icon}</div>
+            <span
+                className={`transition-all origin-left ${isSidebarOpen ? 'ml-3 duration-200 opacity-100' : 'w-0 ml-0 opacity-0'
+                    }`}
+            >
+                {label}
+            </span>
+            {badge && (
+                <span
+                    className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-600 ${isSidebarOpen ? 'block' : 'hidden'
+                        }`}
+                >
                     {badge}
                 </span>
             )}
         </Link>
     );
-}
+};
 
 interface SidebarSectionProps {
     title: string;
@@ -117,6 +115,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
+            <ScrollToTop />
             <Header />
 
             {/* Mobile Menu Button */}
@@ -230,7 +229,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                                     ? 'bg-blue-100 text-blue-800 font-medium shadow-sm'
                                                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                                     }`}
-                                                onClick={toggleMobileSidebar}
+                                                onClick={(e) => {
+                                                    toggleMobileSidebar();
+                                                    window.scrollTo(0, 0);
+                                                }}
                                             >
                                                 <div className="mr-3">{item.icon}</div>
                                                 <span>{item.label}</span>
@@ -247,7 +249,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                                     ? 'bg-blue-100 text-blue-800 font-medium shadow-sm'
                                                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                                     }`}
-                                                onClick={toggleMobileSidebar}
+                                                onClick={(e) => {
+                                                    toggleMobileSidebar();
+                                                    window.scrollTo(0, 0);
+                                                }}
                                             >
                                                 <div className="mr-3">{item.icon}</div>
                                                 <span className="flex-1">{item.label}</span>
@@ -269,7 +274,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                                     ? 'bg-blue-100 text-blue-800 font-medium shadow-sm'
                                                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                                     }`}
-                                                onClick={toggleMobileSidebar}
+                                                onClick={(e) => {
+                                                    toggleMobileSidebar();
+                                                    window.scrollTo(0, 0);
+                                                }}
                                             >
                                                 <div className="mr-3">{item.icon}</div>
                                                 <span>{item.label}</span>

@@ -61,7 +61,7 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 select-none">
+          <Link to="/" className="flex items-center gap-2 select-none" onClick={() => window.scrollTo(0, 0)}>
             <Camera className={`h-8 w-8 text-blue-400`} />
             <span className={`text-2xl font-extrabold tracking-tight text-white`}>RentHub</span>
           </Link>
@@ -72,6 +72,7 @@ export function Header() {
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={() => window.scrollTo(0, 0)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${location.pathname === item.to ? 'bg-blue-800 text-white' : 'text-blue-100 hover:text-blue-400 hover:bg-blue-800/60'}`}
               >
                 {item.icon}

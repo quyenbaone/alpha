@@ -58,7 +58,6 @@ export function Equipment() {
     const [showFilters, setShowFilters] = useState(false);
     const [ratingFilter, setRatingFilter] = useState(0);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [showBackToTop, setShowBackToTop] = useState(false);
     const [categories, setCategories] = useState([
         { value: 'all', label: 'Tất cả danh mục' }
     ]);
@@ -210,23 +209,6 @@ export function Equipment() {
             contentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }, [selectedCategory, searchTerm, priceRange, ratingFilter, loading]);
-
-    // Show/hide "Back to top" button
-    useEffect(() => {
-        const handleScroll = () => {
-            setShowBackToTop(window.scrollY > 400);
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    };
 
     if (loading) {
         return (
@@ -502,6 +484,7 @@ export function Equipment() {
                                 <Link
                                     key={item.id}
                                     to={`/equipment/${item.id}`}
+                                    onClick={() => window.scrollTo(0, 0)}
                                     className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100"
                                 >
                                     <div className="relative overflow-hidden">
@@ -580,6 +563,7 @@ export function Equipment() {
                                 <Link
                                     key={item.id}
                                     to={`/equipment/${item.id}`}
+                                    onClick={() => window.scrollTo(0, 0)}
                                     className="group flex bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100"
                                 >
                                     <div className="relative w-36 sm:w-48 flex-shrink-0">
@@ -678,19 +662,6 @@ export function Equipment() {
                     )}
                 </div>
             </div>
-
-            {/* Back to top button */}
-            {showBackToTop && (
-                <button
-                    onClick={scrollToTop}
-                    className="fixed right-6 bottom-6 p-2 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition-colors focus:outline-none"
-                    aria-label="Back to top"
-                >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 11l7-7 7 7M5 19l7-7 7 7" />
-                    </svg>
-                </button>
-            )}
         </div>
     );
 }

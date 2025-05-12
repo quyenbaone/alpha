@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { Layout } from './components/Layout';
+import { ScrollToTop } from './components/ScrollToTop';
 import { supabase } from './lib/supabase';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminEquipment } from './pages/AdminEquipment';
@@ -82,6 +83,7 @@ export default function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Toaster position="top-right" />
       <div className="min-h-screen flex flex-col bg-background">
         <main className="flex-1">

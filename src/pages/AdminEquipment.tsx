@@ -19,6 +19,7 @@ interface Equipment {
     deposit_amount?: number;
     location?: string;
     status?: string;
+    quantity?: number;
     created_at?: Date;
     updated_at?: Date;
     owner?: {
@@ -44,6 +45,7 @@ interface EditFormData {
     deposit_amount: string | number;
     location: string;
     status: string;
+    quantity: string;
 }
 
 interface ModalProps {
@@ -87,6 +89,14 @@ const Modal = ({ isOpen, onClose, children }: ModalProps) => {
     );
 };
 
+// Add a function to handle scrolling to top for important actions
+const scrollToTop = () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+};
+
 export function AdminEquipment() {
     const { user } = useAuthStore();
     const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -103,7 +113,8 @@ export function AdminEquipment() {
         imageInput: '',
         deposit_amount: '',
         location: '',
-        status: ''
+        status: '',
+        quantity: ''
     });
     const [showNewEquipmentForm, setShowNewEquipmentForm] = useState(false);
     const [newEquipment, setNewEquipment] = useState({
@@ -115,7 +126,8 @@ export function AdminEquipment() {
         deposit_amount: '',
         location: 'Hồ Chí Minh',
         imageInput: '', // Temporary field for UI
-        status: 'available'
+        status: 'available',
+        quantity: '1'
     });
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -154,14 +166,14 @@ export function AdminEquipment() {
             const { data: equipmentData, error: equipmentError } = await supabase
                 .from('equipment')
                 .select(`
-                    *,
-                    owner:owner_id (
-                        email
+          *,
+          owner:owner_id (
+            email
                     ),
                     category:category_id (
                         name
-                    )
-                `)
+          )
+        `)
                 .order('created_at', { ascending: false });
 
             if (equipmentError) throw equipmentError;
@@ -182,6 +194,9 @@ export function AdminEquipment() {
             return;
         }
 
+        // Scroll to top of the page when editing
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         // At this point, item is definitely defined
         const safeItem: Equipment = item;
 
@@ -195,7 +210,8 @@ export function AdminEquipment() {
             imageInput: safeItem.images && safeItem.images.length > 0 ? safeItem.images[0] : '',
             deposit_amount: safeItem.deposit_amount?.toString() || '',
             location: safeItem.location || 'Hồ Chí Minh',
-            status: safeItem.status || 'available'
+            status: safeItem.status || 'available',
+            quantity: safeItem.quantity?.toString() || '1'
         });
         setIsEditModalOpen(true);
     };
@@ -211,10 +227,16 @@ export function AdminEquipment() {
             // Convert price and deposit to numbers
             const price_per_day = parseFloat(editForm.price_per_day);
             const deposit_amount = parseFloat(editForm.deposit_amount.toString()) || 0;
+            const quantity = parseInt(editForm.quantity) || 1;
 
             // Validate numeric values
             if (isNaN(price_per_day) || price_per_day <= 0) {
                 toast.error('Giá thuê phải là số dương');
+                return;
+            }
+
+            if (isNaN(quantity) || quantity <= 0) {
+                toast.error('Số lượng phải là số dương');
                 return;
             }
 
@@ -234,6 +256,7 @@ export function AdminEquipment() {
                 deposit_amount: deposit_amount,
                 location: editForm.location || 'Hồ Chí Minh',
                 status: editForm.status,
+                quantity: quantity,
                 updated_at: new Date()
             };
 
@@ -256,9 +279,14 @@ export function AdminEquipment() {
                 imageInput: '',
                 deposit_amount: '',
                 location: '',
-                status: ''
+                status: '',
+                quantity: ''
             });
             setIsEditModalOpen(false);
+
+            // Scroll to top after saving
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             fetchEquipment();
         } catch (error: any) {
             console.error('Error updating equipment:', error);
@@ -277,9 +305,13 @@ export function AdminEquipment() {
             imageInput: '',
             deposit_amount: '',
             location: '',
-            status: ''
+            status: '',
+            quantity: ''
         });
         setIsEditModalOpen(false);
+
+        // Scroll to top after canceling
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDeleteEquipment = async (equipmentId: string) => {
@@ -293,6 +325,10 @@ export function AdminEquipment() {
 
             if (error) throw error;
             toast.success('Đã xóa thiết bị');
+
+            // Scroll to top after deletion
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             fetchEquipment();
         } catch (error) {
             console.error('Error deleting equipment:', error);
@@ -331,6 +367,7 @@ export function AdminEquipment() {
                 owner_id: user.id,
                 location: newEquipment.location || 'Hồ Chí Minh',
                 status: newEquipment.status,
+                quantity: parseInt(newEquipment.quantity) || 1,
                 created_at: new Date(),
                 updated_at: new Date()
             };
@@ -358,8 +395,13 @@ export function AdminEquipment() {
                 imageInput: '',
                 deposit_amount: '',
                 location: 'Hồ Chí Minh',
-                status: 'available'
+                status: 'available',
+                quantity: '1'
             });
+
+            // Scroll to top after creating equipment
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             fetchEquipment();
         } catch (error: any) {
             console.error('Error creating equipment:', error);
@@ -458,6 +500,20 @@ export function AdminEquipment() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Số lượng
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={formData.quantity}
+                                                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder="1"
+                                                min="1"
+                                            />
+                                        </div>
+
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 Địa điểm
@@ -590,7 +646,10 @@ export function AdminEquipment() {
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold">Quản lý thiết bị</h1>
                     <button
-                        onClick={() => setShowNewEquipmentForm(!showNewEquipmentForm)}
+                        onClick={() => {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            setShowNewEquipmentForm(!showNewEquipmentForm);
+                        }}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
                     >
                         <Plus className="h-5 w-5" /> Thêm thiết bị mới
@@ -622,15 +681,21 @@ export function AdminEquipment() {
 
                 {/* Search Bar */}
                 <div className="mb-6">
-                    <div className="relative">
+                    <div className="relative flex-1">
                         <input
                             type="text"
-                            placeholder="Tìm kiếm theo tên, chủ sở hữu..."
+                            placeholder="Tìm kiếm theo tên thiết bị hoặc chủ sở hữu..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-4 py-2 border rounded-lg pl-10"
+                            onKeyUp={(e) => {
+                                if (e.key === 'Enter') {
+                                    // Scroll to top when user presses Enter to search
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                            }}
+                            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
-                        <Search className="absolute left-3 top-3 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                     </div>
                 </div>
 
@@ -642,6 +707,7 @@ export function AdminEquipment() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chủ sở hữu</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá thuê</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiền đặt cọc</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa điểm</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
@@ -680,9 +746,14 @@ export function AdminEquipment() {
                                         {formatPrice(item.deposit_amount || 0)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={parseInt(item.quantity) > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                                            {parseInt(item.quantity) || 0}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === 'available' ? 'bg-green-100 text-green-800' :
-                                                item.status === 'hidden' ? 'bg-gray-300 text-gray-800' :
-                                                    'bg-yellow-100 text-yellow-800'
+                                            item.status === 'hidden' ? 'bg-gray-300 text-gray-800' :
+                                                'bg-yellow-100 text-yellow-800'
                                             }`}>
                                             {item.status === 'available' ? (
                                                 <><span className="w-1.5 h-1.5 rounded-full bg-green-600 mr-1.5"></span>Có sẵn</>
