@@ -1,9 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Database } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
-type Equipment = Database['public']['Tables']['equipment']['Row'];
+type Equipment = {
+    id: string
+    title: string
+    description: string | null
+    price_per_day: number
+    category_id: string
+    images: string[]
+    location: string
+    owner_id: string
+    rating: number
+    reviews: number
+    deposit_amount: number
+    created_at: string
+    condition: string
+    available_quantity: number
+    tags: string[]
+    status: string
+    category?: {
+        name: string
+    }
+};
 
 // Skeleton component for loading state
 const EquipmentSkeleton = () => {
@@ -40,6 +59,9 @@ export function Equipment() {
     const [ratingFilter, setRatingFilter] = useState(0);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [showBackToTop, setShowBackToTop] = useState(false);
+    const [categories, setCategories] = useState([
+        { value: 'all', label: 'Tất cả danh mục' }
+    ]);
 
     const categoryDropdownRef = useRef<HTMLDivElement>(null);
     const sortDropdownRef = useRef<HTMLDivElement>(null);
@@ -62,15 +84,6 @@ export function Equipment() {
         };
     }, [categoryDropdownRef, sortDropdownRef]);
 
-    // Define fixed categories
-    const categories = [
-        { value: 'all', label: 'Tất cả danh mục' },
-        { value: 'Thiết bị chụp ảnh', label: 'Thiết bị chụp ảnh' },
-        { value: 'Thiết bị âm thanh', label: 'Thiết bị âm thanh' },
-        { value: 'Đồ cắm trại', label: 'Đồ cắm trại' },
-        { value: 'Thiết bị SUP', label: 'Thiết bị SUP' },
-    ];
-
     // Define sort options
     const sortOptions = [
         { value: 'price', label: 'Sắp xếp theo: Giá' },
@@ -79,7 +92,33 @@ export function Equipment() {
         { value: 'newest', label: 'Sắp xếp theo: Mới nhất' },
     ];
 
+    // Fetch categories from database
+    const fetchCategories = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*')
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+
+            const categoryOptions = [
+                { value: 'all', label: 'Tất cả danh mục' },
+                ...(data || []).map(cat => ({
+                    value: cat.id,
+                    label: cat.name
+                }))
+            ];
+
+            setCategories(categoryOptions);
+            console.log('Categories loaded:', categoryOptions);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+    };
+
     useEffect(() => {
+        fetchCategories();
         fetchEquipment();
     }, []);
 
@@ -88,16 +127,22 @@ export function Equipment() {
             setLoading(true);
             const { data, error } = await supabase
                 .from('equipment')
-                .select('*')
+                .select(`
+                    *,
+                    category:category_id (
+                        name
+                    )
+                `)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
 
+            console.log('Equipment data:', data);
             setEquipment(data || []);
 
             // Set initial price range based on actual data
             if (data && data.length > 0) {
-                const prices = data.map(item => item.price);
+                const prices = data.map(item => item.price_per_day);
                 const minPrice = Math.min(...prices);
                 const maxPrice = Math.max(...prices);
                 setPriceRange([minPrice, maxPrice]);
@@ -116,7 +161,7 @@ export function Equipment() {
         setSelectedCategory('all');
         setRatingFilter(0);
         if (equipment.length > 0) {
-            const prices = equipment.map(item => item.price);
+            const prices = equipment.map(item => item.price_per_day);
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
             setPriceRange([minPrice, maxPrice]);
@@ -130,21 +175,25 @@ export function Equipment() {
                 (item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
 
             // Category filter
-            const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+            const matchesCategory = selectedCategory === 'all' ||
+                (item.category?.name === selectedCategory) ||
+                (item.category_id === selectedCategory);
 
             // Price range filter
-            const matchesPrice = item.price >= priceRange[0] && item.price <= priceRange[1];
+            const matchesPrice = item.price_per_day >= priceRange[0] && item.price_per_day <= priceRange[1];
 
             // Rating filter
-            const matchesRating = item.rating >= ratingFilter;
+            const matchesRating = (item.rating || 0) >= ratingFilter;
 
             return matchesSearch && matchesCategory && matchesPrice && matchesRating;
         })
         .sort((a, b) => {
             if (sortBy === 'price') {
-                return sortOrder === 'asc' ? a.price - b.price : b.price - a.price;
+                return sortOrder === 'asc' ? a.price_per_day - b.price_per_day : b.price_per_day - a.price_per_day;
             } else if (sortBy === 'rating') {
-                return sortOrder === 'asc' ? a.rating - b.rating : b.rating - a.rating;
+                const ratingA = a.rating || 0;
+                const ratingB = b.rating || 0;
+                return sortOrder === 'asc' ? ratingA - ratingB : ratingB - ratingA;
             } else if (sortBy === 'newest') {
                 const dateA = new Date(a.created_at || '').getTime();
                 const dateB = new Date(b.created_at || '').getTime();
@@ -457,20 +506,58 @@ export function Equipment() {
                                 >
                                     <div className="relative overflow-hidden">
                                         <img
-                                            src={item.image}
+                                            src={item.images?.[0] || '/placeholder.png'}
                                             alt={item.title}
                                             className="object-cover w-full h-48 group-hover:scale-105 transition-transform duration-200"
+                                            onError={(e) => e.currentTarget.src = '/placeholder.png'}
                                         />
                                         <div className="absolute top-2 right-2 bg-white bg-opacity-90 px-2 py-1 rounded-md text-xs font-medium">
-                                            {item.category}
+                                            {item.category?.name}
                                         </div>
+                                        {item.condition && (
+                                            <div className="absolute top-2 left-2 bg-orange-500 text-white px-2 py-1 rounded-md text-xs font-medium">
+                                                {item.condition}
+                                            </div>
+                                        )}
+                                        {item.available_quantity <= 0 && (
+                                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                                <span className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-md">Hết hàng</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="p-5">
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">{item.title}</h3>
-                                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{item.description}</p>
+                                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>
+
+                                        {item.tags && item.tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mb-3">
+                                                {item.tags.map((tag, index) => (
+                                                    <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
+                                            <div className="flex items-center">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
+                                                </svg>
+                                                {item.available_quantity > 0 ? (
+                                                    <span>Còn {item.available_quantity} có sẵn</span>
+                                                ) : (
+                                                    <span className="text-red-500">Hết hàng</span>
+                                                )}
+                                            </div>
+                                            <div>
+                                                {new Date(item.created_at).toLocaleDateString('vi-VN')}
+                                            </div>
+                                        </div>
+
                                         <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                                             <span className="text-orange-500 font-bold">
-                                                {item.price.toLocaleString('vi-VN')}đ/ngày
+                                                {item.price_per_day.toLocaleString('vi-VN')}đ/ngày
                                             </span>
                                             <span className="flex items-center text-sm text-gray-500">
                                                 {item.rating > 0 ? (
@@ -497,18 +584,56 @@ export function Equipment() {
                                 >
                                     <div className="relative w-36 sm:w-48 flex-shrink-0">
                                         <img
-                                            src={item.image}
+                                            src={item.images?.[0] || '/placeholder.png'}
                                             alt={item.title}
                                             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                            onError={(e) => e.currentTarget.src = '/placeholder.png'}
                                         />
                                         <div className="absolute top-2 right-2 bg-white bg-opacity-90 px-2 py-1 rounded-md text-xs font-medium">
-                                            {item.category}
+                                            {item.category?.name}
                                         </div>
+                                        {item.condition && (
+                                            <div className="absolute top-2 left-2 bg-orange-500 text-white px-2 py-1 rounded-md text-xs font-medium">
+                                                {item.condition}
+                                            </div>
+                                        )}
+                                        {item.available_quantity <= 0 && (
+                                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                                <span className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-md">Hết hàng</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="p-4 flex-grow flex flex-col justify-between">
                                         <div>
                                             <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">{item.title}</h3>
                                             <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.description}</p>
+
+                                            {item.tags && item.tags.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mb-2">
+                                                    {item.tags.map((tag, index) => (
+                                                        <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
+                                                <div className="flex items-center">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
+                                                    </svg>
+                                                    {item.available_quantity > 0 ? (
+                                                        <span>Còn {item.available_quantity} có sẵn</span>
+                                                    ) : (
+                                                        <span className="text-red-500">Hết hàng</span>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    {new Date(item.created_at).toLocaleDateString('vi-VN')}
+                                                </div>
+                                            </div>
+
                                             <div className="flex items-center text-sm text-gray-500 mb-2">
                                                 {item.rating > 0 ? (
                                                     <>
@@ -522,7 +647,7 @@ export function Equipment() {
                                         </div>
                                         <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                                             <span className="text-orange-500 font-bold">
-                                                {item.price.toLocaleString('vi-VN')}đ/ngày
+                                                {item.price_per_day.toLocaleString('vi-VN')}đ/ngày
                                             </span>
                                             <span className="text-sm text-blue-600 font-medium hover:underline">
                                                 Xem chi tiết
