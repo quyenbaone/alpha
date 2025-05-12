@@ -1,19 +1,33 @@
-import { Calendar, Calendar as CalendarIcon, Check, Edit, Heart, Mail, MapPin, Package, Phone, Save, Settings, Upload, User, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Calendar, Calendar as CalendarIcon, Check, Edit, Heart, Mail, MapPin, Package, Phone, Plus, Save, Settings, Upload, User, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { AddEquipmentModal } from '../components/AddEquipmentModal';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 
+// Type definition for preferences
+interface UserPreferences {
+  notify_new_rentals: boolean;
+  notify_rental_updates: boolean;
+  theme: string;
+}
+
 export function Profile() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState('profile');
-  const [myRentals, setMyRentals] = useState([]);
-  const [myEquipment, setMyEquipment] = useState([]);
+  const [myRentals, setMyRentals] = useState<any[]>([]);
+  const [myEquipment, setMyEquipment] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddEquipmentModal, setShowAddEquipmentModal] = useState(false);
+  const [editingEquipment, setEditingEquipment] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [savingPreferences, setSavingPreferences] = useState(false);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({
+    notify_new_rentals: false,
+    notify_rental_updates: false,
+    theme: 'light'
+  });
   const [userProfile, setUserProfile] = useState({
     full_name: user?.full_name || '',
     phone_number: user?.phone_number || '',
@@ -24,10 +38,113 @@ export function Profile() {
     avatar_url: user?.avatar_url || ''
   });
 
+  // Use a ref to track when we need to show toasts
+  const showMissingTableToastRef = useRef(false);
+
+  // Ref to track toast notifications
+  const toastMessagesRef = useRef<{ type: 'error' | 'success' | 'info' | 'warning', message: string, id?: string, duration?: number }[]>([]);
+
+  // Declare fetchUserPreferences before it's used in useEffect
+  const fetchUserPreferences = useCallback(async () => {
+    if (!user?.id) {
+      console.log('No user ID available, cannot fetch preferences');
+      return;
+    }
+
+    // Always set default preferences first (fallback)
+    const defaultPrefs = {
+      notify_new_rentals: false,
+      notify_rental_updates: false,
+      theme: 'light'
+    };
+    setUserPreferences(defaultPrefs);
+
+    try {
+      // Check if user_preferences table exists by trying a simple fetch
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('count')
+        .limit(1)
+        .single();
+
+      // If error checking table existence, user preferences will use default values
+      if (error) {
+        if (error.code === '42P01') {
+          console.log('user_preferences table missing - you may need to run the SQL migration script');
+          // Mark that we need to show the toast in useEffect
+          showMissingTableToastRef.current = true;
+          return; // Just use the defaults we already set
+        }
+        console.error('Error checking user_preferences table:', error);
+        return;
+      }
+
+      // Table exists, try to fetch this user's preferences
+      const { data: userPrefs, error: prefsError } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (prefsError) {
+        console.error('Error fetching user preferences:', prefsError);
+        return;
+      }
+
+      // If we found preferences, use them
+      if (userPrefs) {
+        setUserPreferences({
+          notify_new_rentals: Boolean(userPrefs.notify_new_rentals),
+          notify_rental_updates: Boolean(userPrefs.notify_rental_updates),
+          theme: userPrefs.theme || 'light'
+        });
+      } else {
+        // No preferences found, try to create default ones
+        const { error: insertError } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            ...defaultPrefs
+          });
+
+        if (insertError) {
+          console.error('Error creating default preferences:', insertError);
+        }
+      }
+    } catch (err) {
+      console.error('Exception in fetchUserPreferences:', err);
+      // Default preferences are already set
+    }
+  }, [user]);
+
+  // Show toast for missing table in a useEffect to avoid setState during render
+  useEffect(() => {
+    if (showMissingTableToastRef.current) {
+      const timeoutId = setTimeout(() => {
+        // Add toast message to ref instead of calling directly
+        toastMessagesRef.current.push({
+          type: 'info',
+          message: 'Tùy chọn người dùng chỉ được lưu trong phiên này',
+          id: 'no-prefs-table',
+          duration: 4000
+        });
+        showMissingTableToastRef.current = false;
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [loading]); // Run when loading changes
+
   useEffect(() => {
     if (user) {
-      fetchMyRentals();
-      fetchMyEquipment();
+      Promise.all([
+        fetchMyRentals(),
+        fetchMyEquipment(),
+        fetchUserPreferences()
+      ]).finally(() => {
+        setLoading(false);
+      });
+
       setUserProfile({
         full_name: user.full_name || '',
         phone_number: user.phone_number || '',
@@ -37,37 +154,93 @@ export function Profile() {
         gender: user.gender || '',
         avatar_url: user.avatar_url || ''
       });
+    } else {
+      // If no user, still set loading to false to avoid infinite loading
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, fetchUserPreferences]);
+
+  // Check if user is logged in
+  useEffect(() => {
+    // If no user after a short delay, show login required message
+    const timer = setTimeout(() => {
+      if (!user && !loading) {
+        // Add toast message to ref instead of calling directly
+        toastMessagesRef.current.push({
+          type: 'error',
+          message: 'Vui lòng đăng nhập để xem trang này',
+          duration: 3000
+        });
+        // Redirect to login page after showing toast
+        window.location.href = '/signin';
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [user, loading]);
+
+  // Show toast messages from ref in a useEffect to avoid setState during render
+  useEffect(() => {
+    if (toastMessagesRef.current.length > 0) {
+      const timeoutId = setTimeout(() => {
+        toastMessagesRef.current.forEach(({ type, message, id, duration }) => {
+          const options = id || duration ? { id, duration } : undefined;
+          if (type === 'error') toast.error(message, options);
+          else if (type === 'success') toast.success(message, options);
+          else if (type === 'info') toast.info(message, options);
+          else if (type === 'warning') toast.warning(message, options);
+        });
+        toastMessagesRef.current = []; // Clear processed messages
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [userProfile, myRentals, myEquipment, isEditing, loading]); // Add dependencies that might trigger toast messages
 
   const fetchMyRentals = async () => {
     try {
+      if (!user) {
+        console.error('No user found');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('rentals')
         .select(`
           *,
           equipment:equipment_id (
             title,
-            image,
-            price
+            images,
+            price_per_day
           )
         `)
         .eq('renter_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setMyRentals(data);
+      if (error) {
+        console.error('Error fetching rentals:', error);
+        return [];
+      }
+      setMyRentals(data || []);
+      return data;
     } catch (error) {
       console.error('Error fetching rentals:', error);
+      return [];
     }
   };
 
   const fetchMyEquipment = async () => {
     try {
+      if (!user) {
+        console.error('No user found');
+        return [];
+      }
+
       const { data: equipmentData, error: equipmentError } = await supabase
         .from('equipment')
         .select(`
           *,
+          category:category_id (*),
           rentals (
             id,
             start_date,
@@ -82,12 +255,16 @@ export function Profile() {
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (equipmentError) throw equipmentError;
-      setMyEquipment(equipmentData);
+      if (equipmentError) {
+        console.error('Error fetching equipment:', equipmentError);
+        return [];
+      }
+
+      setMyEquipment(equipmentData || []);
+      return equipmentData;
     } catch (error) {
       console.error('Error fetching equipment:', error);
-    } finally {
-      setLoading(false);
+      return [];
     }
   };
 
@@ -102,15 +279,32 @@ export function Profile() {
       fetchMyEquipment();
 
       const statusText = newStatus === 'approved' ? 'đã chấp nhận' : 'đã từ chối';
-      toast.success(`Đã ${statusText} yêu cầu thuê thiết bị`);
+      // Add toast message to ref instead of calling directly
+      toastMessagesRef.current.push({
+        type: 'success',
+        message: `Đã ${statusText} yêu cầu thuê thiết bị`
+      });
     } catch (error) {
       console.error('Error updating rental status:', error);
-      toast.error('Không thể cập nhật trạng thái thuê');
+      // Add toast message to ref instead of calling directly
+      toastMessagesRef.current.push({
+        type: 'error',
+        message: 'Không thể cập nhật trạng thái thuê'
+      });
     }
   };
 
   const handleProfileUpdate = async () => {
     try {
+      if (!user) {
+        // Add toast message to ref instead of calling directly
+        toastMessagesRef.current.push({
+          type: 'error',
+          message: 'Không thể cập nhật khi chưa đăng nhập'
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('users')
         .update({
@@ -125,7 +319,11 @@ export function Profile() {
 
       if (error) throw error;
 
-      toast.success('Cập nhật thông tin thành công');
+      // Add toast message to ref instead of calling directly
+      toastMessagesRef.current.push({
+        type: 'success',
+        message: 'Cập nhật thông tin thành công'
+      });
       setIsEditing(false);
 
       // Cập nhật thông tin user trong store
@@ -147,11 +345,15 @@ export function Profile() {
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Không thể cập nhật thông tin');
+      // Add toast message to ref instead of calling directly
+      toastMessagesRef.current.push({
+        type: 'error',
+        message: 'Không thể cập nhật thông tin'
+      });
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setUserProfile(prev => ({
       ...prev,
@@ -159,9 +361,18 @@ export function Profile() {
     }));
   };
 
-  const uploadAvatar = async (event) => {
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
+
+      if (!user) {
+        // Add toast message to ref instead of calling directly
+        toastMessagesRef.current.push({
+          type: 'error',
+          message: 'Người dùng chưa đăng nhập'
+        });
+        return;
+      }
 
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error('Bạn cần chọn một ảnh để tải lên');
@@ -197,28 +408,129 @@ export function Profile() {
       setUserProfile(prev => ({ ...prev, avatar_url }));
 
       // Cập nhật user trong store
-      useAuthStore.setState(state => ({
-        ...state,
-        user: {
-          ...state.user,
-          avatar_url
+      useAuthStore.setState((state) => {
+        if (state.user) {
+          return {
+            ...state,
+            user: {
+              ...state.user,
+              avatar_url
+            }
+          };
         }
-      }));
+        return state;
+      });
 
-      toast.success('Cập nhật ảnh đại diện thành công');
-    } catch (error) {
+      // Add toast message to ref instead of calling directly
+      toastMessagesRef.current.push({
+        type: 'success',
+        message: 'Cập nhật ảnh đại diện thành công'
+      });
+    } catch (error: any) {
       console.error('Lỗi khi tải ảnh lên:', error);
-      toast.error('Không thể tải ảnh lên: ' + error.message);
+      // Add toast message to ref instead of calling directly
+      toastMessagesRef.current.push({
+        type: 'error',
+        message: 'Không thể tải ảnh lên: ' + (error.message || 'Lỗi không xác định')
+      });
     } finally {
       setUploading(false);
     }
   };
 
+  // Update user preference directly with full notification object to avoid type errors
+  const saveUserPreferences = async (updatedPrefs: Partial<UserPreferences>) => {
+    if (!user?.id) {
+      console.log('No user ID available, cannot save preferences');
+      return true; // Return true to avoid UI state reverting
+    }
+
+    try {
+      // Apply updates to local state first
+      const mergedPrefs = { ...userPreferences, ...updatedPrefs };
+      setUserPreferences(mergedPrefs);
+
+      // First check if the table exists
+      const { error: tableError } = await supabase
+        .from('user_preferences')
+        .select('count')
+        .limit(1)
+        .single();
+
+      // If table doesn't exist, just use local state
+      if (tableError && tableError.code === '42P01') {
+        console.log('user_preferences table does not exist - settings saved only locally');
+        return true;
+      }
+
+      // Table exists, try to save preferences
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          ...mergedPrefs
+        });
+
+      if (error) {
+        console.error('Error saving preferences:', error);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Exception in saveUserPreferences:', err);
+      return true; // Still return true to maintain UI state
+    }
+  };
+
+  // Toggle handler for notification preferences
+  const handleToggleNotification = (type: 'notify_new_rentals' | 'notify_rental_updates') => {
+    // Update UI immediately
+    const newValue = !userPreferences[type];
+    setUserPreferences({
+      ...userPreferences,
+      [type]: newValue
+    });
+
+    // Save to database
+    saveUserPreferences({ [type]: newValue }).catch(err => {
+      console.error(`Error saving ${type}:`, err);
+      // Revert UI state on failure
+      setUserPreferences({
+        ...userPreferences,
+        [type]: !newValue
+      });
+    });
+  };
+
   if (loading) {
-    return <div className="container mx-auto px-4 py-8">Đang tải...</div>;
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600 text-lg">Đang tải thông tin tài khoản...</p>
+        </div>
+      </div>
+    );
   }
 
-  const getRentalStatusText = (status) => {
+  // If user is still not available after loading completes, show login required
+  if (!user) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
+            <h2 className="text-xl font-semibold mb-2 text-yellow-700">Yêu cầu đăng nhập</h2>
+            <p className="text-gray-600 mb-4">Vui lòng đăng nhập để xem trang này</p>
+            <a href="/signin" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              Đăng nhập
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const getRentalStatusText = (status: string) => {
     switch (status) {
       case 'pending': return 'Đang chờ';
       case 'approved': return 'Đã chấp nhận';
@@ -235,7 +547,7 @@ export function Profile() {
         <h2 className="text-xl font-semibold">Thông tin cá nhân</h2>
         <button
           onClick={() => isEditing ? handleProfileUpdate() : setIsEditing(true)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg ${isEditing ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600'
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg ${isEditing ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-600 hover:bg-blue-700'
             } text-white`}
         >
           {isEditing ? (
@@ -251,62 +563,6 @@ export function Profile() {
           )}
         </button>
       </div>
-
-                                {/* <div className="mb-8 flex flex-col items-center">
-                                  <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center mb-3 relative overflow-hidden group">
-                                    {userProfile.avatar_url ? (
-                                      <>
-                                        <img
-                                          src={userProfile.avatar_url}
-                                          alt={userProfile.full_name || user.email}
-                                          className="w-full h-full object-cover rounded-full"
-                                        />
-                                        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                          <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full">
-                                            <Upload className="w-5 h-5 text-gray-800" />
-                                            <input
-                                              type="file"
-                                              className="hidden"
-                                              accept="image/*"
-                                              onChange={uploadAvatar}
-                                              disabled={uploading}
-                                            />
-                                          </label>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <User className="w-16 h-16 text-gray-400" />
-                                        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                          <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full">
-                                            <Upload className="w-5 h-5 text-gray-800" />
-                                            <input
-                                              type="file"
-                                              className="hidden"
-                                              accept="image/*"
-                                              onChange={uploadAvatar}
-                                              disabled={uploading}
-                                            />
-                                          </label>
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                  <label className="flex items-center cursor-pointer text-orange-500 hover:text-orange-600">
-                                    <Upload className="w-4 h-4 mr-1" />
-                                    Tải ảnh đại diện lên
-                                    <input
-                                      type="file"
-                                      className="hidden"
-                                      accept="image/*"
-                                      onChange={uploadAvatar}
-                                      disabled={uploading}
-                                    />
-                                  </label>
-                                  {uploading && (
-                                    <p className="text-sm text-gray-500 mt-1">Đang tải lên...</p>
-                                  )}
-                                </div> */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
         <div className="flex items-start gap-2">
@@ -332,7 +588,7 @@ export function Profile() {
           <Mail className="w-5 h-5 text-gray-500 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-gray-600 mb-1">Email</p>
-            <p className="text-gray-800">{user.email}</p>
+            <p className="text-gray-800">{user?.email || 'Chưa cập nhật'}</p>
           </div>
         </div>
 
@@ -444,17 +700,17 @@ export function Profile() {
 
       <div className="mt-8 pt-4 border-t">
         <p className="text-gray-500 text-sm">
-          Thành viên từ {new Date(user.created_at).toLocaleDateString('vi-VN')}
+          Thành viên từ {user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : 'N/A'}
         </p>
         <p className="text-gray-500 text-sm">
-          Vai trò: {user.is_admin ? 'Quản trị viên' : user.role === 'owner' ? 'Người cho thuê' : 'Người thuê'}
+          Vai trò: {user?.is_admin ? 'Quản trị viên' : user?.role === 'owner' ? 'Người cho thuê' : 'Người thuê'}
         </p>
       </div>
     </div>
   );
 
   // Xác định nếu người dùng là người thuê
-  const isRenter = !user.is_admin && user.role !== 'owner';
+  const isRenter = user ? (!user.is_admin && user.role !== 'owner') : false;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -462,16 +718,16 @@ export function Profile() {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-center gap-6">
           <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden group">
-            {user.avatar_url ? (
+            {user?.avatar_url ? (
               <>
                 <img
                   src={user.avatar_url}
-                  alt={user.full_name}
+                  alt={user.full_name || 'User'}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full">
-                    <Upload className="w-4 h-4 text-gray-800" />
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full hover:scale-110 transition-transform">
+                    <Upload className="w-4 h-4 text-blue-700" />
                     <input
                       type="file"
                       className="hidden"
@@ -485,9 +741,9 @@ export function Profile() {
             ) : (
               <>
                 <User className="w-12 h-12 text-gray-400" />
-                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full">
-                    <Upload className="w-4 h-4 text-gray-800" />
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <label className="cursor-pointer p-2 bg-white bg-opacity-80 rounded-full hover:scale-110 transition-transform">
+                    <Upload className="w-4 h-4 text-blue-700" />
                     <input
                       type="file"
                       className="hidden"
@@ -499,11 +755,20 @@ export function Profile() {
                 </div>
               </>
             )}
+            {uploading && (
+              <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold mb-1">{user.full_name || 'Người thuê'}</h1>
-            <p className="text-gray-600 text-sm">Thành viên từ {new Date(user.created_at).toLocaleDateString('vi-VN')}</p>
-            <p className="text-gray-600 text-sm">{user.is_admin ? 'Quản trị viên' : user.role === 'owner' ? 'Người cho thuê' : 'Người thuê'}</p>
+            <h1 className="text-2xl font-bold mb-1">{user?.full_name || 'Người thuê'}</h1>
+            <p className="text-gray-600 text-sm">
+              Thành viên từ {user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : 'N/A'}
+            </p>
+            <p className="text-gray-600 text-sm">
+              {user?.is_admin ? 'Quản trị viên' : user?.role === 'owner' ? 'Người cho thuê' : 'Người thuê'}
+            </p>
           </div>
         </div>
       </div>
@@ -512,8 +777,8 @@ export function Profile() {
       <div className="flex flex-wrap gap-2 mb-6 bg-white rounded-lg shadow-sm p-1.5">
         <button
           onClick={() => setActiveTab('profile')}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${activeTab === 'profile'
-            ? 'bg-orange-500 text-white'
+          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 ${activeTab === 'profile'
+            ? 'bg-blue-600 text-white shadow-md'
             : 'text-gray-600 hover:bg-gray-50'
             }`}
         >
@@ -522,8 +787,8 @@ export function Profile() {
         </button>
         <button
           onClick={() => setActiveTab('rentals')}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${activeTab === 'rentals'
-            ? 'bg-orange-500 text-white'
+          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 ${activeTab === 'rentals'
+            ? 'bg-blue-600 text-white shadow-md'
             : 'text-gray-600 hover:bg-gray-50'
             }`}
         >
@@ -533,8 +798,8 @@ export function Profile() {
         {!isRenter && (
           <button
             onClick={() => setActiveTab('equipment')}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${activeTab === 'equipment'
-              ? 'bg-orange-500 text-white'
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 ${activeTab === 'equipment'
+              ? 'bg-blue-600 text-white shadow-md'
               : 'text-gray-600 hover:bg-gray-50'
               }`}
           >
@@ -542,20 +807,22 @@ export function Profile() {
             Thiết bị cho thuê
           </button>
         )}
-        <button
-          onClick={() => setActiveTab('favorites')}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${activeTab === 'favorites'
-            ? 'bg-orange-500 text-white'
-            : 'text-gray-600 hover:bg-gray-50'
-            }`}
-        >
-          <Heart className="w-5 h-5" />
-          Yêu thích
-        </button>
+        {isRenter && (
+          <button
+            onClick={() => setActiveTab('favorites')}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 ${activeTab === 'favorites'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-gray-600 hover:bg-gray-50'
+              }`}
+          >
+            <Heart className="w-5 h-5" />
+            Yêu thích
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('settings')}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${activeTab === 'settings'
-            ? 'bg-orange-500 text-white'
+          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 ${activeTab === 'settings'
+            ? 'bg-blue-600 text-white shadow-md'
             : 'text-gray-600 hover:bg-gray-50'
             }`}
         >
@@ -579,7 +846,7 @@ export function Profile() {
                   <div key={rental.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4">
                       <img
-                        src={rental.equipment.image}
+                        src={rental.equipment.images && rental.equipment.images.length > 0 ? rental.equipment.images[0] : '/placeholder.png'}
                         alt={rental.equipment.title}
                         className="w-24 h-24 object-cover rounded-lg"
                       />
@@ -599,8 +866,8 @@ export function Profile() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg text-orange-600">
-                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(rental.equipment.price)}
+                        <p className="font-bold text-lg text-blue-600">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(rental.equipment.price_per_day)}
                           <span className="text-sm text-gray-500">/ngày</span>
                         </p>
                       </div>
@@ -617,9 +884,13 @@ export function Profile() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Thiết bị cho thuê</h2>
               <button
-                onClick={() => setShowAddEquipmentModal(true)}
-                className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+                onClick={() => {
+                  setEditingEquipment(null);
+                  setShowAddEquipmentModal(true);
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md flex items-center gap-2"
               >
+                <Plus size={16} />
                 Thêm thiết bị mới
               </button>
             </div>
@@ -628,26 +899,42 @@ export function Profile() {
             ) : (
               <div className="space-y-6">
                 {myEquipment.map((item: any) => (
-                  <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 group">
                     <div className="flex items-center gap-4 mb-4">
                       <img
-                        src={item.image}
+                        src={item.images && item.images.length > 0 ? item.images[0] : '/placeholder.png'}
                         alt={item.title}
-                        className="w-24 h-24 object-cover rounded-lg"
+                        className="w-24 h-24 object-cover rounded-lg group-hover:scale-105 transition-transform duration-200"
+                        onError={(e) => e.currentTarget.src = '/placeholder.png'}
                       />
                       <div className="flex-1">
                         <h3 className="font-semibold">{item.title}</h3>
                         <p className="text-gray-600 text-sm">{item.description}</p>
                         <p className="text-sm text-gray-500 mt-1">
-                          Danh mục: <span className="font-medium">{item.category}</span>
+                          Danh mục: <span className="font-medium">{item.category?.name || 'Không xác định'}</span>
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Trạng thái: <span className={`font-medium ${item.status === 'available' ? 'text-green-600' :
+                            item.status === 'rented' ? 'text-blue-600' : 'text-yellow-600'
+                            }`}>
+                            {item.status === 'available' ? 'Có sẵn' :
+                              item.status === 'rented' ? 'Đang cho thuê' : 'Không khả dụng'}
+                          </span>
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg text-orange-600">
-                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}
+                        <p className="font-bold text-lg text-blue-600">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price_per_day)}
                           <span className="text-sm text-gray-500">/ngày</span>
                         </p>
-                        <button className="text-orange-500 hover:text-orange-600 text-sm mt-1">
+                        <button
+                          onClick={() => {
+                            setEditingEquipment(item);
+                            setShowAddEquipmentModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 hover:underline text-sm mt-1 flex items-center justify-end gap-1 transition-all"
+                        >
+                          <Edit size={14} className="group-hover:animate-pulse" />
                           Chỉnh sửa
                         </button>
                       </div>
@@ -707,7 +994,7 @@ export function Profile() {
           </div>
         )}
 
-        {activeTab === 'favorites' && (
+        {activeTab === 'favorites' && isRenter && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Thiết bị yêu thích</h2>
             <p className="text-gray-500">Chức năng đang được phát triển.</p>
@@ -724,34 +1011,108 @@ export function Profile() {
                 </label>
                 <input
                   type="email"
-                  value={user.email}
+                  value={user?.email || ''}
                   disabled
                   className="w-full px-3 py-2 border rounded-lg bg-gray-50"
                 />
               </div>
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Mật khẩu
-                </label>
-                <button className="text-orange-500 hover:text-orange-600 flex items-center">
-                  <Edit className="w-4 h-4 mr-1" />
-                  Thay đổi mật khẩu
-                </button>
-              </div>
-              <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Thông báo
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input type="checkbox" className="mr-2 accent-orange-500" />
-                    Nhận email thông báo khi có yêu cầu thuê mới
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-lg font-medium mb-4">Bảo mật tài khoản</h3>
+                <div className="mb-6">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Mật khẩu
                   </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="mr-2 accent-orange-500" />
-                    Nhận email thông báo khi có cập nhật trạng thái thuê
+                  <button
+                    onClick={() => {
+                      // Send password reset email
+                      const email = user?.email;
+                      if (email) {
+                        supabase.auth.resetPasswordForEmail(email)
+                          .then(({ data, error: resetError }) => {
+                            if (resetError) {
+                              // Add toast message to ref instead of calling directly
+                              toastMessagesRef.current.push({
+                                type: 'error',
+                                message: 'Không thể gửi email đặt lại mật khẩu'
+                              });
+                              console.error('Error sending reset password email:', resetError);
+                            } else {
+                              // Add toast message to ref instead of calling directly
+                              toastMessagesRef.current.push({
+                                type: 'success',
+                                message: 'Email đặt lại mật khẩu đã được gửi!'
+                              });
+                            }
+                          });
+                      } else {
+                        // Add toast message to ref instead of calling directly
+                        toastMessagesRef.current.push({
+                          type: 'error',
+                          message: 'Không thể tìm thấy email của tài khoản'
+                        });
+                      }
+                    }}
+                    className="px-4 py-2 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Thay đổi mật khẩu
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Yêu cầu thay đổi mật khẩu sẽ được gửi đến email của bạn
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-lg font-medium mb-4">Thông báo</h3>
+                <div className="space-y-4 pl-1">
+                  <label className="flex items-center cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      className="mr-3 w-4 h-4 accent-blue-600"
+                      checked={userPreferences.notify_new_rentals}
+                      onChange={() => handleToggleNotification('notify_new_rentals')}
+                    />
+                    <span className="select-none group-hover:text-blue-600 transition-colors">
+                      Nhận email thông báo khi có yêu cầu thuê mới
+                    </span>
+                  </label>
+
+                  <label className="flex items-center cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      className="mr-3 w-4 h-4 accent-blue-600"
+                      checked={userPreferences.notify_rental_updates}
+                      onChange={() => handleToggleNotification('notify_rental_updates')}
+                    />
+                    <span className="select-none group-hover:text-blue-600 transition-colors">
+                      Nhận email thông báo khi có cập nhật trạng thái thuê
+                    </span>
                   </label>
                 </div>
+              </div>
+
+              <div className="pt-6 border-t mt-4">
+                <button
+                  onClick={() => {
+                    if (confirm('Bạn chắc chắn muốn đăng xuất?')) {
+                      supabase.auth.signOut().then(() => {
+                        // Add toast message to ref instead of calling directly
+                        toastMessagesRef.current.push({
+                          type: 'success',
+                          message: 'Đã đăng xuất thành công'
+                        });
+                        setTimeout(() => {
+                          window.location.href = '/';
+                        }, 1000);
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  Đăng xuất
+                </button>
               </div>
             </div>
           </div>
@@ -761,10 +1122,15 @@ export function Profile() {
       {!isRenter && (
         <AddEquipmentModal
           isOpen={showAddEquipmentModal}
-          onClose={() => setShowAddEquipmentModal(false)}
+          onClose={() => {
+            setShowAddEquipmentModal(false);
+            setEditingEquipment(null);
+          }}
           onSuccess={() => {
             fetchMyEquipment();
+            setEditingEquipment(null);
           }}
+          equipmentToEdit={editingEquipment}
         />
       )}
     </div>

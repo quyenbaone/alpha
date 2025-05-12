@@ -23,3 +23,11 @@ export function formatDateTime(date: string) {
     minute: '2-digit',
   }).format(new Date(date));
 }
+
+export function formatDate(date: string) {
+  return new Intl.DateTimeFormat('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(date));
+}

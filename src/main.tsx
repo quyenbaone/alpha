@@ -1,20 +1,50 @@
-import { StrictMode } from 'react';
+import { StrictMode, startTransition } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Toaster } from 'sonner';
 import App from './App';
 import './index.css';
 
-const container = document.getElementById('root');
+// Preload key assets
+const preloadAssets = () => {
+  // Add any critical assets to preload here
+  // This helps with performance by loading critical resources early
+  const imagesToPreload: string[] = [];
+  imagesToPreload.forEach(src => {
+    const img = new Image();
+    img.src = src;
+  });
+};
 
-if (!container) {
-  throw new Error('Root element not found');
-}
+// Initialize the app with performance optimizations
+const initApp = () => {
+  const container = document.getElementById('root');
 
-const root = createRoot(container);
+  if (!container) {
+    throw new Error('Root element not found');
+  }
 
-root.render(
-  <StrictMode>
-    <App />
-    <Toaster richColors position="top-center" />
-  </StrictMode>
-);
+  // Start preloading assets in parallel
+  preloadAssets();
+
+  // Use createRoot for React 18 concurrent features
+  const root = createRoot(container);
+
+  // Use startTransition to wrap app rendering (helps with React Router future flags)
+  const renderApp = () => {
+    // Disable StrictMode in production for better performance
+    if (import.meta.env.DEV) {
+      root.render(
+        <StrictMode>
+          <App />
+        </StrictMode>
+      );
+    } else {
+      root.render(<App />);
+    }
+  };
+
+  // Wrap rendering in startTransition to be compatible with React Router's future flags
+  startTransition(renderApp);
+};
+
+// Initialize the app
+initApp();

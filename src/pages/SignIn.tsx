@@ -117,18 +117,6 @@ export function SignIn() {
     try {
       toast.info('Đang đăng nhập...', { id: 'login', duration: 2000 });
 
-      // Check connection first
-      try {
-        await fetch(import.meta.env.VITE_SUPABASE_URL, {
-          method: 'HEAD',
-          mode: 'no-cors',
-          cache: 'no-cache'
-        });
-      } catch (networkErr) {
-        console.error('Network check failed:', networkErr);
-        throw new Error('network_error');
-      }
-
       const { error } = await signIn(email, password);
 
       if (error) {
@@ -171,18 +159,6 @@ export function SignIn() {
 
     try {
       toast.info('Đang chuyển hướng đến trang đăng nhập Google...', { id: 'google-login' });
-
-      // Check connection first
-      try {
-        await fetch(import.meta.env.VITE_SUPABASE_URL, {
-          method: 'HEAD',
-          mode: 'no-cors',
-          cache: 'no-cache'
-        });
-      } catch (networkErr) {
-        console.error('Network check failed:', networkErr);
-        throw new Error('network_error');
-      }
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

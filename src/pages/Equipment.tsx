@@ -113,7 +113,7 @@ export function Equipment() {
             ];
 
             setCategories(categoryOptions);
-            console.log('Categories loaded:', categoryOptions);
+            // Categories loaded successfully
         } catch (error) {
             console.error('Error fetching categories:', error);
         }
@@ -127,20 +127,25 @@ export function Equipment() {
     // Apply category filter from URL parameters when categories are loaded
     useEffect(() => {
         const categoryParam = searchParams.get('category');
-        console.log('URL category parameter:', categoryParam);
-        console.log('Available categories:', categories);
 
         if (categoryParam && categories.length > 1) {
-            // Check if the category exists in our options (by label)
-            const categoryOption = categories.find(cat => cat.label === categoryParam);
-            console.log('Found category option:', categoryOption);
+            // Check if the category exists in our options
+            const categoryOption = categories.find(cat =>
+                cat.value === categoryParam ||
+                cat.label === categoryParam
+            );
 
             if (categoryOption) {
                 setSelectedCategory(categoryOption.value);
             } else {
-                // If exact match not found, set it directly (it might be the name)
-                setSelectedCategory(categoryParam);
-                console.log('Setting category name directly:', categoryParam);
+                // If not found by exact match, try to find a partial match
+                const partialMatch = categories.find(cat =>
+                    cat.label.toLowerCase().includes(categoryParam.toLowerCase())
+                );
+
+                if (partialMatch) {
+                    setSelectedCategory(partialMatch.value);
+                }
             }
         }
     }, [searchParams, categories]);
@@ -160,7 +165,7 @@ export function Equipment() {
 
             if (error) throw error;
 
-            console.log('Equipment data:', data);
+            // Set equipment data
             setEquipment(data || []);
 
             // Set initial price range based on actual data

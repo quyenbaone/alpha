@@ -1,4 +1,4 @@
-import { User } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -7,8 +7,22 @@ import { supabase } from '../lib/supabase';
 
 type Profile = Database['public']['Tables']['users']['Row'];
 
+// Custom extended User type that includes profile fields
+export interface ExtendedUser extends SupabaseUser {
+  full_name?: string;
+  phone_number?: string;
+  address?: string;
+  bio?: string;
+  date_of_birth?: string;
+  gender?: string;
+  avatar_url?: string;
+  role?: string;
+  is_admin?: boolean;
+  created_at?: string;
+}
+
 interface AuthState {
-  user: User | null;
+  user: ExtendedUser | null;
   session: any | null;
   loading: boolean;
   isAdmin: boolean;
@@ -19,6 +33,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   setSession: (session: any) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  setUser: (userData: Partial<ExtendedUser>) => void;
 }
 
 // Helper function to handle network errors
@@ -185,6 +200,12 @@ export const useAuthStore = create<AuthState>()(
             userRole: null,
           });
         }
+      },
+
+      setUser: (userData: Partial<ExtendedUser>) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, ...userData } : null
+        }));
       },
     }),
     {

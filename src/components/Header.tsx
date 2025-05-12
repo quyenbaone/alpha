@@ -10,7 +10,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { user, signOut, isAdmin } = useAuthStore();
+  const { user, signOut, isAdmin, userRole } = useAuthStore();
   const { items } = useCartStore();
   const { settings, fetchSettings } = useSettingsStore();
   const location = useLocation();
@@ -49,7 +49,7 @@ export function Header() {
 
   const getUserRole = () => {
     if (isAdmin) return 'Admin';
-    if (user?.role === 'owner') return 'Chủ nhà';
+    if (userRole === 'owner') return 'Chủ sở hữu';
     return 'Người thuê';
   };
 
@@ -155,6 +155,15 @@ export function Header() {
                           Quản trị viên
                         </Link>
                       )}
+                      {userRole === 'owner' && (
+                        <Link
+                          to="/owner"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Quản lý cho thuê
+                        </Link>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -200,17 +209,27 @@ export function Header() {
               {user ? (
                 <>
                   <Link to="/profile" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
-                    <User className="h-5 w-5" /> Tài khoản ({getUserRole()})
+                    <User className="h-5 w-5" /> Tài khoản
                   </Link>
+                  {isAdmin && (
+                    <Link to="/admin" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                      <User className="h-5 w-5" /> Quản trị viên
+                    </Link>
+                  )}
+                  {userRole === 'owner' && (
+                    <Link to="/owner" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                      <User className="h-5 w-5" /> Quản lý cho thuê
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-3 text-red-300 hover:text-red-400 hover:bg-blue-800/60 rounded-lg font-semibold"
+                    className="flex items-center gap-2 px-4 py-3 text-red-300 hover:text-red-400 hover:bg-red-900/30 rounded-lg font-semibold w-full text-left"
                   >
                     <LogOut className="h-5 w-5" /> Đăng xuất
                   </button>
                 </>
               ) : (
-                <Link to="/signin" className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold shadow-lg">
+                <Link to="/signin" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
                   <LogIn className="h-5 w-5" /> Đăng nhập
                 </Link>
               )}
@@ -223,8 +242,9 @@ export function Header() {
 }
 
 function CalendarIcon() {
-  return <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>;
+  return <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M16 2V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M3.5 9H20.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>;
 }
+
 function StarIcon() {
-  return <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5 12 2" /></svg>;
+  return <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.73 3.51L15.49 7.03C15.73 7.52 16.37 7.99 16.91 8.08L20.1 8.61C22.14 8.95 22.62 10.43 21.15 11.89L18.67 14.37C18.25 14.79 18.02 15.6 18.15 16.18L18.86 19.25C19.42 21.68 18.13 22.62 15.98 21.35L12.99 19.58C12.45 19.26 11.56 19.26 11.01 19.58L8.02 21.35C5.88 22.62 4.58 21.67 5.14 19.25L5.85 16.18C5.98 15.6 5.75 14.79 5.33 14.37L2.85 11.89C1.39 10.43 1.86 8.95 3.9 8.61L7.09 8.08C7.63 7.99 8.27 7.52 8.51 7.03L10.27 3.51C11.22 1.6 12.78 1.6 13.73 3.51Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
