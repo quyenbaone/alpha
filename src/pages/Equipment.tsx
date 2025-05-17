@@ -51,6 +51,7 @@ export function Equipment() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [searching, setSearching] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'price' | 'title' | 'rating' | 'newest'>('price');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -64,12 +65,19 @@ export function Equipment() {
         { value: 'all', label: 'Tất cả danh mục' }
     ]);
 
+    // Search suggestions
+    const searchSuggestions = [
+        "Máy ảnh", "Máy quay phim", "Drone", "Tripod", "Máy chiếu", "Đèn studio"
+    ];
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
     const location = useLocation();
     const [searchParams] = useSearchParams();
 
     const categoryDropdownRef = useRef<HTMLDivElement>(null);
     const sortDropdownRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     // Close category dropdown when clicking outside
     useEffect(() => {
@@ -129,6 +137,11 @@ export function Equipment() {
             setLoading(true);
             setError(null); // Reset error state before fetching
 
+            // Simulate search loading for demo
+            if (searchTerm) {
+                setSearching(true);
+            }
+
             const { data, error } = await supabase
                 .from('equipment')
                 .select(`
@@ -161,14 +174,46 @@ export function Equipment() {
             setEquipment([]); // Reset equipment data on error
         } finally {
             setLoading(false);
+            // End search loading after delay for better UX
+            if (searchTerm) {
+                setTimeout(() => setSearching(false), 500);
+            }
         }
     };
 
-    // Fetch data on component mount and when user changes
+    // Handle search with debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            // Only refetch if we already have initial data
+            if (!loading && equipment.length > 0) {
+                setSearching(true);
+                // Simulate API call delay
+                setTimeout(() => {
+                    setSearching(false);
+                }, 500);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Fetch data on component mount
     useEffect(() => {
         fetchCategories();
         fetchEquipment();
     }, []);
+
+    // Handle key press events for search input
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Escape') {
+            setSearchTerm('');
+            searchInputRef.current?.blur();
+            setShowSuggestions(false);
+        } else if (e.key === 'Enter') {
+            searchInputRef.current?.blur();
+            setShowSuggestions(false);
+        }
+    };
 
     // Apply category filter from URL parameters when categories are loaded
     useEffect(() => {
@@ -361,33 +406,142 @@ export function Equipment() {
                     {/* Control group with unified styling */}
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-8">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-                            {/* Search box */}
+                            {/* Enhanced Search box */}
                             <div className="md:col-span-5 relative">
+                                <label htmlFor="search-equipment" className="sr-only">Tìm kiếm thiết bị</label>
                                 <div className="relative">
                                     <input
+                                        id="search-equipment"
+                                        ref={searchInputRef}
                                         type="text"
                                         placeholder="Tìm kiếm thiết bị..."
                                         value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            if (e.target.value) setShowSuggestions(true);
+                                        }}
+                                        onFocus={() => {
+                                            if (searchTerm) setShowSuggestions(true);
+                                        }}
+                                        onBlur={() => {
+                                            // Delayed to allow clicking on suggestions
+                                            setTimeout(() => setShowSuggestions(false), 200);
+                                        }}
+                                        onKeyDown={handleSearchKeyDown}
+                                        aria-label="Tìm kiếm thiết bị"
+                                        aria-describedby="search-description"
                                         className="
-    pl-11 w-full py-3 px-4
-    border border-gray-300 dark:border-gray-700
-    rounded-lg
-    focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
-    text-sm shadow-sm
-    bg-white dark:bg-gray-800
-    text-gray-900 dark:text-white
-    placeholder-white dark:placeholder-white
-  "
+                                            pl-11 pr-10 w-full 
+                                            py-3 md:py-3 
+                                            border border-gray-300 dark:border-gray-700
+                                            rounded-lg
+                                            focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+                                            text-sm shadow-sm
+                                            bg-white dark:bg-gray-800
+                                            text-gray-900 dark:text-white
+                                            placeholder-gray-500 dark:placeholder-gray-400
+                                            transition-all
+                                        "
                                     />
+                                    <span id="search-description" className="sr-only">
+                                        Nhập từ khóa để tìm kiếm thiết bị. Nhấn Enter để tìm kiếm, Esc để xóa.
+                                    </span>
 
-
-
+                                    {/* Search icon with improved visibility */}
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                                        <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <svg
+                                            className="h-5 w-5 text-orange-500 dark:text-gray-300"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                            aria-hidden="true"
+                                        >
                                             <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                                         </svg>
                                     </div>
+
+                                    {/* Loading spinner */}
+                                    {searching && (
+                                        <div className="absolute inset-y-0 right-8 flex items-center">
+                                            <svg
+                                                className="animate-spin h-4 w-4 text-orange-500"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                aria-hidden="true"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                ></circle>
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                ></path>
+                                            </svg>
+                                        </div>
+                                    )}
+
+                                    {/* Clear button */}
+                                    {searchTerm && (
+                                        <button
+                                            type="button"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                searchInputRef.current?.focus();
+                                            }}
+                                            aria-label="Xóa tìm kiếm"
+                                        >
+                                            <svg
+                                                className="h-4 w-4 text-gray-500 dark:text-gray-400"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                                aria-hidden="true"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        </button>
+                                    )}
+
+                                    {/* Search suggestions */}
+                                    {showSuggestions && searchTerm && (
+                                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 py-1 max-h-60 overflow-auto">
+                                            {searchSuggestions
+                                                .filter(suggestion =>
+                                                    suggestion.toLowerCase().includes(searchTerm.toLowerCase())
+                                                )
+                                                .map((suggestion, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="px-4 py-2 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-800 dark:text-gray-200"
+                                                        onClick={() => {
+                                                            setSearchTerm(suggestion);
+                                                            setShowSuggestions(false);
+                                                        }}
+                                                    >
+                                                        {suggestion}
+                                                    </div>
+                                                ))}
+                                            {searchSuggestions.filter(suggestion =>
+                                                suggestion.toLowerCase().includes(searchTerm.toLowerCase())
+                                            ).length === 0 && (
+                                                    <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                        Không tìm thấy gợi ý
+                                                    </div>
+                                                )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -598,7 +752,7 @@ export function Equipment() {
                                                         <svg className="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                                         </svg>
-                                                        {item.rating}
+                                                        {item.rating} <span className="ml-1 text-gray-400">({item.reviews || 0})</span>
                                                     </>
                                                 ) : 'Chưa có đánh giá'}
                                             </span>
@@ -665,7 +819,7 @@ export function Equipment() {
                                                         <svg className="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                                         </svg>
-                                                        {item.rating}
+                                                        {item.rating} <span className="ml-1 text-gray-400">({item.reviews || 0} đánh giá)</span>
                                                     </>
                                                 ) : 'Chưa có đánh giá'}
                                             </div>
@@ -691,7 +845,7 @@ export function Equipment() {
                             </svg>
                             <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">Không tìm thấy thiết bị</h3>
                             <p className="mt-2 text-gray-600 dark:text-gray-300 max-w-md mx-auto">
-                                Hãy thử tìm kiếm với từ khóa khác hoặc điều chỉnh bộ lọc
+                                Không tìm thấy thiết bị phù hợp. Thử từ khóa khác hoặc chọn lại bộ lọc!
                             </p>
                             <button
                                 onClick={resetFilters}

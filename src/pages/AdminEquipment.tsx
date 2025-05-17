@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase';
 import { formatPrice } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
 
-// Add interfaces for data types
+// ======= INTERFACE =======
 interface Equipment {
     id: string;
     title: string;
@@ -63,7 +63,7 @@ interface EquipmentFormProps {
     saveButtonText: string;
 }
 
-// Function to generate slug from title
+// ======= UTILS =======
 const generateSlug = (title: string): string => {
     return title
         .toLowerCase()
@@ -73,34 +73,24 @@ const generateSlug = (title: string): string => {
         .replace(/^-+|-+$/g, '');
 };
 
-// Modal component for edit form
+// ======= MODAL COMPONENT =======
 const Modal = ({ isOpen, onClose, children }: ModalProps) => {
     if (!isOpen) return null;
-
     return createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
-                <div className="relative">
-                    {children}
-                </div>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+                {children}
             </div>
         </div>,
         document.body
     );
 };
 
-// Add a function to handle scrolling to top for important actions
-const scrollToTop = () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-};
-
+// ======= MAIN COMPONENT =======
 export function AdminEquipment() {
     const { user } = useAuthStore();
     const [equipment, setEquipment] = useState<Equipment[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]); // Define categories state
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [editingItem, setEditingItem] = useState<string | null>(null);
@@ -123,9 +113,9 @@ export function AdminEquipment() {
         price_per_day: '',
         category_id: '',
         images: [],
+        imageInput: '',
         deposit_amount: '',
         location: 'Hồ Chí Minh',
-        imageInput: '', // Temporary field for UI
         status: 'available',
         quantity: '1'
     });
@@ -136,6 +126,7 @@ export function AdminEquipment() {
             fetchCategories();
             fetchEquipment();
         }
+        // eslint-disable-next-line
     }, [user]);
 
     const fetchCategories = async () => {
@@ -147,14 +138,11 @@ export function AdminEquipment() {
 
             if (error) throw error;
             setCategories(data || []);
-            console.log('Categories loaded:', data);
         } catch (error) {
-            console.error('Error fetching categories:', error);
             toast.error('Lỗi khi tải danh mục thiết bị');
         }
     };
 
-    // Function to get category name from id
     const getCategoryName = (categoryId: string): string => {
         const category = categories.find(cat => cat.id === categoryId);
         return category ? category.name : 'Không xác định';
@@ -166,21 +154,19 @@ export function AdminEquipment() {
             const { data: equipmentData, error: equipmentError } = await supabase
                 .from('equipment')
                 .select(`
-          *,
-          owner:owner_id (
-            email
+                    *,
+                    owner:owner_id (
+                        email
                     ),
                     category:category_id (
                         name
-          )
-        `)
+                    )
+                `)
                 .order('created_at', { ascending: false });
 
             if (equipmentError) throw equipmentError;
-            setEquipment(equipmentData);
-            console.log('Equipment loaded:', equipmentData);
+            setEquipment(equipmentData || []);
         } catch (error) {
-            console.error('Error fetching equipment:', error);
             toast.error('Lỗi khi tải dữ liệu thiết bị');
         } finally {
             setLoading(false);
@@ -193,75 +179,55 @@ export function AdminEquipment() {
             toast.error('Không tìm thấy thiết bị');
             return;
         }
-
-        // Scroll to top of the page when editing
         window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        // At this point, item is definitely defined
-        const safeItem: Equipment = item;
-
         setEditingItem(equipmentId);
         setEditForm({
-            title: safeItem.title,
-            description: safeItem.description || '',
-            price_per_day: safeItem.price_per_day.toString(),
-            category_id: safeItem.category_id,
-            images: safeItem.images || [],
-            imageInput: safeItem.images && safeItem.images.length > 0 ? safeItem.images[0] : '',
-            deposit_amount: safeItem.deposit_amount?.toString() || '',
-            location: safeItem.location || 'Hồ Chí Minh',
-            status: safeItem.status || 'available',
-            quantity: safeItem.quantity?.toString() || '1'
+            title: item.title,
+            description: item.description || '',
+            price_per_day: item.price_per_day.toString(),
+            category_id: item.category_id,
+            images: item.images || [],
+            imageInput: item.images && item.images.length > 0 ? item.images[0] : '',
+            deposit_amount: item.deposit_amount?.toString() || '',
+            location: item.location || 'Hồ Chí Minh',
+            status: item.status || 'available',
+            quantity: item.quantity?.toString() || '1'
         });
         setIsEditModalOpen(true);
     };
 
     const handleSaveEdit = async () => {
         try {
-            // Validate required fields
             if (!editForm.title || !editForm.category_id || !editForm.price_per_day) {
                 toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
                 return;
             }
-
-            // Convert price and deposit to numbers
             const price_per_day = parseFloat(editForm.price_per_day);
             const deposit_amount = parseFloat(editForm.deposit_amount.toString()) || 0;
             const quantity = parseInt(editForm.quantity) || 1;
-
-            // Validate numeric values
             if (isNaN(price_per_day) || price_per_day <= 0) {
                 toast.error('Giá thuê phải là số dương');
                 return;
             }
-
             if (isNaN(quantity) || quantity <= 0) {
                 toast.error('Số lượng phải là số dương');
                 return;
             }
-
-            // Generate slug from title
             const slug = generateSlug(editForm.title);
-
-            // Prepare images array
             const images = editForm.imageInput ? [editForm.imageInput] : [];
-
             const updatePayload = {
                 title: editForm.title,
-                slug: slug,
+                slug,
                 description: editForm.description || '',
-                price_per_day: price_per_day,
+                price_per_day,
                 category_id: editForm.category_id,
-                images: images,
-                deposit_amount: deposit_amount,
+                images,
+                deposit_amount,
                 location: editForm.location || 'Hồ Chí Minh',
                 status: editForm.status,
-                quantity: quantity,
+                quantity,
                 updated_at: new Date()
             };
-
-            console.log('Updating equipment with:', updatePayload);
-
             const { error } = await supabase
                 .from('equipment')
                 .update(updatePayload)
@@ -283,13 +249,9 @@ export function AdminEquipment() {
                 quantity: ''
             });
             setIsEditModalOpen(false);
-
-            // Scroll to top after saving
             window.scrollTo({ top: 0, behavior: 'smooth' });
-
             fetchEquipment();
         } catch (error: any) {
-            console.error('Error updating equipment:', error);
             toast.error(`Lỗi khi cập nhật thông tin: ${error.message || 'Lỗi không xác định'}`);
         }
     };
@@ -309,61 +271,45 @@ export function AdminEquipment() {
             quantity: ''
         });
         setIsEditModalOpen(false);
-
-        // Scroll to top after canceling
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDeleteEquipment = async (equipmentId: string) => {
         if (!confirm('Bạn có chắc chắn muốn xóa thiết bị này?')) return;
-
         try {
             const { error } = await supabase
                 .from('equipment')
                 .delete()
                 .eq('id', equipmentId);
-
             if (error) throw error;
             toast.success('Đã xóa thiết bị');
-
-            // Scroll to top after deletion
             window.scrollTo({ top: 0, behavior: 'smooth' });
-
             fetchEquipment();
         } catch (error) {
-            console.error('Error deleting equipment:', error);
             toast.error('Lỗi khi xóa thiết bị');
         }
     };
 
     const handleCreateEquipment = async () => {
         try {
-            // Validate required fields
             if (!newEquipment.title || !newEquipment.price_per_day || !newEquipment.category_id) {
                 toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
                 return;
             }
-
             if (!user) {
                 toast.error('Bạn cần đăng nhập để thêm thiết bị');
                 return;
             }
-
-            // Generate slug from title
             const slug = generateSlug(newEquipment.title);
-
-            // Prepare images array
             const images = newEquipment.imageInput ? [newEquipment.imageInput] : [];
-
-            // Create payload with all required fields
             const equipmentPayload = {
                 title: newEquipment.title,
-                slug: slug,
+                slug,
                 description: newEquipment.description || '',
                 category_id: newEquipment.category_id,
                 price_per_day: parseFloat(newEquipment.price_per_day),
                 deposit_amount: parseFloat(newEquipment.deposit_amount) || 0,
-                images: images,
+                images,
                 owner_id: user.id,
                 location: newEquipment.location || 'Hồ Chí Minh',
                 status: newEquipment.status,
@@ -371,19 +317,10 @@ export function AdminEquipment() {
                 created_at: new Date(),
                 updated_at: new Date()
             };
-
-            console.log('Creating equipment with:', equipmentPayload);
-
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('equipment')
                 .insert([equipmentPayload]);
-
-            if (error) {
-                console.error('Database error:', error);
-                throw error;
-            }
-
-            console.log('Equipment created successfully:', data);
+            if (error) throw error;
             toast.success('Đã thêm thiết bị mới');
             setShowNewEquipmentForm(false);
             setNewEquipment({
@@ -398,18 +335,10 @@ export function AdminEquipment() {
                 status: 'available',
                 quantity: '1'
             });
-
-            // Scroll to top after creating equipment
             window.scrollTo({ top: 0, behavior: 'smooth' });
-
             fetchEquipment();
         } catch (error: any) {
-            console.error('Error creating equipment:', error);
-            if (error.message) {
-                toast.error(`Lỗi: ${error.message}`);
-            } else {
-                toast.error('Lỗi khi thêm thiết bị mới');
-            }
+            toast.error(error.message || 'Lỗi khi thêm thiết bị mới');
         }
     };
 
@@ -418,224 +347,212 @@ export function AdminEquipment() {
         item.owner?.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Add the EquipmentForm component here, inside the AdminEquipment function so it has access to categories
-    const EquipmentForm = ({ formData, setFormData, onSave, onCancel, title, saveButtonText }: EquipmentFormProps) => {
-        return (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="bg-blue-50 border-b border-blue-100 px-6 py-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-blue-800 flex items-center">
-                        {title === "Thêm thiết bị mới" ? <Plus className="h-5 w-5 mr-2 text-blue-600" /> : <Edit className="h-5 w-5 mr-2 text-blue-600" />}
-                        {title}
-                    </h2>
-                </div>
-                <div className="p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Left column - Basic info */}
-                        <div className="space-y-5">
-                            <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                                <h3 className="text-md font-medium text-gray-700 mb-4 border-b pb-2">Thông tin cơ bản</h3>
-                                <div className="space-y-4">
+    // ====== FORM COMPONENT ======
+    const EquipmentForm = ({ formData, setFormData, onSave, onCancel, title, saveButtonText }: EquipmentFormProps) => (
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
+            <div className="bg-blue-50 dark:bg-blue-900 border-b border-blue-100 dark:border-blue-800 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-blue-800 dark:text-blue-300 flex items-center">
+                    {title === "Thêm thiết bị mới" ? <Plus className="h-5 w-5 mr-2 text-blue-600" /> : <Edit className="h-5 w-5 mr-2 text-blue-600" />}
+                    {title}
+                </h2>
+            </div>
+            <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Left */}
+                    <div className="space-y-5">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+                            <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Thông tin cơ bản</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                        Tên thiết bị <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                        placeholder="Nhập tên thiết bị"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                        Danh mục <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        value={formData.category_id}
+                                        onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                                        className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                    >
+                                        <option value="">-- Chọn danh mục --</option>
+                                        {categories.map(category => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Tên thiết bị <span className="text-red-500">*</span>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                            Giá thuê/ngày <span className="text-red-500">*</span>
                                         </label>
-                                        <input
-                                            value={formData.title}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                            placeholder="Nhập tên thiết bị"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Danh mục <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={formData.category_id}
-                                            onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            <option value="">-- Chọn danh mục --</option>
-                                            {categories.map(category => (
-                                                <option key={category.id} value={category.id}>
-                                                    {category.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Giá thuê/ngày <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="number"
-                                                    value={formData.price_per_day}
-                                                    onChange={(e) => setFormData({ ...formData, price_per_day: e.target.value })}
-                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="0"
-                                                />
-                                                <span className="absolute right-3 top-2 text-sm text-gray-500">VNĐ</span>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Tiền đặt cọc
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="number"
-                                                    value={formData.deposit_amount}
-                                                    onChange={(e) => setFormData({ ...formData, deposit_amount: e.target.value })}
-                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="0"
-                                                />
-                                                <span className="absolute right-3 top-2 text-sm text-gray-500">VNĐ</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Số lượng
-                                            </label>
+                                        <div className="relative">
                                             <input
                                                 type="number"
-                                                value={formData.quantity}
-                                                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                                placeholder="1"
-                                                min="1"
+                                                value={formData.price_per_day}
+                                                onChange={(e) => setFormData({ ...formData, price_per_day: e.target.value })}
+                                                className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                                placeholder="0"
                                             />
+                                            <span className="absolute right-3 top-2 text-sm text-gray-500 dark:text-gray-400">VNĐ</span>
                                         </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Địa điểm
-                                            </label>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                            Tiền đặt cọc
+                                        </label>
+                                        <div className="relative">
                                             <input
-                                                value={formData.location}
-                                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                                placeholder="Nhập địa điểm"
+                                                type="number"
+                                                value={formData.deposit_amount}
+                                                onChange={(e) => setFormData({ ...formData, deposit_amount: e.target.value })}
+                                                className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                                placeholder="0"
                                             />
+                                            <span className="absolute right-3 top-2 text-sm text-gray-500 dark:text-gray-400">VNĐ</span>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                                <h3 className="text-md font-medium text-gray-700 mb-4 border-b pb-2">Hình ảnh & Vị trí</h3>
-                                <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Link hình ảnh
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                            Số lượng
                                         </label>
-                                        <div className="flex space-x-2">
-                                            <input
-                                                value={formData.imageInput}
-                                                onChange={(e) => setFormData({ ...formData, imageInput: e.target.value })}
-                                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                                placeholder="https://example.com/image.jpg"
-                                            />
-                                        </div>
-                                        {formData.imageInput && (
-                                            <div className="mt-2 flex justify-center">
-                                                <img
-                                                    className="h-32 w-32 rounded-lg object-cover border border-gray-200"
-                                                    src={formData.imageInput}
-                                                    alt="Preview"
-                                                    onError={(e) => e.currentTarget.src = '/placeholder.png'}
-                                                />
-                                            </div>
-                                        )}
+                                        <input
+                                            type="number"
+                                            value={formData.quantity}
+                                            onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                                            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                            placeholder="1"
+                                            min="1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                            Địa điểm
+                                        </label>
+                                        <input
+                                            value={formData.location}
+                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                            placeholder="Nhập địa điểm"
+                                        />
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Right column - Status, Description */}
-                        <div className="space-y-5">
-                            <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                                <h3 className="text-md font-medium text-gray-700 mb-4 border-b pb-2">Trạng thái & Hiển thị</h3>
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+                            <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Hình ảnh & Vị trí</h3>
+                            <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Trạng thái hiển thị
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                        Link hình ảnh
                                     </label>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div
-                                            className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'available' ? 'bg-green-50 border-green-500 text-green-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                                            onClick={() => setFormData({ ...formData, status: 'available' })}
-                                        >
-                                            <div className="flex justify-center mb-1">
-                                                <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                                            </div>
-                                            <span className="text-sm font-medium">Có sẵn</span>
+                                    <div className="flex space-x-2">
+                                        <input
+                                            value={formData.imageInput}
+                                            onChange={(e) => setFormData({ ...formData, imageInput: e.target.value })}
+                                            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                            placeholder="https://example.com/image.jpg"
+                                        />
+                                    </div>
+                                    {formData.imageInput && (
+                                        <div className="mt-2 flex justify-center">
+                                            <img
+                                                className="h-32 w-32 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+                                                src={formData.imageInput}
+                                                alt="Preview"
+                                                onError={(e) => e.currentTarget.src = '/placeholder.png'}
+                                            />
                                         </div>
-                                        <div
-                                            className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'hidden' ? 'bg-gray-50 border-gray-500 text-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                                            onClick={() => setFormData({ ...formData, status: 'hidden' })}
-                                        >
-                                            <div className="flex justify-center mb-1">
-                                                <span className="w-3 h-3 rounded-full bg-gray-500"></span>
-                                            </div>
-                                            <span className="text-sm font-medium">Ẩn</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {/* Right */}
+                    <div className="space-y-5">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+                            <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Trạng thái & Hiển thị</h3>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                    Trạng thái hiển thị
+                                </label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div
+                                        className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'available' ? 'bg-green-50 border-green-500 text-green-700 dark:bg-green-900 dark:border-green-400 dark:text-green-200' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                        onClick={() => setFormData({ ...formData, status: 'available' })}
+                                    >
+                                        <div className="flex justify-center mb-1">
+                                            <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
                                         </div>
-                                        <div
-                                            className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'maintenance' ? 'bg-yellow-50 border-yellow-500 text-yellow-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                                            onClick={() => setFormData({ ...formData, status: 'maintenance' })}
-                                        >
-                                            <div className="flex justify-center mb-1">
-                                                <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-                                            </div>
-                                            <span className="text-sm font-medium">Bảo trì</span>
+                                        <span className="text-sm font-medium">Có sẵn</span>
+                                    </div>
+                                    <div
+                                        className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'hidden' ? 'bg-gray-50 border-gray-500 text-gray-700 dark:bg-gray-700 dark:border-gray-400 dark:text-gray-100' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                        onClick={() => setFormData({ ...formData, status: 'hidden' })}
+                                    >
+                                        <div className="flex justify-center mb-1">
+                                            <span className="w-3 h-3 rounded-full bg-gray-500 inline-block"></span>
                                         </div>
+                                        <span className="text-sm font-medium">Ẩn</span>
+                                    </div>
+                                    <div
+                                        className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'maintenance' ? 'bg-yellow-50 border-yellow-500 text-yellow-700 dark:bg-yellow-900 dark:border-yellow-400 dark:text-yellow-200' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                        onClick={() => setFormData({ ...formData, status: 'maintenance' })}
+                                    >
+                                        <div className="flex justify-center mb-1">
+                                            <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                                        </div>
+                                        <span className="text-sm font-medium">Bảo trì</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                                <h3 className="text-md font-medium text-gray-700 mb-4 border-b pb-2">Mô tả thiết bị</h3>
-                                <textarea
-                                    rows={6}
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-h-[180px] resize-y"
-                                    placeholder="Nhập thông tin chi tiết về thiết bị, tính năng, cách sử dụng..."
-                                />
-                            </div>
-
-                            {/* Action buttons */}
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button
-                                    onClick={onCancel}
-                                    className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                                >
-                                    <XCircle className="h-5 w-5 text-red-500" /> Hủy
-                                </button>
-                                <button
-                                    onClick={onSave}
-                                    className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
-                                >
-                                    <Save className="h-5 w-5" /> {saveButtonText}
-                                </button>
-                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+                            <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Mô tả thiết bị</h3>
+                            <textarea
+                                rows={6}
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-h-[180px] resize-y dark:bg-gray-800 dark:text-white"
+                                placeholder="Nhập thông tin chi tiết về thiết bị, tính năng, cách sử dụng..."
+                            />
+                        </div>
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button
+                                onClick={onCancel}
+                                className="px-5 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                            >
+                                <XCircle className="h-5 w-5 text-red-500" /> Hủy
+                            </button>
+                            <button
+                                onClick={onSave}
+                                className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+                            >
+                                <Save className="h-5 w-5" /> {saveButtonText}
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        );
-    };
+        </div>
+    );
 
     if (loading) {
         return (
             <AdminLayout>
-                <div className="container mx-auto px-4 py-8">Loading...</div>
+                <div className="container mx-auto px-4 py-8 text-gray-800 dark:text-gray-100">Loading...</div>
             </AdminLayout>
         );
     }
@@ -644,7 +561,7 @@ export function AdminEquipment() {
         <AdminLayout>
             <div className="container mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold">Quản lý thiết bị</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý thiết bị</h1>
                     <button
                         onClick={() => {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -655,7 +572,6 @@ export function AdminEquipment() {
                         <Plus className="h-5 w-5" /> Thêm thiết bị mới
                     </button>
                 </div>
-
                 {showNewEquipmentForm && (
                     <EquipmentForm
                         formData={newEquipment}
@@ -666,8 +582,6 @@ export function AdminEquipment() {
                         saveButtonText="Lưu thiết bị"
                     />
                 )}
-
-                {/* Edit Modal */}
                 <Modal isOpen={isEditModalOpen} onClose={handleCancelEdit}>
                     <EquipmentForm
                         formData={editForm}
@@ -678,8 +592,6 @@ export function AdminEquipment() {
                         saveButtonText="Lưu thay đổi"
                     />
                 </Modal>
-
-                {/* Search Bar */}
                 <div className="mb-6">
                     <div className="relative flex-1">
                         <input
@@ -687,73 +599,66 @@ export function AdminEquipment() {
                             placeholder="Tìm kiếm theo tên thiết bị hoặc chủ sở hữu..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyUp={(e) => {
-                                if (e.key === 'Enter') {
-                                    // Scroll to top when user presses Enter to search
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }
-                            }}
-                            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
                         />
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-300 h-5 w-5" />
                     </div>
                 </div>
-
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-800">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chủ sở hữu</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá thuê</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiền đặt cọc</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa điểm</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Thiết bị</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Chủ sở hữu</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Giá thuê</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tiền đặt cọc</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Số lượng</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Trạng thái</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Địa điểm</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                             {filteredEquipment.map((item) => (
-                                <tr key={item.id} className="hover:bg-gray-50">
+                                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center">
                                             <div className="h-10 w-10 flex-shrink-0">
                                                 <img
-                                                    className="h-10 w-10 rounded-lg object-cover"
+                                                    className="h-10 w-10 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
                                                     src={item.images && item.images.length > 0 ? item.images[0] : '/placeholder.png'}
                                                     alt={item.title}
-                                                    onError={(e) => e.currentTarget.src = '/placeholder.png'}
+                                                    onError={(e) => {
+                                                        if (e.currentTarget.src !== window.location.origin + '/placeholder.png') {
+                                                            e.currentTarget.src = '/placeholder.png';
+                                                        }
+                                                    }}
                                                 />
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">
+                                                <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                     {item.title}
                                                 </div>
-                                                <div className="text-sm text-gray-500">
+                                                <div className="text-sm text-gray-500 dark:text-gray-300">
                                                     {item.category?.name || getCategoryName(item.category_id)}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {item.owner?.email}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {formatPrice(item.price_per_day)}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {formatPrice(item.deposit_amount || 0)}
-                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{item.owner?.email}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{formatPrice(item.price_per_day)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{formatPrice(item.deposit_amount || 0)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={(item.quantity && parseInt(item.quantity.toString()) > 0) ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                                             {(item.quantity && parseInt(item.quantity.toString())) || 0}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === 'available' ? 'bg-green-100 text-green-800' :
-                                            item.status === 'hidden' ? 'bg-gray-300 text-gray-800' :
-                                                'bg-yellow-100 text-yellow-800'
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === 'available'
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                : item.status === 'hidden'
+                                                    ? 'bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                                             }`}>
                                             {item.status === 'available' ? (
                                                 <><span className="w-1.5 h-1.5 rounded-full bg-green-600 mr-1.5"></span>Có sẵn</>
@@ -766,9 +671,7 @@ export function AdminEquipment() {
                                             )}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {item.location}
-                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{item.location}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex gap-2">
                                             <button
@@ -801,4 +704,4 @@ export function AdminEquipment() {
             </div>
         </AdminLayout>
     );
-} 
+}
