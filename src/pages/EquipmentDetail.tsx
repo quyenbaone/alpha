@@ -20,6 +20,9 @@ export function EquipmentDetail() {
   const [showCalendar, setShowCalendar] = useState(false);
   const addToCart = useCartStore((state) => state.addToCart);
 
+  // Define fallback values for equipment properties
+  const defaultImage = '/placeholder.png';
+
   useEffect(() => {
     if (!id) {
       navigate('/equipment');
@@ -33,15 +36,17 @@ export function EquipmentDetail() {
       return;
     }
 
-    addToCart({
+    // Use explicit typecasting to fix the TypeScript error
+    const cartItem = {
       id: equipment.id,
       title: equipment.title,
-      price: equipment.price,
-      image: equipment.image,
+      price: equipment.price_per_day || 0,
+      image: ((equipment.images && equipment.images.length > 0) ? equipment.images[0] : defaultImage),
       startDate: new Date(startDate),
       endDate: new Date(endDate),
-    });
+    };
 
+    addToCart(cartItem);
     toast.success('Đã thêm vào giỏ hàng');
   };
 
@@ -128,9 +133,12 @@ export function EquipmentDetail() {
         {/* Image Section */}
         <div className="relative">
           <img
-            src={equipment.image}
+            src={equipment.image || defaultImage}
             alt={equipment.title}
             className="w-full h-[500px] object-cover rounded-lg shadow-lg"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = defaultImage;
+            }}
           />
           <button
             onClick={() => setIsLiked(!isLiked)}
@@ -212,7 +220,7 @@ export function EquipmentDetail() {
             <div className="mt-4">
               <div className="flex justify-between items-center mb-2">
                 <span>Giá thuê mỗi ngày</span>
-                <span className="font-semibold">{formatPrice(equipment.price)}</span>
+                <span className="font-semibold">{formatPrice(equipment.price_per_day || 0)}</span>
               </div>
               <div className="flex justify-between items-center mb-2">
                 <span>Phí bảo hiểm</span>
@@ -226,7 +234,7 @@ export function EquipmentDetail() {
                 <div className="flex justify-between items-center">
                   <span className="font-bold">Tổng cộng</span>
                   <span className="font-bold text-xl text-orange-500">
-                    {formatPrice(equipment.price + 80000)}/ngày
+                    {formatPrice((equipment.price_per_day || 0) + 80000)}/ngày
                   </span>
                 </div>
               </div>
@@ -256,7 +264,7 @@ export function EquipmentDetail() {
               location={{
                 lat: 10.762622, // Default to Ho Chi Minh City coordinates
                 lng: 106.660172,
-                address: equipment.location
+                address: equipment.location || 'Hồ Chí Minh'
               }}
               height="300px"
             />

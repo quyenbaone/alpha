@@ -128,25 +128,30 @@ export function Footer() {
             </p>
             <div className="flex space-x-4 mt-4 md:mt-0">
               <img
-                src="/payment/visa.png"
+                src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
                 alt="Visa"
                 className="h-6 w-auto"
               />
               <img
-                src="/payment/mastercard.png"
+                src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
                 alt="Mastercard"
                 className="h-6 w-auto"
               />
+
               <img
-                src="/payment/momo.png"
+                src="https://homepage.momocdn.net/fileuploads/svg/momo-file-240411162904.svg"
                 alt="MoMo"
                 className="h-6 w-auto"
               />
+
+
               <img
-                src="/payment/vnpay.png"
+                src="https://stcd02206177151.cloud.edgevnpay.vn/assets/images/logo-icon/logo-primary.svg"
                 alt="VNPay"
                 className="h-6 w-auto"
               />
+
+
             </div>
           </div>
         </div>

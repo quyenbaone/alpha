@@ -44,6 +44,9 @@ interface ReportData {
     rentals: number[];
     categories: CategoryData[];
     topUsers: UserData[];
+    totalRevenue: number;
+    totalRentalsCount: number;
+    averageValue: number;
 }
 
 export function AdminReports() {
@@ -54,6 +57,9 @@ export function AdminReports() {
         rentals: [],
         categories: [],
         topUsers: [],
+        totalRevenue: 0,
+        totalRentalsCount: 0,
+        averageValue: 0,
     });
 
     useEffect(() => {
@@ -66,11 +72,18 @@ export function AdminReports() {
             // Lấy dữ liệu doanh thu theo tháng
             const { data: revenueData, error: revenueError } = await supabase
                 .from('rentals')
-                .select('created_at, total_amount')
+                .select('created_at, total_price')
                 .gte('created_at', getTimeRangeDate())
                 .order('created_at');
 
             if (revenueError) throw revenueError;
+
+            // Lấy tổng doanh thu (tất cả thời gian)
+            const { data: allRevenueData, error: allRevenueError } = await supabase
+                .from('rentals')
+                .select('total_price');
+
+            if (allRevenueError) throw allRevenueError;
 
             // Lấy dữ liệu số lượng đơn thuê theo tháng
             const { data: rentalData, error: rentalError } = await supabase
@@ -81,47 +94,103 @@ export function AdminReports() {
 
             if (rentalError) throw rentalError;
 
-            // Lấy dữ liệu phân tích theo danh mục
-            const { data: categoryData, error: categoryError } = await supabase
-                .from('equipment')
-                .select(`
-                    category,
-                    rentals:rentals(total_amount)
-                `);
+            // Lấy tổng số đơn thuê
+            const { count: totalRentalsCount, error: countError } = await supabase
+                .from('rentals')
+                .select('*', { count: 'exact', head: true });
 
-            if (categoryError) throw categoryError;
+            if (countError) throw countError;
+
+            // Lấy dữ liệu phân tích theo danh mục
+            const { data: equipmentData, error: equipmentError } = await supabase
+                .from('equipment')
+                .select('id, category_id');
+
+            if (equipmentError) throw equipmentError;
+
+            // Lấy dữ liệu giao dịch cho phân tích doanh thu theo danh mục
+            const { data: categoryRentalData, error: categoryRentalError } = await supabase
+                .from('rentals')
+                .select('equipment_id, total_price');
+
+            if (categoryRentalError) throw categoryRentalError;
+
+            // Tạo map để tổng hợp doanh thu theo danh mục
+            const categoryRevenueMap = new Map();
+
+            // Đảm bảo các đối tượng tồn tại trước khi xử lý
+            if (categoryRentalData && equipmentData) {
+                categoryRentalData.forEach((rental: any) => {
+                    if (rental && rental.equipment_id && rental.total_price) {
+                        const equipment = equipmentData.find((e: any) => e.id === rental.equipment_id);
+                        if (equipment && equipment.category_id) {
+                            const currentRevenue = categoryRevenueMap.get(equipment.category_id) || 0;
+                            categoryRevenueMap.set(equipment.category_id, currentRevenue + rental.total_price);
+                        }
+                    }
+                });
+            }
+
+            // Chuyển đổi map thành mảng để hiển thị
+            const categoryRevenueData = Array.from(categoryRevenueMap).map(([categoryId, totalRevenue]) => ({
+                category_id: categoryId,
+                total_revenue: totalRevenue
+            }));
 
             // Lấy top khách hàng
-            const { data: topUsersData, error: topUsersError } = await supabase
+            const { data: userData, error: userError } = await supabase
                 .from('users')
-                .select(`
-                    id, 
-                    business_name,
-                    rentals:rentals(id, total_amount)
-                `)
-                .eq('role', 'renter')
-                .order('rentals.count', { ascending: false })
-                .limit(5);
+                .select('id, full_name, email')
+                .eq('role', 'customer')
+                .limit(10);
 
-            if (topUsersError) throw topUsersError;
+            if (userError) throw userError;
+
+            // Lấy giao dịch thuê của mỗi khách hàng
+            const topCustomersWithRentals = [];
+
+            if (userData) {
+                for (const user of userData) {
+                    const { data: userRentals, error: userRentalsError } = await supabase
+                        .from('rentals')
+                        .select('id, total_price, status')
+                        .eq('renter_id', user.id);
+
+                    if (!userRentalsError && userRentals) {
+                        topCustomersWithRentals.push({
+                            ...user,
+                            rentals: userRentals
+                        });
+                    }
+                }
+            }
 
             // Xử lý dữ liệu doanh thu
-            const monthlyRevenues = processMonthlyData(revenueData, 'total_amount');
+            const monthlyRevenues = processMonthlyData(revenueData || [], 'total_price');
 
             // Xử lý dữ liệu đơn thuê
-            const monthlyRentals = processMonthlyData(rentalData);
+            const monthlyRentals = processMonthlyData(rentalData || []);
+
+            // Tính tổng doanh thu
+            const totalRevenue = allRevenueData?.reduce((sum, rental) => sum + (rental.total_price || 0), 0) || 0;
+
+            // Tính giá trị trung bình mỗi đơn
+            const averageValue = totalRentalsCount ? totalRevenue / totalRentalsCount : 0;
 
             // Xử lý dữ liệu danh mục
-            const processedCategories = processCategories(categoryData);
+            const processedCategories = processCategories(categoryRevenueData);
 
             // Xử lý dữ liệu top khách hàng
-            const processedTopUsers = processTopUsers(topUsersData);
+            const processedTopUsers = processTopUsers(topCustomersWithRentals);
 
             setReportData({
                 revenues: monthlyRevenues,
                 rentals: monthlyRentals,
                 categories: processedCategories,
                 topUsers: processedTopUsers,
+                totalRevenue,
+                totalRentalsCount: totalRentalsCount || 0,
+                averageValue,
             });
 
             setIsLoading(false);
@@ -182,23 +251,31 @@ export function AdminReports() {
 
         const categories: Record<string, CategoryData> = {};
 
-        data.forEach(item => {
-            const category = item.category || 'Khác';
+        // Danh sách tên danh mục mặc định (bạn có thể thay thế bằng dữ liệu thực)
+        const categoryNames: Record<string, string> = {
+            '1': 'Camera',
+            '2': 'Đèn chiếu sáng',
+            '3': 'Thiết bị âm thanh',
+            '4': 'Phụ kiện',
+            '5': 'Khác'
+        };
 
-            if (!categories[category]) {
-                categories[category] = {
-                    name: category,
+        data.forEach(item => {
+            const categoryId = item.category_id ? item.category_id.toString() : 'unknown';
+            const categoryName = categoryNames[categoryId] || 'Danh mục ' + categoryId;
+
+            if (!categories[categoryId]) {
+                categories[categoryId] = {
+                    name: categoryName,
                     count: 0,
                     revenue: 0
                 };
             }
 
-            categories[category].count += 1;
+            categories[categoryId].count += 1;
 
-            if (item.rentals) {
-                item.rentals.forEach((rental: any) => {
-                    categories[category].revenue += rental.total_amount || 0;
-                });
+            if (item.total_revenue) {
+                categories[categoryId].revenue += item.total_revenue;
             }
         });
 
@@ -215,16 +292,20 @@ export function AdminReports() {
 
             if (user.rentals) {
                 user.rentals.forEach((rental: any) => {
-                    totalSpent += rental.total_amount || 0;
+                    totalSpent += rental.total_price || 0;
                 });
             }
 
             return {
-                name: user.business_name || 'Người dùng ' + user.id.substring(0, 5),
+                name: user.full_name || 'Người dùng ' + user.id.substring(0, 5),
                 rentals: rentalsCount,
                 spent: totalSpent
             };
-        }).sort((a, b) => b.spent - a.spent);
+        })
+            // Sắp xếp theo số lượng đơn hàng giảm dần
+            .sort((a, b) => b.rentals - a.rentals)
+            // Chỉ lấy 5 người dùng hàng đầu
+            .slice(0, 5);
     };
 
     const getMonthLabels = () => {
@@ -285,15 +366,6 @@ export function AdminReports() {
         },
     };
 
-    // Tính tổng doanh thu
-    const totalRevenue = reportData.revenues.reduce((sum, value) => sum + value, 0);
-
-    // Tính tổng đơn thuê
-    const totalRentals = reportData.rentals.reduce((sum, value) => sum + value, 0);
-
-    // Tính giá trị trung bình mỗi đơn
-    const averageValue = totalRentals > 0 ? totalRevenue / totalRentals : 0;
-
     return (
         <AdminLayout>
             <div className="container mx-auto px-4 py-8">
@@ -342,18 +414,18 @@ export function AdminReports() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             <div className="bg-white rounded-lg shadow p-6">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">Tổng doanh thu</h3>
-                                <p className="text-3xl font-bold text-gray-900">{formatPrice(totalRevenue)}</p>
+                                <p className="text-3xl font-bold text-gray-900">{formatPrice(reportData.totalRevenue)}</p>
                             </div>
 
                             <div className="bg-white rounded-lg shadow p-6">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">Tổng đơn thuê</h3>
-                                <p className="text-3xl font-bold text-gray-900">{totalRentals}</p>
+                                <p className="text-3xl font-bold text-gray-900">{reportData.totalRentalsCount}</p>
                             </div>
 
                             <div className="bg-white rounded-lg shadow p-6">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">Giá trị trung bình mỗi đơn</h3>
                                 <p className="text-3xl font-bold text-gray-900">
-                                    {formatPrice(averageValue)}
+                                    {formatPrice(reportData.averageValue)}
                                 </p>
                             </div>
                         </div>

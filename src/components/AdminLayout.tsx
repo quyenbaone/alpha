@@ -25,8 +25,8 @@ const SidebarItem = ({ icon, label, path, isActive, isSidebarOpen, badge }: Side
             to={path}
             onClick={() => window.scrollTo(0, 0)}
             className={`flex items-center px-3 py-2 rounded-lg transition-all whitespace-nowrap ${isActive
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-blue-50 text-blue-600 font-medium'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
         >
             <div className="flex-shrink-0">{icon}</div>

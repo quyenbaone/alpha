@@ -119,6 +119,46 @@ export function Equipment() {
         }
     };
 
+    const fetchEquipment = async () => {
+        try {
+            setLoading(true);
+            setError(null); // Reset error state before fetching
+
+            const { data, error } = await supabase
+                .from('equipment')
+                .select(`
+                    *,
+                    category:category_id (
+                        name
+                    )
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching equipment:', error);
+                throw error;
+            }
+
+            // Set equipment data
+            setEquipment(data || []);
+
+            // Set initial price range based on actual data
+            if (data && data.length > 0) {
+                const prices = data.map(item => item.price_per_day);
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                setPriceRange([minPrice, maxPrice]);
+            }
+        } catch (err) {
+            console.error('Error fetching equipment:', err);
+            setError('Không thể tải danh sách thiết bị. Vui lòng thử lại sau.');
+            setEquipment([]); // Reset equipment data on error
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch data on component mount and when user changes
     useEffect(() => {
         fetchCategories();
         fetchEquipment();
@@ -149,39 +189,6 @@ export function Equipment() {
             }
         }
     }, [searchParams, categories]);
-
-    const fetchEquipment = async () => {
-        try {
-            setLoading(true);
-            const { data, error } = await supabase
-                .from('equipment')
-                .select(`
-                    *,
-                    category:category_id (
-                        name
-                    )
-                `)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            // Set equipment data
-            setEquipment(data || []);
-
-            // Set initial price range based on actual data
-            if (data && data.length > 0) {
-                const prices = data.map(item => item.price_per_day);
-                const minPrice = Math.min(...prices);
-                const maxPrice = Math.max(...prices);
-                setPriceRange([minPrice, maxPrice]);
-            }
-        } catch (err) {
-            console.error('Error fetching equipment:', err);
-            setError('Không thể tải danh sách thiết bị. Vui lòng thử lại sau.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // Reset all filters
     const resetFilters = () => {
@@ -239,6 +246,31 @@ export function Equipment() {
         }
     }, [selectedCategory, searchTerm, priceRange, ratingFilter, loading]);
 
+    // Add error boundary
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
+                    <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h2 className="text-2xl font-semibold text-red-600">Đã xảy ra lỗi</h2>
+                    <p className="mt-2 text-gray-600">{error}</p>
+                    <button
+                        onClick={() => {
+                            setError(null);
+                            fetchEquipment();
+                        }}
+                        className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50"
+                    >
+                        Thử lại
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Show loading state
     if (loading) {
         return (
             <div className="bg-gray-50 min-h-screen">
@@ -268,26 +300,6 @@ export function Equipment() {
                             ))}
                         </div>
                     </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
-                    <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h2 className="text-2xl font-semibold text-red-600">Đã xảy ra lỗi</h2>
-                    <p className="mt-2 text-gray-600">{error}</p>
-                    <button
-                        onClick={fetchEquipment}
-                        className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50"
-                    >
-                        Thử lại
-                    </button>
                 </div>
             </div>
         );
@@ -531,11 +543,6 @@ export function Equipment() {
                                                 {item.condition}
                                             </div>
                                         )}
-                                        {item.available_quantity <= 0 && (
-                                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                                <span className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-md">Hết hàng</span>
-                                            </div>
-                                        )}
                                     </div>
                                     <div className="p-5">
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">{item.title}</h3>
@@ -556,11 +563,7 @@ export function Equipment() {
                                                 <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
                                                 </svg>
-                                                {item.available_quantity > 0 ? (
-                                                    <span>Còn {item.available_quantity} có sẵn</span>
-                                                ) : (
-                                                    <span className="text-red-500">Hết hàng</span>
-                                                )}
+                                                <span>Có sẵn</span>
                                             </div>
                                             <div>
                                                 {new Date(item.created_at).toLocaleDateString('vi-VN')}
@@ -569,7 +572,7 @@ export function Equipment() {
 
                                         <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                                             <span className="text-orange-500 font-bold">
-                                                {item.price_per_day.toLocaleString('vi-VN')}đ/ngày
+                                                {(typeof item.price_per_day === 'number' && !isNaN(item.price_per_day) ? item.price_per_day : 0).toLocaleString('vi-VN')}đ/ngày
                                             </span>
                                             <span className="flex items-center text-sm text-gray-500">
                                                 {item.rating > 0 ? (
@@ -610,11 +613,6 @@ export function Equipment() {
                                                 {item.condition}
                                             </div>
                                         )}
-                                        {item.available_quantity <= 0 && (
-                                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                                <span className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-md">Hết hàng</span>
-                                            </div>
-                                        )}
                                     </div>
                                     <div className="p-4 flex-grow flex flex-col justify-between">
                                         <div>
@@ -636,11 +634,7 @@ export function Equipment() {
                                                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
                                                     </svg>
-                                                    {item.available_quantity > 0 ? (
-                                                        <span>Còn {item.available_quantity} có sẵn</span>
-                                                    ) : (
-                                                        <span className="text-red-500">Hết hàng</span>
-                                                    )}
+                                                    <span>Có sẵn</span>
                                                 </div>
                                                 <div>
                                                     {new Date(item.created_at).toLocaleDateString('vi-VN')}
@@ -660,7 +654,7 @@ export function Equipment() {
                                         </div>
                                         <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                                             <span className="text-orange-500 font-bold">
-                                                {item.price_per_day.toLocaleString('vi-VN')}đ/ngày
+                                                {(typeof item.price_per_day === 'number' && !isNaN(item.price_per_day) ? item.price_per_day : 0).toLocaleString('vi-VN')}đ/ngày
                                             </span>
                                             <span className="text-sm text-blue-600 font-medium hover:underline">
                                                 Xem chi tiết

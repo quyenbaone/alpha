@@ -44,6 +44,48 @@ export function Profile() {
   // Ref to track toast notifications
   const toastMessagesRef = useRef<{ type: 'error' | 'success' | 'info' | 'warning', message: string, id?: string, duration?: number }[]>([]);
 
+  // Add a location-aware effect to refresh rentals when coming from cart checkout
+  const location = window.location;
+
+  // Create a separate useEffect for rentals refresh
+  useEffect(() => {
+    // Always refresh rentals when on the rentals tab
+    if (user && activeTab === 'rentals') {
+      console.log('Refreshing rentals data for tab view');
+      fetchMyRentals();
+    }
+  }, [user, activeTab]);
+
+  // Create a separate function to handle navigation from checkout
+  const refreshRentalsAfterCheckout = useCallback(() => {
+    if (user) {
+      console.log('Force refreshing rentals after checkout');
+      fetchMyRentals().then(data => {
+        if (data?.length) {
+          // Display success message
+          toastMessagesRef.current.push({
+            type: 'success',
+            message: 'Đơn hàng của bạn đã được cập nhật thành công',
+            id: 'rentals-updated'
+          });
+        }
+      });
+    }
+  }, [user]);
+
+  // Add effect to check for navigation from cart
+  useEffect(() => {
+    // Check if we're coming from the cart page
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromCheckout = urlParams.get('fromCheckout') === 'true';
+
+    if (fromCheckout) {
+      refreshRentalsAfterCheckout();
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [refreshRentalsAfterCheckout, window.location.search]);
+
   // Declare fetchUserPreferences before it's used in useEffect
   const fetchUserPreferences = useCallback(async () => {
     if (!user?.id) {
@@ -204,27 +246,69 @@ export function Profile() {
         return [];
       }
 
+      // Thêm logging chi tiết
+      console.log('Fetching rentals for user ID:', user.id);
+
+      // Thử đơn giản hóa truy vấn để tránh các lỗi phức tạp
       const { data, error } = await supabase
         .from('rentals')
-        .select(`
-          *,
-          equipment:equipment_id (
-            title,
-            images,
-            price_per_day
-          )
-        `)
+        .select('*')
         .eq('renter_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching rentals:', error);
+        toastMessagesRef.current.push({
+          type: 'error',
+          message: 'Không thể tải danh sách thiết bị đã thuê'
+        });
         return [];
       }
+
+      console.log('Fetched basic rentals:', data?.length || 0, 'items');
+
+      // Nếu lấy được danh sách cơ bản, tiếp tục lấy thông tin chi tiết
+      if (data && data.length > 0) {
+        // Tạo mảng các ID thiết bị để truy vấn riêng
+        const equipmentIds = data.map(rental => rental.equipment_id);
+
+        // Lấy thông tin thiết bị
+        const { data: equipmentData, error: equipmentError } = await supabase
+          .from('equipment')
+          .select('id, title, images, price_per_day, category_id, status')
+          .in('id', equipmentIds);
+
+        if (equipmentError) {
+          console.error('Error fetching equipment details:', equipmentError);
+        }
+
+        // Tạo lookup map cho thiết bị
+        const equipmentMap = {};
+        if (equipmentData) {
+          equipmentData.forEach(item => {
+            equipmentMap[item.id] = item;
+          });
+        }
+
+        // Kết hợp dữ liệu
+        const combinedData = data.map(rental => ({
+          ...rental,
+          equipment: equipmentMap[rental.equipment_id] || null
+        }));
+
+        console.log('Combined rental data with equipment details');
+        setMyRentals(combinedData);
+        return combinedData;
+      }
+
       setMyRentals(data || []);
       return data;
     } catch (error) {
-      console.error('Error fetching rentals:', error);
+      console.error('Error in fetchMyRentals:', error);
+      toastMessagesRef.current.push({
+        type: 'error',
+        message: 'Đã xảy ra lỗi khi tải danh sách thiết bị đã thuê'
+      });
       return [];
     }
   };
@@ -463,13 +547,39 @@ export function Profile() {
         return true;
       }
 
-      // Table exists, try to save preferences
-      const { error } = await supabase
+      // Kiểm tra xem bản ghi đã tồn tại hay chưa
+      const { data: existingPref, error: checkError } = await supabase
         .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          ...mergedPrefs
-        });
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing preferences:', checkError);
+        return true; // Vẫn trả về true để giữ trạng thái UI
+      }
+
+      let error;
+
+      if (existingPref) {
+        // Nếu đã tồn tại, dùng update thay vì upsert
+        const { error: updateError } = await supabase
+          .from('user_preferences')
+          .update(mergedPrefs)
+          .eq('user_id', user.id);
+
+        error = updateError;
+      } else {
+        // Nếu chưa tồn tại, thêm mới
+        const { error: insertError } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            ...mergedPrefs
+          });
+
+        error = insertError;
+      }
 
       if (error) {
         console.error('Error saving preferences:', error);
@@ -500,6 +610,31 @@ export function Profile() {
         [type]: !newValue
       });
     });
+  };
+
+  // Modify the rental card display
+  const renderRentalImage = (rental) => {
+    // Try to get image from equipment
+    let imageSrc = '/placeholder.png';
+
+    if (rental.equipment) {
+      if (rental.equipment.images && rental.equipment.images.length > 0) {
+        imageSrc = rental.equipment.images[0];
+      }
+      // Fallback for backward compatibility
+      else if (rental.equipment.image) {
+        imageSrc = rental.equipment.image;
+      }
+    }
+
+    return (
+      <img
+        src={imageSrc}
+        alt={rental.equipment?.title || 'Rental equipment'}
+        className="w-24 h-24 object-cover rounded-lg"
+        onError={(e) => e.currentTarget.src = '/placeholder.png'}
+      />
+    );
   };
 
   if (loading) {
@@ -712,6 +847,15 @@ export function Profile() {
   // Xác định nếu người dùng là người thuê
   const isRenter = user ? (!user.is_admin && user.role !== 'owner') : false;
 
+  // Sửa lại để debug
+  useEffect(() => {
+    if (user) {
+      console.log('User role:', user.role);
+      console.log('Is admin:', user.is_admin);
+      console.log('IsRenter:', isRenter);
+    }
+  }, [user, isRenter]);
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Profile Header */}
@@ -845,11 +989,7 @@ export function Profile() {
                 {myRentals.map((rental: any) => (
                   <div key={rental.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4">
-                      <img
-                        src={rental.equipment.images && rental.equipment.images.length > 0 ? rental.equipment.images[0] : '/placeholder.png'}
-                        alt={rental.equipment.title}
-                        className="w-24 h-24 object-cover rounded-lg"
-                      />
+                      {renderRentalImage(rental)}
                       <div className="flex-1">
                         <h3 className="font-semibold">{rental.equipment.title}</h3>
                         <p className="text-gray-600 text-sm">
@@ -869,6 +1009,9 @@ export function Profile() {
                         <p className="font-bold text-lg text-blue-600">
                           {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(rental.equipment.price_per_day)}
                           <span className="text-sm text-gray-500">/ngày</span>
+                        </p>
+                        <p className="text-sm text-gray-700 mt-1">
+                          Tổng tiền: <span className="font-medium">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(rental.total_amount)}</span>
                         </p>
                       </div>
                     </div>

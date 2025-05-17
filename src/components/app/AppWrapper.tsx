@@ -13,9 +13,59 @@ export const AppWrapper = () => {
     // Initialize with shorter timeout for faster app display
     const [initializing, setInitializing] = useState(true);
     const sessionErrorRef = useRef(false);
-    
+
     // Refs to track toast notifications needed
-    const toastMessagesRef = useRef<{type: 'error' | 'success' | 'info', message: string, id?: string}[]>([]);
+    const toastMessagesRef = useRef<{ type: 'error' | 'success' | 'info', message: string, id?: string }[]>([]);
+
+    // Track tab visibility to optimize resources
+    const isVisibleRef = useRef(true);
+    const tabIdRef = useRef(Math.random().toString(36).substring(2, 10));
+
+    // Handle tab visibility changes
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            const isVisible = document.visibilityState === 'visible';
+            isVisibleRef.current = isVisible;
+
+            if (isVisible) {
+                // Register this tab as active
+                localStorage.setItem('activeTab', tabIdRef.current);
+
+                // Refresh important data when coming back to this tab
+                if (!initializing && !loading) {
+                    fetchSettings().catch(console.error);
+                }
+            }
+        };
+
+        // Listen for visibility changes
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // Listen for storage events from other tabs
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === 'activeTab' && event.newValue !== tabIdRef.current) {
+                // Another tab became active, we can reduce resource usage in this tab
+                // This is handled by the useRealtimeChannel hook in supabase.ts
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        // Register this tab as active on initial load
+        if (document.visibilityState === 'visible') {
+            localStorage.setItem('activeTab', tabIdRef.current);
+        }
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('storage', handleStorageChange);
+
+            // Clean up after this tab
+            if (localStorage.getItem('activeTab') === tabIdRef.current) {
+                localStorage.removeItem('activeTab');
+            }
+        };
+    }, [initializing, loading, fetchSettings]);
 
     useEffect(() => {
         // Set a shorter timeout to prevent prolonged loading
@@ -65,22 +115,29 @@ export const AppWrapper = () => {
 
         initialize();
 
-        // Listen for auth changes
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            try {
-                if (session) {
-                    await setSession(session);
+        // Listen for auth changes - using a more memory-efficient approach
+        let authListener: { subscription: { unsubscribe: () => void } } | null = null;
+
+        // Only set up auth listener if this is the visible tab
+        if (isVisibleRef.current) {
+            const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+                try {
+                    if (session) {
+                        await setSession(session);
+                    }
+                } catch (err) {
+                    console.error('Auth state change error:', err);
                 }
-            } catch (err) {
-                console.error('Auth state change error:', err);
-            }
-        });
+            });
+
+            authListener = data;
+        }
 
         return () => {
-            subscription.unsubscribe();
             clearTimeout(timeoutId);
+            if (authListener) {
+                authListener.subscription.unsubscribe();
+            }
         };
     }, [setSession, fetchSettings, initializing]);
 
@@ -99,7 +156,7 @@ export const AppWrapper = () => {
 
             return () => clearTimeout(timeoutId);
         }
-        
+
         // Show session error toast if flag is set
         if (sessionErrorRef.current) {
             const timeoutId = setTimeout(() => {

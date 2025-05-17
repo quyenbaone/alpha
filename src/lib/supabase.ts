@@ -8,6 +8,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+// Track if this tab is the active tab for realtime subscriptions
+let isActiveTab = true;
+let tabId = Math.random().toString(36).substring(2, 10);
+
 // Check for cached session on page load (before Supabase client init)
 // This helps prevent the loading delay when refreshing
 const checkForCachedSession = () => {
@@ -92,6 +96,17 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     params: {
       eventsPerSecond: 2,
     },
+    // Reduce memory usage and prevent leaks for inactive tabs
+    transport: {
+      // Close websocket connection quicker when tab becomes inactive
+      closeOnUninstantiate: true,
+      // Automatically release resources when tab becomes inactive
+      releaseDurations: {
+        // Reduce the default 60 seconds to faster cleanup
+        closing: 15 * 1000, // 15 seconds (default: 60)
+        normalClosure: 15 * 1000, // 15 seconds (default: 60)
+      },
+    }
   },
 });
 
@@ -109,6 +124,38 @@ export const hasValidSession = checkForCachedSession();
 export const clearSupabaseCache = () => {
   cachedResponses.clear();
 };
+
+// Active tab management to limit realtime connections
+// Only the active tab will maintain realtime subscriptions
+window.addEventListener('visibilitychange', () => {
+  isActiveTab = document.visibilityState === 'visible';
+
+  // When tab becomes visible, reconnect realtime if previously disconnected
+  if (isActiveTab) {
+    // Replace deprecated session() call with async getSession()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.realtime.setAuth(session?.access_token || null);
+    });
+  }
+});
+
+// Detect multi-tab scenario and synchronize which tab should handle realtime
+window.addEventListener('storage', (event) => {
+  if (event.key === 'activeRealtimeTab') {
+    if (event.newValue && event.newValue !== tabId) {
+      // Another tab has claimed ownership of realtime
+      // Disconnect realtime in this tab if it's not the owner
+      if (supabase.realtime.channels.length > 0) {
+        supabase.realtime.disconnect();
+      }
+    }
+  }
+});
+
+// Try to claim ownership when tab becomes active
+if (document.visibilityState === 'visible') {
+  localStorage.setItem('activeRealtimeTab', tabId);
+}
 
 // Custom hook for memoized queries
 import { useCallback, useEffect, useState } from 'react';
@@ -142,4 +189,28 @@ export function useSupabaseQuery<T>(
   }, [execute]);
 
   return { data, error, loading, refetch: execute };
+}
+
+// Helper to manage realtime channel subscriptions across tabs
+export function useRealtimeChannel(channelName: string, options?: {
+  enabled?: boolean;
+}) {
+  const { enabled = true } = options || {};
+
+  useEffect(() => {
+    // Only subscribe if this is the active tab and enabled
+    if (!enabled || !isActiveTab) return;
+
+    // Force only one tab to use realtime by claiming ownership
+    localStorage.setItem('activeRealtimeTab', tabId);
+
+    return () => {
+      // When component unmounts, release ownership if this tab had it
+      if (localStorage.getItem('activeRealtimeTab') === tabId) {
+        localStorage.removeItem('activeRealtimeTab');
+      }
+    };
+  }, [enabled, channelName]);
+
+  return isActiveTab;
 }

@@ -66,7 +66,7 @@ export function useRentals() {
             *,
             equipment:equipment_id (
               title,
-              price,
+              price_per_day,
               image
             ),
             renter:renter_id (

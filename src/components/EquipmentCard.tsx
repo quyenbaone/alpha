@@ -1,10 +1,10 @@
+import { Eye, Heart, ShoppingCart, Star } from 'lucide-react';
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, Heart, ShoppingCart, Star } from 'lucide-react';
+import { toast } from 'sonner';
 import { Equipment } from '../lib/types';
 import { formatPrice } from '../lib/utils';
 import { useCartStore } from '../store/cartStore';
-import { toast } from 'sonner';
 
 interface EquipmentCardProps {
   item: Equipment;
@@ -13,7 +13,7 @@ interface EquipmentCardProps {
 export function EquipmentCard({ item }: EquipmentCardProps) {
   const [isLiked, setIsLiked] = React.useState(false);
   const navigate = useNavigate();
-  const addItem = useCartStore((state) => state.addItem);
+  const addToCart = useCartStore((state) => state.addToCart);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation when clicking cart button
@@ -21,11 +21,13 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    addItem({
-      equipment: item,
-      quantity: 1,
-      startDate: today.toISOString().split('T')[0],
-      endDate: tomorrow.toISOString().split('T')[0],
+    addToCart({
+      id: item.id,
+      title: item.title,
+      price: item.price_per_day || 0,
+      image: item.images?.[0] || '/placeholder.png',
+      startDate: today,
+      endDate: tomorrow,
     });
 
     toast.success('Đã thêm vào giỏ hàng');
@@ -42,25 +44,24 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
   };
 
   return (
-    <Link 
+    <Link
       to={`/equipment/${item.id}`}
       className="block group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
     >
       <div className="relative overflow-hidden">
-        <img 
-          src={item.image} 
-          alt={item.title} 
+        <img
+          src={item.image}
+          alt={item.title}
           className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-700"
         />
         <div className="absolute top-2 right-2 flex gap-2 z-10">
-          <button 
+          <button
             onClick={handleLike}
             className="p-2 bg-white rounded-full hover:bg-gray-100 transform hover:scale-110 transition-all duration-300"
           >
-            <Heart 
-              className={`h-5 w-5 transition-colors duration-300 ${
-                isLiked ? 'text-red-500 fill-current' : 'text-gray-600'
-              }`} 
+            <Heart
+              className={`h-5 w-5 transition-colors duration-300 ${isLiked ? 'text-red-500 fill-current' : 'text-gray-600'
+                }`}
             />
           </button>
           <button
@@ -93,13 +94,12 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
         <div className="flex items-center gap-2 mb-3">
           <div className="flex items-center gap-1">
             {[...Array(5)].map((_, index) => (
-              <Star 
+              <Star
                 key={index}
-                className={`h-4 w-4 ${
-                  index < Math.floor(item.rating)
+                className={`h-4 w-4 ${index < Math.floor(item.rating)
                     ? 'text-yellow-400 fill-current'
                     : 'text-gray-300'
-                } transform group-hover:scale-110 transition-transform duration-300 hover:rotate-12`}
+                  } transform group-hover:scale-110 transition-transform duration-300 hover:rotate-12`}
               />
             ))}
           </div>

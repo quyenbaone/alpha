@@ -1,5 +1,5 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.39.7';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2.39.7';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -105,8 +105,8 @@ serve(async (req) => {
           *,
           equipment:equipment_id (
             title,
-            price,
-            image
+            price_per_day,
+            images
           ),
           renter:renter_id (
             email

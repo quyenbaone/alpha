@@ -46,14 +46,14 @@ export default function OwnerRentals() {
           *,
           equipment:equipment_id (
             title,
-            price,
-            image
+            price_per_day,
+            images
           ),
           renter:renter_id (
             id,
             email,
             full_name,
-            phone
+            phone_number
           )
         `)
                 .in('equipment_id', equipmentIds)
@@ -229,10 +229,10 @@ export default function OwnerRentals() {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center">
                                                         <div className="h-10 w-10 flex-shrink-0">
-                                                            {rental.equipment?.image ? (
+                                                            {rental.equipment?.images && rental.equipment.images.length > 0 ? (
                                                                 <img
                                                                     className="h-10 w-10 object-cover rounded-md"
-                                                                    src={rental.equipment.image}
+                                                                    src={rental.equipment.images[0]}
                                                                     alt={rental.equipment?.title}
                                                                 />
                                                             ) : (
@@ -249,8 +249,8 @@ export default function OwnerRentals() {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">{rental.renter?.full_name || 'N/A'}</div>
                                                     <div className="text-sm text-gray-500">{rental.renter?.email}</div>
-                                                    {rental.renter?.phone && (
-                                                        <div className="text-xs text-gray-500">{rental.renter.phone}</div>
+                                                    {rental.renter?.phone_number && (
+                                                        <div className="text-xs text-gray-500">{rental.renter.phone_number}</div>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">

@@ -7,7 +7,7 @@ export type Notification = Database['public']['Tables']['notifications']['Row'];
 export type User = Database['public']['Tables']['users']['Row'];
 
 export type RentalWithDetails = Rental & {
-  equipment: Pick<Equipment, 'title' | 'price' | 'image'>;
+  equipment: Pick<Equipment, 'title' | 'price_per_day' | 'image'>;
   renter: Pick<User, 'email'>;
 };
 

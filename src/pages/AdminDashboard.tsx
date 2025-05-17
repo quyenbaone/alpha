@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   const [newEquipment, setNewEquipment] = useState({
     title: '',
     description: '',
-    price: '',
+    price_per_day: '',
     category: '',
     image: '',
     quantity: '',
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
         .from('rentals')
         .select('*');
 
-      const totalRevenue = rentalData?.reduce((sum, rental) => sum + (rental.total_amount || 0), 0) || 0;
+      const totalRevenue = rentalData?.reduce((sum, rental) => sum + (rental.total_price || 0), 0) || 0;
 
       // Fetch recent rentals
       const { data: recentRentals } = await supabase
@@ -144,26 +144,31 @@ export default function AdminDashboard() {
           *,
           equipment:equipment_id (
             title,
-            image
+            image,
+            price_per_day
           ),
           renter:renter_id (
             email
-          )
+          ),
+          total_price
         `)
         .order('created_at', { ascending: false })
         .limit(5);
 
       // Fetch popular equipment
-      const { data: popularEquipment } = await supabase
+      const { data: popularEquipmentRaw } = await supabase
         .from('equipment')
         .select(`
           *,
+          price_per_day,
           rentals:rentals (
             id
           )
         `)
-        .order('rentals.count', { ascending: false })
-        .limit(5);
+        .limit(20); // lấy nhiều hơn để sort phía client
+
+      // Sort phía client theo số lượt thuê giảm dần
+      const popularEquipment = (popularEquipmentRaw || []).sort((a, b) => (b.rentals?.length || 0) - (a.rentals?.length || 0)).slice(0, 5);
 
       setStats({
         totalUsers: userCount || 0,
@@ -336,18 +341,20 @@ export default function AdminDashboard() {
   const handleCreateEquipment = async () => {
     try {
       // Validate required fields
-      if (!newEquipment.title || !newEquipment.price || !newEquipment.category) {
+      if (!newEquipment.title || !newEquipment.price_per_day || !newEquipment.category) {
         toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
         return;
       }
 
+      const newEquipmentData = {
+        ...newEquipment,
+        price_per_day: parseFloat(newEquipment.price_per_day),
+        owner_id: user.id // Set the current admin as the owner
+      };
+
       const { error } = await supabase
         .from('equipment')
-        .insert([{
-          ...newEquipment,
-          price: parseFloat(newEquipment.price),
-          owner_id: user.id // Set the current admin as the owner
-        }]);
+        .insert([newEquipmentData]);
 
       if (error) throw error;
 
@@ -356,7 +363,7 @@ export default function AdminDashboard() {
       setNewEquipment({
         title: '',
         description: '',
-        price: '',
+        price_per_day: '',
         category: '',
         image: '',
         quantity: '',
@@ -486,7 +493,7 @@ export default function AdminDashboard() {
                           {rental.renter?.email}
                         </p>
                         <p className="text-sm font-medium text-blue-600">
-                          {formatPrice(rental.total_amount)}
+                          {formatPrice(rental.total_price)}
                         </p>
                       </div>
                     </div>
@@ -514,7 +521,7 @@ export default function AdminDashboard() {
                             Đã thuê: <span className="font-medium">{item.rentals?.length || 0}</span>
                           </p>
                           <p className="text-sm font-medium text-blue-600">
-                            {formatPrice(item.price)}
+                            {formatPrice(item.price_per_day)}
                           </p>
                         </div>
                       </div>
@@ -723,8 +730,8 @@ export default function AdminDashboard() {
                       </label>
                       <input
                         type="number"
-                        value={newEquipment.price}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, price: e.target.value })}
+                        value={newEquipment.price_per_day}
+                        onChange={(e) => setNewEquipment({ ...newEquipment, price_per_day: e.target.value })}
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         placeholder="Nhập giá thuê"
                       />
@@ -950,7 +957,7 @@ export default function AdminDashboard() {
                         {rental.equipment?.title}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {formatPrice(rental.equipment?.price)}/ngày
+                        {formatPrice(rental.equipment?.price_per_day)}/ngày
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
