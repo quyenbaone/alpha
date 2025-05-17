@@ -184,7 +184,6 @@ export function EquipmentDetail() {
             <div className="flex items-center">
               <Star className="h-5 w-5 text-yellow-400 fill-current" />
               <span className="ml-1 font-semibold">{avgRating || equipment.rating || 0}</span>
-              <span className="text-gray-500 ml-2 text-sm">({reviewCount || equipment.reviews || 0} đánh giá)</span>
             </div>
             <div className="flex items-center text-gray-600">
               <MapPin className="h-5 w-5" />
