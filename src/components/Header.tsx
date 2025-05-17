@@ -1,4 +1,4 @@
-import { Camera, ChevronDown, LogIn, LogOut, Menu, Search, ShoppingCart, User, X } from 'lucide-react';
+import { Camera, ChevronDown, Home, LogIn, LogOut, Mail, Menu, Search, ShoppingCart, User, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -54,8 +54,9 @@ export function Header() {
   };
 
   const menuItems = [
+    { to: '/', label: 'Home', icon: <Home className="h-5 w-5" /> },
     { to: '/equipment', label: 'Thiết bị', icon: <Camera className="h-5 w-5" /> },
-    
+    { to: '/contact', label: 'Liên hệ', icon: <Mail className="h-5 w-5" /> },
   ];
 
   return (

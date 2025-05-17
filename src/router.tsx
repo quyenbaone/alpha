@@ -33,6 +33,7 @@ const SignIn = lazy(() => import('./pages/SignIn').then(module => ({ default: mo
 const SignUp = lazy(() => import('./pages/SignUp').then(module => ({ default: module.SignUp })));
 const ResetPassword = lazy(() => import('./pages/ResetPassword').then(module => ({ default: module.ResetPassword })));
 const Messages = lazy(() => import('./pages/Messages').then(module => ({ default: module.Messages })));
+const Contact = lazy(() => import('./pages/Contact').then(module => ({ default: module.Contact })));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
 const AdminReports = lazy(() => import('./pages/AdminReports').then(module => ({ default: module.AdminReports })));
 const AdminUsers = lazy(() => import('./pages/AdminUsers').then(module => ({ default: module.AdminUsers })));
@@ -53,6 +54,7 @@ export const router = createBrowserRouter(
                 <Route index element={<Home />} />
                 <Route path="equipment" element={<Equipment />} />
                 <Route path="equipment/:id" element={<EquipmentDetail />} />
+                <Route path="contact" element={<Contact />} />
                 <Route path="cart" element={
                     <ProtectedRoute>
                         <Cart />
