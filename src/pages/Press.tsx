@@ -12,7 +12,7 @@ export function Press() {
         <h2>Thông cáo báo chí mới nhất</h2>
         <div className="grid gap-8">
           <article className="border-b pb-8">
-            <time className="text-sm text-muted-foreground">15 tháng 3, 2024</time>
+            <time className="text-sm text-muted-foreground">15 tháng 3, 2025</time>
             <h3 className="text-xl font-semibold mt-2 mb-4">
               RentGear nhận đầu tư 2 triệu USD từ quỹ đầu tư ABC Ventures
             </h3>

@@ -53,11 +53,7 @@ export function Footer() {
                   Thiết bị
                 </Link>
               </li>
-              <li>
-                <Link to="/categories" className="text-sm hover:text-white">
-                  Danh mục
-                </Link>
-              </li>
+              
               <li>
                 <Link to="/about" className="text-sm hover:text-white">
                   Giới thiệu

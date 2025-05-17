@@ -34,6 +34,11 @@ const SignUp = lazy(() => import('./pages/SignUp').then(module => ({ default: mo
 const ResetPassword = lazy(() => import('./pages/ResetPassword').then(module => ({ default: module.ResetPassword })));
 const Messages = lazy(() => import('./pages/Messages').then(module => ({ default: module.Messages })));
 const Contact = lazy(() => import('./pages/Contact').then(module => ({ default: module.Contact })));
+const Terms = lazy(() => import('./pages/Terms').then(module => ({ default: module.Terms })));
+const Privacy = lazy(() => import('./pages/Privacy').then(module => ({ default: module.Privacy })));
+const About = lazy(() => import('./pages/About').then(module => ({ default: module.About })));
+const FAQ = lazy(() => import('./pages/FAQ').then(module => ({ default: module.FAQ })));
+const Help = lazy(() => import('./pages/Help').then(module => ({ default: module.Help })));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
 const AdminReports = lazy(() => import('./pages/AdminReports').then(module => ({ default: module.AdminReports })));
 const AdminUsers = lazy(() => import('./pages/AdminUsers').then(module => ({ default: module.AdminUsers })));
@@ -55,6 +60,11 @@ export const router = createBrowserRouter(
                 <Route path="equipment" element={<Equipment />} />
                 <Route path="equipment/:id" element={<EquipmentDetail />} />
                 <Route path="contact" element={<Contact />} />
+                <Route path="terms" element={<Terms />} />
+                <Route path="privacy" element={<Privacy />} />
+                <Route path="about" element={<About />} />
+                <Route path="faq" element={<FAQ />} />
+                <Route path="help" element={<Help />} />
                 <Route path="cart" element={
                     <ProtectedRoute>
                         <Cart />

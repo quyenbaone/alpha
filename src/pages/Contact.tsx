@@ -55,8 +55,7 @@ export function Contact() {
                             <Mail className="h-6 w-6 text-orange-600" />
                         </div>
                         <h3 className="font-semibold text-lg mb-2">Email</h3>
-                        <p className="text-gray-600">info@rentgear.vn</p>
-                        <p className="text-gray-600">support@rentgear.vn</p>
+                        <p className="text-gray-600">cauvan2293@gmail.com</p>
                     </div>
 
                     <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center text-center">
@@ -64,8 +63,7 @@ export function Contact() {
                             <MapPin className="h-6 w-6 text-orange-600" />
                         </div>
                         <h3 className="font-semibold text-lg mb-2">Địa chỉ</h3>
-                        <p className="text-gray-600">123 Đường Nguyễn Huệ</p>
-                        <p className="text-gray-600">Quận 1, TP. Hồ Chí Minh</p>
+                        <p className="text-gray-600">Quy Nhơn, Gia Lai</p>
                     </div>
                 </div>
 
@@ -137,16 +135,18 @@ export function Contact() {
                     <h2 className="text-2xl font-semibold mb-6">Vị trí của chúng tôi</h2>
                     <div className="h-80 bg-gray-200 rounded-lg overflow-hidden">
                         <iframe
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.394855374676!2d106.70162147469967!3d10.77945898931368!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f4670702e31%3A0xa5777fb3a5d0d8f4!2zTmd1eeG7hW4gSHXhu4csIELhur9uIE5naMOpLCBRdeG6rW4gMSwgVGjDoG5oIHBo4buRIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1687147547800!5m2!1svi!2s"
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d62713.984552736775!2d109.19858591085635!3d13.803743288648636!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x316f6bf778c80973%3A0x8a7d0b5aa0af29c7!2zxJDhuqFpIGjhu41jIEZQVCBRdXkgTmjGsG4!5e0!3m2!1svi!2s!4v1716022467783!5m2!1svi!2s"
                             width="100%"
                             height="100%"
                             style={{ border: 0 }}
                             allowFullScreen
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
+                            title="FPT Quy Nhơn"
                         ></iframe>
                     </div>
                 </div>
+
             </div>
         </div>
     );

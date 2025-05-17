@@ -1,4 +1,3 @@
-import React from 'react';
 
 export function Help() {
   return (
@@ -34,7 +33,7 @@ export function Help() {
                   Chính sách bảo hiểm như thế nào?
                 </summary>
                 <p className="mt-4 text-muted-foreground">
-                  Mọi giao dịch trên RentGear đều được bảo hiểm 100% giá trị thiết bị.
+                  Mọi giao dịch trên Alpha đều được bảo hiểm 100% giá trị thiết bị.
                   Trong trường hợp xảy ra sự cố, chúng tôi sẽ hỗ trợ giải quyết và bồi thường theo quy định.
                 </p>
               </details>
@@ -49,16 +48,16 @@ export function Help() {
             <div className="mt-6 space-y-4">
               <div>
                 <h3 className="font-medium">Email</h3>
-                <p className="text-muted-foreground">support@rentgear.vn</p>
+                <p className="text-muted-foreground">cauvang2293@gmail.com</p>
               </div>
               <div>
                 <h3 className="font-medium">Hotline</h3>
-                <p className="text-muted-foreground">1900 1234</p>
+                <p className="text-muted-foreground">012345678</p>
               </div>
               <div>
                 <h3 className="font-medium">Địa chỉ</h3>
                 <p className="text-muted-foreground">
-                  123 Đường ABC, Quận 1, TP HCM
+                  Quy Nhơn, Gia Lai
                 </p>
               </div>
             </div>
@@ -68,3 +67,5 @@ export function Help() {
     </div>
   );
 }
+
+export default Help;
