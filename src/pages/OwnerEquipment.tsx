@@ -39,6 +39,7 @@ export default function OwnerEquipment() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingEquipment, setEditingEquipment] = useState<EquipmentItem | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -114,14 +115,32 @@ export default function OwnerEquipment() {
         }
     };
 
-    const handleAddEquipment = async (e) => {
-        e.preventDefault();
-
-        // Basic validation
+    // Validate form
+    const validateForm = () => {
         if (!formData.title || !formData.price_per_day || !formData.category_id) {
             toast.error('Vui lòng nhập tiêu đề, giá và chọn danh mục');
-            return;
+            return false;
         }
+        if (parseFloat(formData.price_per_day) <= 0) {
+            toast.error('Giá phải lớn hơn 0');
+            return false;
+        }
+        if (parseInt(formData.quantity) <= 0) {
+            toast.error('Số lượng phải lớn hơn 0');
+            return false;
+        }
+        if (categories.length === 0) {
+            toast.error('Bạn cần tạo danh mục trước!');
+            return false;
+        }
+        // Optionally check image URL format
+        return true;
+    };
+
+    const handleAddEquipment = async (e) => {
+        e.preventDefault();
+        if (!validateForm()) return;
+        setIsSubmitting(true);
 
         try {
             // Generate slug from title
@@ -139,29 +158,21 @@ export default function OwnerEquipment() {
                 created_at: new Date().toISOString()
             };
 
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('equipment')
-                .insert([newEquipment])
-                .select();
+                .insert([newEquipment]);
 
             if (error) throw error;
 
             toast.success('Đã thêm thiết bị mới');
-            setFormData({
-                title: '',
-                description: '',
-                price_per_day: '',
-                category_id: '',
-                images: [],
-                quantity: '1',
-                location: '',
-                status: 'available'
-            });
-            setShowAddForm(false);
+            resetForm();
             fetchEquipment();
+            setShowAddForm(false);
         } catch (error) {
             console.error('Error adding equipment:', error);
             toast.error('Lỗi khi thêm thiết bị: ' + error.message);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -182,8 +193,9 @@ export default function OwnerEquipment() {
 
     const handleUpdateEquipment = async (e) => {
         e.preventDefault();
-
         if (!editingEquipment) return;
+        if (!validateForm()) return;
+        setIsSubmitting(true);
 
         try {
             // No need to regenerate slug on update
@@ -198,35 +210,28 @@ export default function OwnerEquipment() {
                 .from('equipment')
                 .update(updatedEquipment)
                 .eq('id', editingEquipment.id)
-                .eq('owner_id', user.id); // Extra safety to ensure they own it
+                .eq('owner_id', user.id);
 
             if (error) throw error;
 
             toast.success('Cập nhật thiết bị thành công');
-            setFormData({
-                title: '',
-                description: '',
-                price_per_day: '',
-                category_id: '',
-                images: [],
-                quantity: '1',
-                location: '',
-                status: 'available'
-            });
+            resetForm();
             setEditingEquipment(null);
             setShowAddForm(false);
             fetchEquipment();
         } catch (error) {
             console.error('Error updating equipment:', error);
             toast.error('Lỗi khi cập nhật thiết bị: ' + error.message);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleDeleteEquipment = async (id) => {
         if (!confirm('Bạn có chắc chắn muốn xóa thiết bị này?')) return;
+        setIsSubmitting(true);
 
         try {
-            // Extra check to ensure they own the equipment
             const { error } = await supabase
                 .from('equipment')
                 .delete()
@@ -240,7 +245,22 @@ export default function OwnerEquipment() {
         } catch (error) {
             console.error('Error deleting equipment:', error);
             toast.error('Lỗi khi xóa thiết bị');
+        } finally {
+            setIsSubmitting(false);
         }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            title: '',
+            description: '',
+            price_per_day: '',
+            category_id: '',
+            images: [],
+            quantity: '1',
+            location: '',
+            status: 'available'
+        });
     };
 
     const filteredEquipment = searchTerm
@@ -263,19 +283,11 @@ export default function OwnerEquipment() {
                         <button
                             onClick={() => {
                                 setEditingEquipment(null);
-                                setFormData({
-                                    title: '',
-                                    description: '',
-                                    price_per_day: '',
-                                    category_id: '',
-                                    images: [],
-                                    quantity: '1',
-                                    location: '',
-                                    status: 'available'
-                                });
+                                resetForm();
                                 setShowAddForm(true);
                             }}
                             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            disabled={loadingCategories}
                         >
                             <Plus size={16} className="mr-2" />
                             Thêm thiết bị mới
@@ -318,16 +330,7 @@ export default function OwnerEquipment() {
                                 <button
                                     onClick={() => {
                                         setEditingEquipment(null);
-                                        setFormData({
-                                            title: '',
-                                            description: '',
-                                            price_per_day: '',
-                                            category_id: '',
-                                            images: [],
-                                            quantity: '1',
-                                            location: '',
-                                            status: 'available'
-                                        });
+                                        resetForm();
                                         setShowAddForm(true);
                                     }}
                                     className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -340,24 +343,12 @@ export default function OwnerEquipment() {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Thiết bị
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Danh mục
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Giá / ngày
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Trạng thái
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Ngày tạo
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Hành động
-                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá / ngày</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -396,12 +387,14 @@ export default function OwnerEquipment() {
                                                     <button
                                                         onClick={() => handleEditEquipment(item)}
                                                         className="text-blue-600 hover:text-blue-800 mr-3"
+                                                        disabled={isSubmitting}
                                                     >
                                                         <Edit size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteEquipment(item.id)}
                                                         className="text-red-600 hover:text-red-800"
+                                                        disabled={isSubmitting}
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
@@ -425,140 +418,170 @@ export default function OwnerEquipment() {
                                 {editingEquipment ? 'Chỉnh sửa thiết bị' : 'Thêm thiết bị mới'}
                             </h2>
                             <button
-                                onClick={() => setShowAddForm(false)}
+                                onClick={() => {
+                                    setShowAddForm(false);
+                                    resetForm();
+                                    setEditingEquipment(null);
+                                }}
                                 className="text-gray-600 hover:text-gray-800"
                             >
                                 <X size={24} />
                             </button>
                         </div>
 
-                        <form onSubmit={editingEquipment ? handleUpdateEquipment : handleAddEquipment}>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-medium mb-1">Tiêu đề</label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
-                                />
+                        {loadingCategories ? (
+                            <div className="text-center py-4">Đang tải danh mục...</div>
+                        ) : categories.length === 0 ? (
+                            <div className="text-center text-red-500 font-medium py-6">
+                                Bạn chưa có danh mục nào.<br />
+                                Vui lòng tạo danh mục trước khi thêm thiết bị.
                             </div>
-
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-medium mb-1">Mô tả</label>
-                                <textarea
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    rows={4}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                ></textarea>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Giá thuê mỗi ngày (VND)</label>
-                                    <input
-                                        type="number"
-                                        name="price_per_day"
-                                        value={formData.price_per_day}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Danh mục</label>
-                                    <select
-                                        name="category_id"
-                                        value={formData.category_id}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    >
-                                        <option value="">-- Chọn danh mục --</option>
-                                        {categories.map(category => (
-                                            <option key={category.id} value={category.id}>
-                                                {category.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Số lượng</label>
-                                    <input
-                                        type="number"
-                                        name="quantity"
-                                        value={formData.quantity}
-                                        onChange={handleInputChange}
-                                        min="1"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Vị trí</label>
+                        ) : (
+                            <form onSubmit={editingEquipment ? handleUpdateEquipment : handleAddEquipment}>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 text-sm font-medium mb-1">Tiêu đề</label>
                                     <input
                                         type="text"
-                                        name="location"
-                                        value={formData.location}
+                                        name="title"
+                                        value={formData.title}
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
                                     />
                                 </div>
-                            </div>
 
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-medium mb-1">Đường dẫn hình ảnh</label>
-                                <input
-                                    type="text"
-                                    name="images"
-                                    value={Array.isArray(formData.images) ? formData.images.join(', ') : ''}
-                                    onChange={handleInputChange}
-                                    placeholder="Nhập đường dẫn hình ảnh, cách nhau bởi dấu phẩy"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Nhập nhiều URL hình ảnh, cách nhau bởi dấu phẩy</p>
-                            </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 text-sm font-medium mb-1">Mô tả</label>
+                                    <textarea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        rows={4}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    ></textarea>
+                                </div>
 
-                            <div className="mb-6">
-                                <label className="block text-gray-700 text-sm font-medium mb-1">Trạng thái</label>
-                                <select
-                                    name="status"
-                                    value={formData.status}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="available">Có sẵn</option>
-                                    <option value="unavailable">Không có sẵn</option>
-                                    <option value="rented">Đang thuê</option>
-                                </select>
-                            </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-gray-700 text-sm font-medium mb-1">Giá thuê mỗi ngày (VND)</label>
+                                        <input
+                                            type="number"
+                                            name="price_per_day"
+                                            value={formData.price_per_day}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                            min={1}
+                                        />
+                                    </div>
 
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowAddForm(false)}
-                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                                >
-                                    {editingEquipment ? 'Cập nhật' : 'Thêm thiết bị'}
-                                </button>
-                            </div>
-                        </form>
+                                    <div>
+                                        <label className="block text-gray-700 text-sm font-medium mb-1">Danh mục</label>
+                                        <select
+                                            name="category_id"
+                                            value={formData.category_id}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        >
+                                            <option value="">-- Chọn danh mục --</option>
+                                            {categories.map(category => (
+                                                <option key={category.id} value={category.id}>
+                                                    {category.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-gray-700 text-sm font-medium mb-1">Số lượng</label>
+                                        <input
+                                            type="number"
+                                            name="quantity"
+                                            value={formData.quantity}
+                                            onChange={handleInputChange}
+                                            min="1"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-gray-700 text-sm font-medium mb-1">Vị trí</label>
+                                        <input
+                                            type="text"
+                                            name="location"
+                                            value={formData.location}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 text-sm font-medium mb-1">Đường dẫn hình ảnh</label>
+                                    <input
+                                        type="text"
+                                        name="images"
+                                        value={Array.isArray(formData.images) ? formData.images.join(', ') : ''}
+                                        onChange={handleInputChange}
+                                        placeholder="Nhập đường dẫn hình ảnh, cách nhau bởi dấu phẩy"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Nhập nhiều URL hình ảnh, cách nhau bởi dấu phẩy</p>
+                                    {/* Preview images */}
+                                    {Array.isArray(formData.images) && formData.images.length > 0 && (
+                                        <div className="flex gap-2 mt-2">
+                                            {formData.images.map((url, idx) => (
+                                                <img key={idx} src={url} className="h-12 w-12 object-cover rounded border" alt={`Preview ${idx + 1}`} />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="mb-6">
+                                    <label className="block text-gray-700 text-sm font-medium mb-1">Trạng thái</label>
+                                    <select
+                                        name="status"
+                                        value={formData.status}
+                                        onChange={handleInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="available">Có sẵn</option>
+                                        <option value="unavailable">Không có sẵn</option>
+                                        <option value="rented">Đang thuê</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex justify-end space-x-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowAddForm(false);
+                                            resetForm();
+                                            setEditingEquipment(null);
+                                        }}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                                        disabled={isSubmitting}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                        disabled={isSubmitting}
+                                    >
+                                        {isSubmitting
+                                            ? (editingEquipment ? 'Đang cập nhật...' : 'Đang thêm...')
+                                            : (editingEquipment ? 'Cập nhật' : 'Thêm thiết bị')}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
         </OwnerLayout>
     );
-} 
+}
