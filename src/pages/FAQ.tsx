@@ -10,20 +10,20 @@ function FAQItem({ question, answer }: FAQItemProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="border-b border-gray-200 py-4">
+        <div className="border-b border-gray-200 dark:border-gray-700 py-4">
             <button
                 className="flex w-full justify-between items-center text-left focus:outline-none"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <h3 className="text-lg font-medium text-gray-900">{question}</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">{question}</h3>
                 {isOpen ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                    <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-300" />
                 ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                    <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-300" />
                 )}
             </button>
             {isOpen && (
-                <div className="mt-2 text-gray-600">
+                <div className="mt-2 text-gray-600 dark:text-gray-300">
                     <p>{answer}</p>
                 </div>
             )}
@@ -84,10 +84,10 @@ export function FAQ() {
     return (
         <div className="container mx-auto px-4 py-12 pt-28">
             <div className="max-w-3xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8 text-center">Câu hỏi thường gặp</h1>
+                <h1 className="text-3xl font-bold mb-8 text-center text-gray-900 dark:text-white">Câu hỏi thường gặp</h1>
 
-                <div className="bg-white p-8 rounded-lg shadow-md mb-12">
-                    <h2 className="text-2xl font-semibold mb-6">Thông tin chung</h2>
+                <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md mb-12">
+                    <h2 className="text-2xl font-semibold mb-6 text-orange-600 dark:text-orange-400">Thông tin chung</h2>
                     <div className="space-y-2">
                         {generalFAQs.map((faq, index) => (
                             <FAQItem key={index} question={faq.question} answer={faq.answer} />
@@ -95,8 +95,8 @@ export function FAQ() {
                     </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-lg shadow-md mb-12">
-                    <h2 className="text-2xl font-semibold mb-6">Thuê thiết bị</h2>
+                <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md mb-12">
+                    <h2 className="text-2xl font-semibold mb-6 text-orange-600 dark:text-orange-400">Thuê thiết bị</h2>
                     <div className="space-y-2">
                         {rentalFAQs.map((faq, index) => (
                             <FAQItem key={index} question={faq.question} answer={faq.answer} />
@@ -104,8 +104,8 @@ export function FAQ() {
                     </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-lg shadow-md">
-                    <h2 className="text-2xl font-semibold mb-6">Cho thuê thiết bị</h2>
+                <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md">
+                    <h2 className="text-2xl font-semibold mb-6 text-orange-600 dark:text-orange-400">Cho thuê thiết bị</h2>
                     <div className="space-y-2">
                         {ownerFAQs.map((faq, index) => (
                             <FAQItem key={index} question={faq.question} answer={faq.answer} />
@@ -113,9 +113,9 @@ export function FAQ() {
                     </div>
                 </div>
 
-                <div className="mt-12 bg-orange-50 p-6 rounded-lg border border-orange-100 text-center">
-                    <h3 className="text-lg font-semibold mb-2">Không tìm thấy câu trả lời?</h3>
-                    <p className="text-gray-700 mb-4">
+                <div className="mt-12 bg-orange-50 dark:bg-orange-900/40 p-6 rounded-lg border border-orange-100 dark:border-orange-400/30 text-center shadow">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Không tìm thấy câu trả lời?</h3>
+                    <p className="text-gray-700 dark:text-gray-200 mb-4">
                         Nếu bạn có câu hỏi khác, vui lòng liên hệ với chúng tôi qua trang liên hệ.
                     </p>
                     <a
@@ -130,4 +130,4 @@ export function FAQ() {
     );
 }
 
-export default FAQ; 
+export default FAQ;
