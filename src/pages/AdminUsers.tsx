@@ -143,7 +143,6 @@ export function AdminUsers() {
     useEffect(() => {
         if (user) {
             fetchUsers();
-            debugTableStructure();
         }
     }, [user]);
 
@@ -171,42 +170,6 @@ export function AdminUsers() {
             toast.error('Lỗi khi tải dữ liệu người dùng');
         } finally {
             setLoading(false);
-        }
-    };
-
-    // Thêm hàm debug để xem cấu trúc bảng users
-    const debugTableStructure = async () => {
-        try {
-            // Lấy thông tin cấu trúc bảng từ Supabase
-            const { data, error } = await supabase.rpc('get_schema_info', {
-                table_name: 'users'
-            });
-
-            if (error) {
-                console.error("Không thể lấy thông tin schema:", error);
-                return;
-            }
-
-            console.log("=== USERS TABLE STRUCTURE ===");
-            console.log(data);
-
-            // Cách khác để lấy thông tin
-            const { data: sample, error: sampleError } = await supabase
-                .from('users')
-                .select('*')
-                .limit(1);
-
-            if (sampleError) {
-                console.error("Lỗi khi lấy mẫu:", sampleError);
-                return;
-            }
-
-            console.log("=== USERS SAMPLE DATA ===");
-            console.log(sample);
-            console.log("Column names:", sample && sample[0] ? Object.keys(sample[0]) : []);
-
-        } catch (err) {
-            console.error("Error in debugTableStructure:", err);
         }
     };
 

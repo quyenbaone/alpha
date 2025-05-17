@@ -18,9 +18,7 @@ interface Rental {
         id: string;
         email: string;
         full_name: string;
-        is_business: boolean;
-        business_name: string;
-        phone?: string;
+        phone_number?: string;
     };
     equipment_id: string;
     renter_id: string;
@@ -151,7 +149,7 @@ export function AdminRentals() {
             // Fetch renters data
             const { data: rentersData, error: rentersError } = await supabase
                 .from('users')
-                .select('id, email, full_name, phone, is_business, business_name')
+                .select('id, email, full_name, phone_number')
                 .in('id', renterIds);
 
             if (rentersError) {
@@ -290,8 +288,7 @@ export function AdminRentals() {
     const filteredRentals = rentals.filter(rental =>
         rental.equipment?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rental.renter?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rental.renter?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rental.renter?.business_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        rental.renter?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const getStatusLabel = (status: string) => {
@@ -338,9 +335,9 @@ export function AdminRentals() {
             const csvData = filteredRentals.map(rental => [
                 rental.id,
                 rental.equipment?.title || '',
-                rental.renter?.full_name || rental.renter?.business_name || '',
+                rental.renter?.full_name || '',
                 rental.renter?.email || '',
-                rental.renter?.phone || '',
+                rental.renter?.phone_number || '',
                 formatDate(rental.start_date),
                 formatDate(rental.end_date),
                 getStatusLabel(rental.status).text,
@@ -569,14 +566,14 @@ export function AdminRentals() {
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm text-gray-900">
-                                                                {rental.renter?.business_name || rental.renter?.full_name || 'N/A'}
+                                                                {rental.renter?.full_name || 'N/A'}
                                                             </div>
                                                             <div className="text-sm text-gray-500">
                                                                 {rental.renter?.email}
                                                             </div>
-                                                            {rental.renter?.phone && (
+                                                            {rental.renter?.phone_number && (
                                                                 <div className="text-sm text-gray-500">
-                                                                    SĐT: {rental.renter.phone}
+                                                                    SĐT: {rental.renter.phone_number}
                                                                 </div>
                                                             )}
                                                         </td>
@@ -730,9 +727,9 @@ export function AdminRentals() {
                                     <div className="bg-gray-50 p-4 rounded-lg mb-4">
                                         {selectedRental.renter ? (
                                             <div>
-                                                <p><span className="text-gray-500">Tên:</span> {selectedRental.renter.full_name || selectedRental.renter.business_name || 'N/A'}</p>
+                                                <p><span className="text-gray-500">Tên:</span> {selectedRental.renter.full_name || 'N/A'}</p>
                                                 <p><span className="text-gray-500">Email:</span> {selectedRental.renter.email || 'N/A'}</p>
-                                                <p><span className="text-gray-500">SĐT:</span> {selectedRental.renter.phone || 'N/A'}</p>
+                                                <p><span className="text-gray-500">SĐT:</span> {selectedRental.renter.phone_number || 'N/A'}</p>
                                             </div>
                                         ) : (
                                             <p className="text-gray-500">Không có thông tin người thuê</p>

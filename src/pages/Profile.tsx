@@ -14,6 +14,10 @@ interface UserPreferences {
 
 export function Profile() {
   const { user, setUser } = useAuthStore();
+
+  // Move isRenter declaration to the top of the component
+  const isRenter = user ? (!user.is_admin && user.role !== 'owner') : false;
+
   const [activeTab, setActiveTab] = useState('profile');
   const [myRentals, setMyRentals] = useState<any[]>([]);
   const [myEquipment, setMyEquipment] = useState<any[]>([]);
@@ -46,6 +50,15 @@ export function Profile() {
 
   // Add a location-aware effect to refresh rentals when coming from cart checkout
   const location = window.location;
+
+  // Debug effect - moved up from after renderProfileContent
+  useEffect(() => {
+    if (user) {
+      console.log('User role:', user.role);
+      console.log('Is admin:', user.is_admin);
+      console.log('IsRenter:', isRenter);
+    }
+  }, [user, isRenter]);
 
   // Create a separate useEffect for rentals refresh
   useEffect(() => {
@@ -843,18 +856,6 @@ export function Profile() {
       </div>
     </div>
   );
-
-  // Xác định nếu người dùng là người thuê
-  const isRenter = user ? (!user.is_admin && user.role !== 'owner') : false;
-
-  // Sửa lại để debug
-  useEffect(() => {
-    if (user) {
-      console.log('User role:', user.role);
-      console.log('Is admin:', user.is_admin);
-      console.log('IsRenter:', isRenter);
-    }
-  }, [user, isRenter]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
