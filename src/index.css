@@ -1,51 +1,95 @@
+/*
+  Alpha Theme System
+  ------------------
+  This theme uses CSS variables to create a consistent design system across both light and dark modes.
+  
+  Key colors:
+  - --background / --foreground: Main text and background colors
+  - --card / --card-foreground: Card component colors
+  - --primary / --primary-foreground: Primary accent colors
+  - --secondary / --secondary-foreground: Secondary accent colors
+  - --muted / --muted-foreground: Subdued UI elements
+  - --accent / --accent-foreground: Accent UI elements
+  - --destructive / --destructive-foreground: Error and warning states
+  - --border: Border colors
+  - --input: Form input borders
+  - --ring: Focus states
+
+  Usage:
+  - Use the variables through Tailwind's CSS variable system: bg-background, text-foreground, etc.
+  - For direct HSL values, use: bg-[hsl(var(--primary))] or text-[hsl(var(--foreground))]
+  - For opacity variants, use: bg-primary/80, border-border/50, etc.
+  
+  The theme automatically switches between light and dark mode based on the .dark class on the <html> element.
+*/
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 197 64% 10%;
+    /* Light mode */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 197 64% 10%;
+    --card-foreground: 222 47% 11%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 197 64% 10%;
-    --primary: 197 64% 24%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 197 64% 96%;
-    --secondary-foreground: 197 64% 24%;
-    --muted: 197 64% 96%;
-    --muted-foreground: 197 64% 45%;
-    --accent: 197 64% 32%;
-    --accent-foreground: 210 40% 98%;
+    --popover-foreground: 222 47% 11%;
+    
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 197 64% 90%;
-    --input: 197 64% 90%;
-    --ring: 197 64% 32%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 210 100% 50%;
+    
     --radius: 0.75rem;
   }
 
   .dark {
+    /* Dark mode */
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
+    
     --card: 222 47% 13%;
     --card-foreground: 210 40% 98%;
+    
     --popover: 222 47% 13%;
     --popover-foreground: 210 40% 98%;
-    --primary: 197 64% 44%;
-    --primary-foreground: 222 47% 11%;
+    
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
+    
     --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 75%;
-    --accent: 197 64% 44%;
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
+    
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    
     --border: 217 33% 25%;
     --input: 217 33% 25%;
-    --ring: 197 64% 44%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -159,9 +203,9 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #2563eb;
+  background: hsl(var(--primary));
   cursor: pointer;
-  box-shadow: 0 0 0 4px white;
+  box-shadow: 0 0 0 4px hsl(var(--background));
   position: relative;
   z-index: 1;
 }
@@ -172,9 +216,9 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #2563eb;
+  background: hsl(var(--primary));
   cursor: pointer;
-  box-shadow: 0 0 0 4px white;
+  box-shadow: 0 0 0 4px hsl(var(--background));
   border: none;
   position: relative;
   z-index: 1;
@@ -183,13 +227,13 @@
 /* Price range slider track */
 .range-thumb::-webkit-slider-runnable-track {
   height: 1px;
-  background: transparent;
+  background: hsl(var(--border));
   border: none;
 }
 
 .range-thumb::-moz-range-track {
   height: 1px;
-  background: transparent;
+  background: hsl(var(--border));
   border: none;
 }
 

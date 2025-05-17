@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 
 interface BadgeProps {
     children: ReactNode;
-    variant?: 'default' | 'outline';
+    variant?: 'default' | 'outline' | 'secondary' | 'destructive';
     className?: string;
 }
 
@@ -10,8 +10,10 @@ export function Badge({ children, variant = 'default', className = '' }: BadgePr
     const baseClasses = 'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium';
 
     const variantClasses = {
-        default: 'bg-orange-100 text-orange-800',
-        outline: 'border border-gray-200 text-gray-700'
+        default: 'bg-primary/10 text-primary',
+        outline: 'border border-border text-foreground',
+        secondary: 'bg-secondary text-secondary-foreground',
+        destructive: 'bg-destructive/10 text-destructive'
     };
 
     return (

@@ -48,8 +48,8 @@ const blobAnimation = `
 .tooltip .tooltiptext {
   visibility: hidden;
   width: 200px;
-  background-color: #333;
-  color: #fff;
+  background-color: hsl(var(--foreground));
+  color: hsl(var(--background));
   text-align: center;
   border-radius: 6px;
   padding: 8px;
@@ -70,7 +70,7 @@ const blobAnimation = `
   margin-left: -5px;
   border-width: 5px;
   border-style: solid;
-  border-color: #333 transparent transparent transparent;
+  border-color: hsl(var(--foreground)) transparent transparent transparent;
 }
 
 .tooltip:hover .tooltiptext {
@@ -221,23 +221,23 @@ export function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 relative py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background/50 relative py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: blobAnimation }} />
 
       {/* Animated background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute top-10 left-10 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-[20%] right-[20%] w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-10 left-[30%] w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-10 left-10 w-64 h-64 bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-[20%] right-[20%] w-72 h-72 bg-primary/40 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-10 left-[30%] w-80 h-80 bg-primary/30 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
 
       <div className="max-w-md w-full relative z-10">
-        <div className="bg-white rounded-xl shadow-2xl overflow-hidden transform transition-all hover:scale-[1.01] duration-300">
-          <div className="px-8 pt-8 pb-6 border-b border-gray-100">
-            <h2 className="text-center text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
+        <div className="bg-card rounded-xl shadow-2xl overflow-hidden transform transition-all hover:scale-[1.01] duration-300">
+          <div className="px-8 pt-8 pb-6 border-b border-border">
+            <h2 className="text-center text-3xl font-extrabold text-foreground">
               {showForgotPassword ? 'Quên mật khẩu' : 'Đăng nhập'}
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
+            <p className="mt-2 text-center text-sm text-muted-foreground">
               {showForgotPassword ? (
                 'Nhập email của bạn để nhận liên kết đặt lại mật khẩu'
               ) : (
@@ -245,10 +245,9 @@ export function SignIn() {
                   Hoặc{' '}
                   <Link
                     to="/signup"
-                    className="inline-flex items-center font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200"
+                    className="inline-flex items-center font-medium text-primary hover:text-primary/90 transition-colors duration-200"
                   >
                     đăng ký tài khoản mới
-                    <ArrowRight className="h-4 w-4 ml-1" />
                   </Link>
                 </>
               )}

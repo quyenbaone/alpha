@@ -46,7 +46,7 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
   return (
     <Link
       to={`/equipment/${item.id}`}
-      className="block group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+      className="block group bg-card dark:bg-card rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
     >
       <div className="relative overflow-hidden">
         <img
@@ -57,37 +57,37 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
         <div className="absolute top-2 right-2 flex gap-2 z-10">
           <button
             onClick={handleLike}
-            className="p-2 bg-white rounded-full hover:bg-gray-100 transform hover:scale-110 transition-all duration-300"
+            className="p-2 bg-white dark:bg-gray-800 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transform hover:scale-110 transition-all duration-300"
           >
             <Heart
-              className={`h-5 w-5 transition-colors duration-300 ${isLiked ? 'text-red-500 fill-current' : 'text-gray-600'
+              className={`h-5 w-5 transition-colors duration-300 ${isLiked ? 'text-red-500 fill-current' : 'text-gray-600 dark:text-gray-300'
                 }`}
             />
           </button>
           <button
             onClick={handleViewDetails}
-            className="p-2 bg-white rounded-full hover:bg-gray-100 transform hover:scale-110 transition-all duration-300"
+            className="p-2 bg-white dark:bg-gray-800 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transform hover:scale-110 transition-all duration-300"
           >
-            <Eye className="h-5 w-5 text-gray-600" />
+            <Eye className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
           <button
             onClick={handleAddToCart}
-            className="p-2 bg-white rounded-full hover:bg-gray-100 transform hover:scale-110 transition-all duration-300"
+            className="p-2 bg-white dark:bg-gray-800 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transform hover:scale-110 transition-all duration-300"
           >
-            <ShoppingCart className="h-5 w-5 text-gray-600" />
+            <ShoppingCart className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
         </div>
-        <div className="absolute top-2 left-2 px-3 py-1 bg-orange-500 text-white text-xs rounded-full transform -rotate-2 hover:rotate-0 transition-transform duration-300">
+        <div className="absolute top-2 left-2 px-3 py-1 bg-primary text-primary-foreground text-xs rounded-full transform -rotate-2 hover:rotate-0 transition-transform duration-300">
           {item.category}
         </div>
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-lg mb-2 group-hover:text-orange-500 transition-colors duration-300">
+        <h3 className="font-semibold text-lg mb-2 text-foreground group-hover:text-primary transition-colors duration-300">
           {item.title}
         </h3>
-        <p className="text-gray-600 text-sm mb-2 flex items-center gap-1">
+        <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
           <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           {item.location}
         </p>
@@ -97,23 +97,23 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
               <Star
                 key={index}
                 className={`h-4 w-4 ${index < Math.floor(item.rating)
-                    ? 'text-yellow-400 fill-current'
-                    : 'text-gray-300'
+                  ? 'text-yellow-400 fill-current'
+                  : 'text-gray-300 dark:text-gray-600'
                   } transform group-hover:scale-110 transition-transform duration-300 hover:rotate-12`}
               />
             ))}
           </div>
-          <span className="text-sm">{item.rating}</span>
-          <span className="text-gray-500 text-sm">({item.reviews} đánh giá)</span>
+          <span className="text-sm text-foreground">{item.rating}</span>
+          <span className="text-muted-foreground text-sm">({item.reviews} đánh giá)</span>
         </div>
         <div className="flex justify-between items-center">
-          <p className="text-xl font-bold text-orange-500 group-hover:scale-105 transform transition-transform duration-300">
+          <p className="text-xl font-bold text-primary group-hover:scale-105 transform transition-transform duration-300">
             {formatPrice(item.price)}
-            <span className="text-sm text-gray-500">/ngày</span>
+            <span className="text-sm text-muted-foreground">/ngày</span>
           </p>
           <button
             onClick={handleViewDetails}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 hover:bg-orange-600 active:scale-95"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg transform hover:translate-y-[-2px] hover:shadow-lg transition-all duration-300 hover:bg-primary/90 active:scale-95"
           >
             Thuê ngay
           </button>

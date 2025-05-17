@@ -27,17 +27,19 @@ type Equipment = {
 // Skeleton component for loading state
 const EquipmentSkeleton = () => {
     return (
-        <div className="group block bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
-            <div className="relative">
-                <div className="w-full h-48 bg-gray-200"></div>
-            </div>
-            <div className="p-5">
-                <div className="h-5 w-2/3 bg-gray-200 rounded mb-3"></div>
-                <div className="h-4 w-full bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 w-5/6 bg-gray-200 rounded mb-4"></div>
-                <div className="pt-2 border-t border-gray-100 flex justify-between">
-                    <div className="h-5 w-1/3 bg-gray-200 rounded"></div>
-                    <div className="h-5 w-1/4 bg-gray-200 rounded"></div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden animate-pulse">
+            <div className="h-48 bg-gray-200 dark:bg-gray-700"></div>
+            <div className="p-4">
+                <div className="h-6 w-3/4 bg-gray-200 dark:bg-gray-700 rounded mb-3"></div>
+                <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+                <div className="flex items-center gap-1 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                        <div key={i} className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                    ))}
+                </div>
+                <div className="flex justify-between items-center">
+                    <div className="h-6 w-1/3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-8 w-1/4 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </div>
             </div>
         </div>
@@ -104,9 +106,12 @@ export function Equipment() {
 
             if (error) throw error;
 
+            // Use any type to bypass TypeScript limitations
+            const categoryData = (data as any[]) || [];
+
             const categoryOptions = [
                 { value: 'all', label: 'Tất cả danh mục' },
-                ...(data || []).map(cat => ({
+                ...categoryData.map(cat => ({
                     value: cat.id,
                     label: cat.name
                 }))
@@ -139,12 +144,13 @@ export function Equipment() {
                 throw error;
             }
 
-            // Set equipment data
-            setEquipment(data || []);
+            // Use any type to bypass TypeScript limitations
+            const equipmentData = (data as any[]) || [];
+            setEquipment(equipmentData as Equipment[]);
 
             // Set initial price range based on actual data
-            if (data && data.length > 0) {
-                const prices = data.map(item => item.price_per_day);
+            if (equipmentData.length > 0) {
+                const prices = equipmentData.map(item => item.price_per_day);
                 const minPrice = Math.min(...prices);
                 const maxPrice = Math.max(...prices);
                 setPriceRange([minPrice, maxPrice]);
@@ -306,21 +312,21 @@ export function Equipment() {
     }
 
     return (
-        <div className="bg-gray-50 min-h-screen relative">
+        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen relative">
             <div className="container mx-auto px-4 py-10">
-                <div className="bg-white rounded-xl shadow-md p-6 mb-8" ref={contentRef}>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8" ref={contentRef}>
                     <div className="flex items-center justify-between mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
                             <svg className="w-8 h-8 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                             </svg>
                             Danh sách thiết bị
                         </h1>
                         <div className="flex items-center space-x-4">
-                            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+                            <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 ${viewMode === 'grid' ? 'bg-orange-100 text-orange-600' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                    className={`p-2 ${viewMode === 'grid' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/60 dark:text-orange-300' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                                     aria-label="Grid view"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -329,7 +335,7 @@ export function Equipment() {
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 ${viewMode === 'list' ? 'bg-orange-100 text-orange-600' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                    className={`p-2 ${viewMode === 'list' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/60 dark:text-orange-300' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                                     aria-label="List view"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -339,21 +345,21 @@ export function Equipment() {
                             </div>
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="flex items-center px-3 py-1.5 border border-orange-500 rounded-lg text-orange-600 bg-white hover:bg-orange-50 transition-colors text-sm"
+                                className="flex items-center px-3 py-1.5 border border-orange-500 rounded-lg text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-800 hover:bg-orange-50 dark:hover:bg-orange-900/30 transition-colors text-sm"
                             >
                                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                                 </svg>
                                 {showFilters ? 'Ẩn bộ lọc' : 'Hiện bộ lọc'}
                             </button>
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
                                 {filteredEquipment.length} {filteredEquipment.length === 1 ? 'thiết bị' : 'thiết bị'}
                             </span>
                         </div>
                     </div>
 
                     {/* Control group with unified styling */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-8">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-8">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                             {/* Search box */}
                             <div className="md:col-span-5 relative">
@@ -363,8 +369,20 @@ export function Equipment() {
                                         placeholder="Tìm kiếm thiết bị..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-11 w-full py-3 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 text-sm shadow-sm"
+                                        className="
+    pl-11 w-full py-3 px-4
+    border border-gray-300 dark:border-gray-700
+    rounded-lg
+    focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
+    text-sm shadow-sm
+    bg-white dark:bg-gray-800
+    text-gray-900 dark:text-white
+    placeholder-white dark:placeholder-white
+  "
                                     />
+
+
+
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-4">
                                         <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -378,23 +396,23 @@ export function Equipment() {
                                 <div className="relative" ref={categoryDropdownRef}>
                                     <button
                                         type="button"
-                                        className="w-full py-3 px-4 border border-gray-300 rounded-lg text-left bg-white text-sm flex justify-between items-center hover:border-gray-400 transition-colors shadow-sm"
+                                        className="w-full py-3 px-4 border border-gray-300 dark:border-gray-700 rounded-lg text-left bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm flex justify-between items-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors shadow-sm"
                                         onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                                     >
                                         <span className="truncate">
                                             {categories.find(cat => cat.value === selectedCategory)?.label || 'Tất cả danh mục'}
                                         </span>
-                                        <svg className="w-4 h-4 text-gray-500 ml-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <svg className="w-4 h-4 text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                                         </svg>
                                     </button>
 
                                     {showCategoryDropdown && (
-                                        <div className="absolute mt-1 w-full z-20 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                                        <div className="absolute mt-1 w-full z-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
                                             {categories.map((category) => (
                                                 <div
                                                     key={category.value}
-                                                    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${selectedCategory === category.value ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+                                                    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedCategory === category.value ? 'bg-blue-600 text-white hover:bg-blue-700' : 'text-gray-900 dark:text-white'}`}
                                                     onClick={() => {
                                                         setSelectedCategory(category.value);
                                                         setShowCategoryDropdown(false);
@@ -413,23 +431,23 @@ export function Equipment() {
                                 <div className="relative flex-1" ref={sortDropdownRef}>
                                     <button
                                         type="button"
-                                        className="w-full py-3 px-4 border border-gray-300 rounded-lg text-left bg-white text-sm flex justify-between items-center hover:border-gray-400 transition-colors shadow-sm"
+                                        className="w-full py-3 px-4 border border-gray-300 dark:border-gray-700 rounded-lg text-left bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm flex justify-between items-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors shadow-sm"
                                         onClick={() => setShowSortDropdown(!showSortDropdown)}
                                     >
                                         <span className="truncate">
                                             {sortOptions.find(opt => opt.value === sortBy)?.label || 'Sắp xếp theo: Giá'}
                                         </span>
-                                        <svg className="w-4 h-4 text-gray-500 ml-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <svg className="w-4 h-4 text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                                         </svg>
                                     </button>
 
                                     {showSortDropdown && (
-                                        <div className="absolute mt-1 w-full z-20 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                                        <div className="absolute mt-1 w-full z-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
                                             {sortOptions.map((option) => (
                                                 <div
                                                     key={option.value}
-                                                    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${sortBy === option.value ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+                                                    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${sortBy === option.value ? 'bg-blue-600 text-white hover:bg-blue-700' : 'text-gray-900 dark:text-white'}`}
                                                     onClick={() => {
                                                         setSortBy(option.value as 'price' | 'title' | 'rating' | 'newest');
                                                         setShowSortDropdown(false);
@@ -454,29 +472,29 @@ export function Equipment() {
 
                     {/* Advanced Filters */}
                     {showFilters && (
-                        <div className="bg-gray-50 p-5 rounded-lg mb-8 border border-gray-200">
+                        <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-lg mb-8 border border-gray-200 dark:border-gray-700">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-700 mb-2">Khoảng giá (đ)</h3>
+                                    <h3 className="text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Khoảng giá (đ)</h3>
                                     <div className="flex items-center space-x-3">
                                         <input
                                             type="number"
                                             value={priceRange[0]}
                                             onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                                            className="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm"
+                                            className="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-700"
                                             min="0"
                                         />
-                                        <span>đến</span>
+                                        <span className="dark:text-gray-300">đến</span>
                                         <input
                                             type="number"
                                             value={priceRange[1]}
                                             onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 0])}
-                                            className="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm"
+                                            className="w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-700"
                                             min={priceRange[0]}
                                         />
                                     </div>
 
-                                    <h3 className="text-sm font-medium text-gray-700 mt-4 mb-2">Đánh giá tối thiểu</h3>
+                                    <h3 className="text-sm font-medium text-gray-700 mt-4 mb-2 dark:text-gray-300">Đánh giá tối thiểu</h3>
                                     <div className="flex items-center">
                                         {[0, 1, 2, 3, 4, 5].map((rating) => (
                                             <button
@@ -509,7 +527,7 @@ export function Equipment() {
                                 <div className="flex flex-col justify-end">
                                     <button
                                         onClick={resetFilters}
-                                        className="w-full mt-4 px-4 py-2 bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 text-sm"
+                                        className="w-full mt-4 px-4 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-md hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 text-sm"
                                     >
                                         Xóa tất cả bộ lọc
                                     </button>
@@ -526,7 +544,7 @@ export function Equipment() {
                                     key={item.id}
                                     to={`/equipment/${item.id}`}
                                     onClick={() => window.scrollTo(0, 0)}
-                                    className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100"
+                                    className="group block bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 dark:border-gray-700"
                                 >
                                     <div className="relative overflow-hidden">
                                         <img
@@ -535,7 +553,7 @@ export function Equipment() {
                                             className="object-cover w-full h-48 group-hover:scale-105 transition-transform duration-200"
                                             onError={(e) => e.currentTarget.src = '/placeholder.png'}
                                         />
-                                        <div className="absolute top-2 right-2 bg-white bg-opacity-90 px-2 py-1 rounded-md text-xs font-medium">
+                                        <div className="absolute top-2 right-2 bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-90 px-2 py-1 rounded-md text-xs font-medium text-gray-900 dark:text-gray-100">
                                             {item.category?.name}
                                         </div>
                                         {item.condition && (
@@ -545,20 +563,20 @@ export function Equipment() {
                                         )}
                                     </div>
                                     <div className="p-5">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">{item.title}</h3>
-                                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-orange-500 transition-colors">{item.title}</h3>
+                                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">{item.description}</p>
 
                                         {item.tags && item.tags.length > 0 && (
                                             <div className="flex flex-wrap gap-1 mb-3">
                                                 {item.tags.map((tag, index) => (
-                                                    <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                                                    <span key={index} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
                                                         {tag}
                                                     </span>
                                                 ))}
                                             </div>
                                         )}
 
-                                        <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
+                                        <div className="flex justify-between items-center mb-2 text-xs text-gray-500 dark:text-gray-400">
                                             <div className="flex items-center">
                                                 <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
@@ -570,11 +588,11 @@ export function Equipment() {
                                             </div>
                                         </div>
 
-                                        <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                                            <span className="text-orange-500 font-bold">
+                                        <div className="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-700">
+                                            <span className="text-orange-500 dark:text-orange-400 font-bold">
                                                 {(typeof item.price_per_day === 'number' && !isNaN(item.price_per_day) ? item.price_per_day : 0).toLocaleString('vi-VN')}đ/ngày
                                             </span>
-                                            <span className="flex items-center text-sm text-gray-500">
+                                            <span className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                                                 {item.rating > 0 ? (
                                                     <>
                                                         <svg className="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -596,7 +614,7 @@ export function Equipment() {
                                     key={item.id}
                                     to={`/equipment/${item.id}`}
                                     onClick={() => window.scrollTo(0, 0)}
-                                    className="group flex bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100"
+                                    className="group flex bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-gray-700"
                                 >
                                     <div className="relative w-36 sm:w-48 flex-shrink-0">
                                         <img
@@ -605,7 +623,7 @@ export function Equipment() {
                                             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
                                             onError={(e) => e.currentTarget.src = '/placeholder.png'}
                                         />
-                                        <div className="absolute top-2 right-2 bg-white bg-opacity-90 px-2 py-1 rounded-md text-xs font-medium">
+                                        <div className="absolute top-2 right-2 bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-90 px-2 py-1 rounded-md text-xs font-medium text-gray-900 dark:text-gray-100">
                                             {item.category?.name}
                                         </div>
                                         {item.condition && (
@@ -616,20 +634,20 @@ export function Equipment() {
                                     </div>
                                     <div className="p-4 flex-grow flex flex-col justify-between">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">{item.title}</h3>
-                                            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.description}</p>
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-orange-500 transition-colors">{item.title}</h3>
+                                            <p className="text-gray-600 dark:text-gray-300 text-sm mb-2 line-clamp-2">{item.description}</p>
 
                                             {item.tags && item.tags.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 mb-2">
                                                     {item.tags.map((tag, index) => (
-                                                        <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                                                        <span key={index} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
                                                             {tag}
                                                         </span>
                                                     ))}
                                                 </div>
                                             )}
 
-                                            <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
+                                            <div className="flex justify-between items-center mb-2 text-xs text-gray-500 dark:text-gray-400">
                                                 <div className="flex items-center">
                                                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
@@ -641,7 +659,7 @@ export function Equipment() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center text-sm text-gray-500 mb-2">
+                                            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
                                                 {item.rating > 0 ? (
                                                     <>
                                                         <svg className="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -652,8 +670,8 @@ export function Equipment() {
                                                 ) : 'Chưa có đánh giá'}
                                             </div>
                                         </div>
-                                        <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                                            <span className="text-orange-500 font-bold">
+                                        <div className="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-700">
+                                            <span className="text-orange-500 dark:text-orange-400 font-bold">
                                                 {(typeof item.price_per_day === 'number' && !isNaN(item.price_per_day) ? item.price_per_day : 0).toLocaleString('vi-VN')}đ/ngày
                                             </span>
                                             <span className="text-sm text-blue-600 font-medium hover:underline">
@@ -667,17 +685,17 @@ export function Equipment() {
                     )}
 
                     {filteredEquipment.length === 0 && (
-                        <div className="bg-gray-50 rounded-lg text-center py-16 px-4">
-                            <svg className="mx-auto h-20 w-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg text-center py-16 px-4">
+                            <svg className="mx-auto h-20 w-20 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <h3 className="mt-4 text-lg font-medium text-gray-900">Không tìm thấy thiết bị</h3>
-                            <p className="mt-2 text-gray-600 max-w-md mx-auto">
+                            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">Không tìm thấy thiết bị</h3>
+                            <p className="mt-2 text-gray-600 dark:text-gray-300 max-w-md mx-auto">
                                 Hãy thử tìm kiếm với từ khóa khác hoặc điều chỉnh bộ lọc
                             </p>
                             <button
                                 onClick={resetFilters}
-                                className="mt-6 px-5 py-2.5 bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50"
+                                className="mt-6 px-5 py-2.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-md hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50"
                             >
                                 Xóa bộ lọc
                             </button>
