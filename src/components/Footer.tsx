@@ -2,9 +2,11 @@ import { Facebook, Instagram, Mail, MapPin, Phone, Twitter } from 'lucide-react'
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettingsStore } from '../store/settingsStore';
+import { useThemeStore } from '../store/themeStore';
 
 export function Footer() {
   const { settings, fetchSettings } = useSettingsStore();
+  const { theme } = useThemeStore();
   const [year] = useState(new Date().getFullYear());
 
   useEffect(() => {
@@ -12,7 +14,7 @@ export function Footer() {
   }, [fetchSettings]);
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer className={`${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-900'} text-gray-300`}>
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
@@ -53,7 +55,7 @@ export function Footer() {
                   Thiết bị
                 </Link>
               </li>
-              
+
               <li>
                 <Link to="/about" className="text-sm hover:text-white">
                   Giới thiệu

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -60,7 +61,7 @@ export function Header() {
   ];
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-[#1e293b] shadow-lg backdrop-blur-md' : 'bg-[#1e293b]'} font-sans`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-[#1e293b] dark:bg-gray-900 shadow-lg backdrop-blur-md' : 'bg-[#1e293b] dark:bg-gray-900'} font-sans`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
@@ -77,7 +78,7 @@ export function Header() {
                 }}
               />
             ) : (
-              <Camera className="h-8 w-8 text-blue-400" />
+              <Camera className="h-8 w-8 text-primary" />
             )}
             <span className="text-2xl font-extrabold tracking-tight text-white">
               {settings.site_name || 'Alpha'}
@@ -91,7 +92,10 @@ export function Header() {
                 key={item.to}
                 to={item.to}
                 onClick={() => window.scrollTo(0, 0)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${location.pathname === item.to ? 'bg-blue-800 text-white' : 'text-blue-100 hover:text-blue-400 hover:bg-blue-800/60'}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${location.pathname === item.to
+                  ? 'bg-primary/80 text-white'
+                  : 'text-blue-100 dark:text-gray-200 hover:text-white hover:bg-primary/40'
+                  }`}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -105,27 +109,31 @@ export function Header() {
               <input
                 type="text"
                 placeholder="Tìm kiếm thiết bị..."
-                className={`w-full pl-10 pr-4 py-2 rounded-full border bg-blue-900 border-blue-800 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm transition-all duration-200`}
+                className="w-full pl-10 pr-4 py-2 rounded-full border bg-blue-900/70 dark:bg-gray-800 border-blue-800 dark:border-gray-700 text-white placeholder-blue-200 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition-all duration-200"
               />
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-300`} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-300 dark:text-gray-400" />
             </div>
           </div>
 
           {/* User Actions */}
           <div className="flex items-center gap-4">
-            <Link to="/cart" className={`relative p-2 rounded-full transition-colors duration-200 text-blue-100 hover:bg-blue-800/60`}>
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
+            <Link to="/cart" className="relative p-2 rounded-full transition-colors duration-200 text-blue-100 dark:text-gray-200 hover:bg-blue-800/60 dark:hover:bg-gray-800/60">
               <ShoppingCart className="h-6 w-6" />
               {items.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
                   {items.length}
                 </span>
               )}
             </Link>
+
             {user ? (
               <div ref={userMenuRef} className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-blue-100 hover:bg-blue-800/60 transition-all duration-200"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-blue-100 dark:text-gray-200 hover:bg-blue-800/60 dark:hover:bg-gray-800/60 transition-all duration-200"
                 >
                   <User className="h-5 w-5" />
                   <span className="hidden md:inline text-sm font-medium">{getUserRole()}</span>
@@ -133,15 +141,15 @@ export function Header() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden z-10 border border-gray-200">
-                    <div className="p-3 border-b border-gray-200">
-                      <p className="text-sm font-medium text-gray-900">{user.email}</p>
-                      <p className="text-xs text-gray-500">{getUserRole()}</p>
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-10 border border-gray-200 dark:border-gray-700">
+                    <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.email}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{getUserRole()}</p>
                     </div>
                     <div className="py-1">
                       <Link
                         to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Tài khoản của tôi
@@ -149,7 +157,7 @@ export function Header() {
                       {isAdmin && (
                         <Link
                           to="/admin"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           Quản trị viên
@@ -158,7 +166,7 @@ export function Header() {
                       {userRole === 'owner' && (
                         <Link
                           to="/owner"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           Quản lý cho thuê
@@ -166,7 +174,7 @@ export function Header() {
                       )}
                       <button
                         onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         <div className="flex items-center">
                           <LogOut className="h-4 w-4 mr-2" />
@@ -178,58 +186,58 @@ export function Header() {
                 )}
               </div>
             ) : (
-              <Link to="/signin" className="px-5 py-2 rounded-full font-semibold bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 flex items-center gap-2">
+              <Link to="/signin" className="px-5 py-2 rounded-full font-semibold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-500 dark:to-blue-700 text-white shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 flex items-center gap-2">
                 <LogIn className="h-5 w-5" /> Đăng nhập
               </Link>
             )}
             {/* Mobile menu button */}
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`md:hidden p-2 rounded-full text-blue-100 hover:bg-blue-800/60`}>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-full text-blue-100 dark:text-gray-200 hover:bg-blue-800/60 dark:hover:bg-gray-800/60">
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-[#1e293b] shadow-lg rounded-b-xl mt-2 py-4 animate-fade-in-down">
+          <div className="md:hidden bg-[#1e293b] dark:bg-gray-900 shadow-lg rounded-b-xl mt-2 py-4 animate-fade-in-down">
             <nav className="px-4 flex flex-col gap-2">
               {menuItems.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
-                  className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold"
+                  className="flex items-center gap-2 px-4 py-3 text-blue-100 dark:text-gray-200 hover:text-white hover:bg-primary/40 rounded-lg font-semibold"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.icon}
                   <span>{item.label}</span>
                 </Link>
               ))}
-              <Link to="/cart" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+              <Link to="/cart" className="flex items-center gap-2 px-4 py-3 text-blue-100 dark:text-gray-200 hover:text-white hover:bg-primary/40 rounded-lg font-semibold">
                 <ShoppingCart className="h-5 w-5" /> Giỏ hàng
               </Link>
               {user ? (
                 <>
-                  <Link to="/profile" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                  <Link to="/profile" className="flex items-center gap-2 px-4 py-3 text-blue-100 dark:text-gray-200 hover:text-white hover:bg-primary/40 rounded-lg font-semibold">
                     <User className="h-5 w-5" /> Tài khoản
                   </Link>
                   {isAdmin && (
-                    <Link to="/admin" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                    <Link to="/admin" className="flex items-center gap-2 px-4 py-3 text-blue-100 dark:text-gray-200 hover:text-white hover:bg-primary/40 rounded-lg font-semibold">
                       <User className="h-5 w-5" /> Quản trị viên
                     </Link>
                   )}
                   {userRole === 'owner' && (
-                    <Link to="/owner" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                    <Link to="/owner" className="flex items-center gap-2 px-4 py-3 text-blue-100 dark:text-gray-200 hover:text-white hover:bg-primary/40 rounded-lg font-semibold">
                       <User className="h-5 w-5" /> Quản lý cho thuê
                     </Link>
                   )}
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-3 text-red-300 hover:text-red-400 hover:bg-red-900/30 rounded-lg font-semibold w-full text-left"
+                    className="flex items-center gap-2 px-4 py-3 text-red-300 dark:text-red-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg font-semibold w-full text-left"
                   >
                     <LogOut className="h-5 w-5" /> Đăng xuất
                   </button>
                 </>
               ) : (
-                <Link to="/signin" className="flex items-center gap-2 px-4 py-3 text-blue-100 hover:text-blue-400 hover:bg-blue-800/60 rounded-lg font-semibold">
+                <Link to="/signin" className="flex items-center gap-2 px-4 py-3 text-blue-100 dark:text-gray-200 hover:text-white hover:bg-primary/40 rounded-lg font-semibold">
                   <LogIn className="h-5 w-5" /> Đăng nhập
                 </Link>
               )}

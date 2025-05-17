@@ -4,12 +4,14 @@ import { toast, Toaster } from 'sonner';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useThemeStore } from '../../store/themeStore';
 import { LoadingComponent } from '../LoadingComponent';
 import { ScrollToTop } from '../ScrollToTop';
 
 export const AppWrapper = () => {
     const { setSession, loading } = useAuthStore();
     const { fetchSettings } = useSettingsStore();
+    const { theme } = useThemeStore();
     // Initialize with shorter timeout for faster app display
     const [initializing, setInitializing] = useState(true);
     const sessionErrorRef = useRef(false);
@@ -20,6 +22,16 @@ export const AppWrapper = () => {
     // Track tab visibility to optimize resources
     const isVisibleRef = useRef(true);
     const tabIdRef = useRef(Math.random().toString(36).substring(2, 10));
+
+    // Set the theme class on the document element
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (theme === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+    }, [theme]);
 
     // Handle tab visibility changes
     useEffect(() => {
@@ -171,13 +183,13 @@ export const AppWrapper = () => {
     // Show loading screen while initializing auth
     if (initializing) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-background dark:bg-background">
                 <div className="flex flex-col items-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
-                    <h2 className="text-xl font-semibold text-gray-700">Đang khởi tạo ứng dụng...</h2>
-                    <div className="mt-2 text-sm text-gray-500">Đang chuẩn bị giao diện</div>
-                    <div className="w-64 h-2 bg-gray-200 rounded-full mt-4 overflow-hidden">
-                        <div className="h-full bg-blue-500 animate-pulse rounded-full"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-4"></div>
+                    <h2 className="text-xl font-semibold text-foreground">Đang khởi tạo ứng dụng...</h2>
+                    <div className="mt-2 text-sm text-muted-foreground">Đang chuẩn bị giao diện</div>
+                    <div className="w-64 h-2 bg-muted rounded-full mt-4 overflow-hidden">
+                        <div className="h-full bg-primary animate-pulse rounded-full"></div>
                     </div>
                 </div>
             </div>
@@ -187,8 +199,8 @@ export const AppWrapper = () => {
     return (
         <>
             <ScrollToTop />
-            <Toaster position="top-right" />
-            <div className="min-h-screen flex flex-col bg-background">
+            <Toaster position="top-right" theme="system" />
+            <div className="min-h-screen flex flex-col bg-background dark:bg-background">
                 <main className="flex-1">
                     <Suspense fallback={<LoadingComponent />}>
                         <Outlet />
