@@ -21,7 +21,7 @@ const localizer = dateFnsLocalizer({
 });
 
 interface EquipmentCalendarProps {
-    equipmentId: string;
+    equipmentId?: string;
     onDateSelect?: (start: Date, end: Date) => void;
 }
 
@@ -30,10 +30,14 @@ export default function EquipmentCalendar({ equipmentId, onDateSelect }: Equipme
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchRentals();
+        if (equipmentId) {
+            fetchRentals();
+        }
     }, [equipmentId]);
 
     const fetchRentals = async () => {
+        if (!equipmentId) return;
+
         try {
             const { data: rentals, error } = await supabase
                 .from('rentals')

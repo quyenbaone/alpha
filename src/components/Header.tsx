@@ -55,8 +55,7 @@ export function Header() {
 
   const menuItems = [
     { to: '/equipment', label: 'Thiết bị', icon: <Camera className="h-5 w-5" /> },
-    { to: '/bookings', label: 'Đặt lịch', icon: <CalendarIcon /> },
-    { to: '/reviews', label: 'Đánh giá', icon: <StarIcon /> },
+    
   ];
 
   return (
