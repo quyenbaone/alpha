@@ -21,7 +21,7 @@ interface Rental {
         email: string
         full_name: string
         phone_number?: string
-        address?: string // thêm address nếu có
+        address?: string
     }
     equipment_id: string
     renter_id: string
@@ -135,21 +135,21 @@ export default function OwnerRentals() {
     const getStatusLabel = (status: string) => {
         switch (status) {
             case 'pending':
-                return { text: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800' }
+                return { text: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' }
             case 'approved':
             case 'confirmed':
-                return { text: 'Đã xác nhận', color: 'bg-green-100 text-green-800' }
+                return { text: 'Đã xác nhận', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
             case 'delivering':
-                return { text: 'Đang giao', color: 'bg-purple-100 text-purple-800' }
+                return { text: 'Đang giao', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' }
             case 'in_progress':
-                return { text: 'Đang thuê', color: 'bg-blue-100 text-blue-800' }
+                return { text: 'Đang thuê', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' }
             case 'rejected':
             case 'cancelled':
-                return { text: 'Từ chối', color: 'bg-red-100 text-red-800' }
+                return { text: 'Từ chối', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }
             case 'completed':
-                return { text: 'Hoàn thành', color: 'bg-green-100 text-green-800' }
+                return { text: 'Hoàn thành', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
             default:
-                return { text: status, color: 'bg-gray-100 text-gray-800' }
+                return { text: status, color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }
         }
     }
 
@@ -182,21 +182,21 @@ export default function OwnerRentals() {
     return (
         <OwnerLayout>
             <div className="max-w-6xl mx-auto py-8 px-4">
-                <h1 className="text-3xl font-bold mb-6 text-slate-800">Quản lý đơn thuê</h1>
+                <h1 className="text-3xl font-bold mb-6 text-slate-800 dark:text-white">Quản lý đơn thuê</h1>
 
                 {/* Thanh search và filter */}
-                <div className="mb-6 p-6 bg-white rounded-lg shadow-lg">
+                <div className="mb-6 p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
                     <div className="flex flex-col md:flex-row items-center gap-4">
                         <Input
                             placeholder="Tìm kiếm tên thiết bị, email..."
                             value={searchTerm}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                            className="md:w-1/3"
+                            className="md:w-1/3 bg-transparent dark:bg-gray-900 dark:text-gray-100"
                         />
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-3 py-2 border rounded-md bg-white"
+                            className="px-3 py-2 border rounded-md bg-white dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700"
                         >
                             <option value="all">Tất cả trạng thái</option>
                             <option value="pending">Chờ xác nhận</option>
@@ -212,72 +212,72 @@ export default function OwnerRentals() {
                 </div>
 
                 {/* Bảng đơn thuê */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg overflow-hidden">
                     {loading ? (
                         <div className="flex flex-col items-center py-24">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4" />
-                            <span className="text-gray-500 text-lg">Đang tải dữ liệu...</span>
+                            <span className="text-gray-500 dark:text-gray-300 text-lg">Đang tải dữ liệu...</span>
                         </div>
                     ) : filteredRentals.length === 0 ? (
                         <div className="py-24 flex flex-col items-center">
                             <img src="/empty-state.svg" alt="No data" className="w-32 h-32 mb-6 opacity-40" />
-                            <span className="text-gray-400">Không có đơn thuê nào.</span>
+                            <span className="text-gray-400 dark:text-gray-500">Không có đơn thuê nào.</span>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-slate-50">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead className="bg-slate-50 dark:bg-gray-800">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                                             Thiết bị
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                                             Người thuê
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                                             Thời gian
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                                             Tổng tiền
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                                             Trạng thái
                                         </th>
-                                        <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
+                                        <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                                             Thao tác
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-100">
+                                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
                                     {filteredRentals.map((rental) => {
                                         const status = getStatusLabel(rental.status)
                                         return (
-                                            <tr key={rental.id} className="hover:bg-slate-50 transition">
+                                            <tr key={rental.id} className="hover:bg-slate-50 dark:hover:bg-gray-800 transition">
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center gap-3">
                                                         <img
                                                             src={rental.equipment?.images?.[0] || '/placeholder.png'}
                                                             alt={rental.equipment?.title}
-                                                            className="h-12 w-12 object-cover rounded-xl border"
+                                                            className="h-12 w-12 object-cover rounded-xl border dark:border-gray-700"
                                                             onError={(e) => (e.currentTarget.src = '/placeholder.png')}
                                                         />
                                                         <div>
-                                                            <div className="font-medium text-gray-800">{rental.equipment?.title}</div>
-                                                            <div className="text-xs text-gray-500">{formatPrice(rental.equipment?.price_per_day)}/ngày</div>
+                                                            <div className="font-medium text-gray-800 dark:text-gray-100">{rental.equipment?.title}</div>
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400">{formatPrice(rental.equipment?.price_per_day)}/ngày</div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-gray-900 font-medium">{rental.renter?.full_name || 'N/A'}</div>
+                                                    <div className="text-gray-900 dark:text-gray-100 font-medium">{rental.renter?.full_name || 'N/A'}</div>
                                                     <div className="text-xs text-gray-500">{rental.renter?.email}</div>
                                                     {rental.renter?.phone_number && (
                                                         <div className="text-xs text-gray-400">SĐT: {rental.renter.phone_number}</div>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-200">
                                                     {formatDate(rental.start_date)} - {formatDate(rental.end_date)}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap font-semibold text-blue-700">
+                                                <td className="px-6 py-4 whitespace-nowrap font-semibold text-blue-700 dark:text-blue-400">
                                                     {formatPrice(rental.total_price)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -343,59 +343,59 @@ export default function OwnerRentals() {
                 {/* Modal chi tiết đơn thuê */}
                 {showRentalDetails && selectedRental && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-                            <div className="flex justify-between items-center border-b px-6 py-4">
-                                <h2 className="text-xl font-bold text-slate-800">Chi tiết đơn thuê #{selectedRental.id}</h2>
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center border-b px-6 py-4 dark:border-gray-700">
+                                <h2 className="text-xl font-bold text-slate-800 dark:text-white">Chi tiết đơn thuê #{selectedRental.id}</h2>
                                 <button
                                     onClick={() => setShowRentalDetails(false)}
-                                    className="text-gray-500 hover:text-gray-800"
+                                    className="text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
                             <div className="p-6 space-y-4 text-[15px]">
                                 <div>
-                                    <div className="mb-2 font-medium text-slate-600">Thiết bị:</div>
+                                    <div className="mb-2 font-medium text-slate-600 dark:text-gray-200">Thiết bị:</div>
                                     <div className="flex items-center gap-3">
                                         <img
                                             src={selectedRental.equipment?.images?.[0] || '/placeholder.png'}
                                             alt={selectedRental.equipment?.title}
-                                            className="h-12 w-12 object-cover rounded-xl border"
+                                            className="h-12 w-12 object-cover rounded-xl border dark:border-gray-700"
                                             onError={(e) => (e.currentTarget.src = '/placeholder.png')}
                                         />
-                                        <span className="font-semibold text-slate-800">{selectedRental.equipment?.title}</span>
+                                        <span className="font-semibold text-slate-800 dark:text-white">{selectedRental.equipment?.title}</span>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div className="mb-2 font-medium text-slate-600">Người thuê:</div>
-                                    <div className="text-slate-800 font-medium">{selectedRental.renter?.full_name || 'N/A'}</div>
-                                    <div className="text-sm text-gray-500">{selectedRental.renter?.email}</div>
+                                    <div className="mb-2 font-medium text-slate-600 dark:text-gray-200">Người thuê:</div>
+                                    <div className="text-slate-800 dark:text-white font-medium">{selectedRental.renter?.full_name || 'N/A'}</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">{selectedRental.renter?.email}</div>
                                 </div>
 
                                 <div>
-                                    <div className="mb-2 font-medium text-slate-600">Địa chỉ:</div>
-                                    <div className="text-slate-800">
-                                        {selectedRental.renter?.address || <span className="text-gray-400 italic">Chưa cập nhật</span>}
+                                    <div className="mb-2 font-medium text-slate-600 dark:text-gray-200">Địa chỉ:</div>
+                                    <div className="text-slate-800 dark:text-gray-100">
+                                        {selectedRental.renter?.address || <span className="text-gray-400 italic dark:text-gray-500">Chưa cập nhật</span>}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div className="mb-2 font-medium text-slate-600">Số điện thoại:</div>
-                                    <div className="text-slate-800">
-                                        {selectedRental.renter?.phone_number || <span className="text-gray-400 italic">Chưa cập nhật</span>}
+                                    <div className="mb-2 font-medium text-slate-600 dark:text-gray-200">Số điện thoại:</div>
+                                    <div className="text-slate-800 dark:text-gray-100">
+                                        {selectedRental.renter?.phone_number || <span className="text-gray-400 italic dark:text-gray-500">Chưa cập nhật</span>}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div className="mb-2 font-medium text-slate-600">Thời gian thuê:</div>
-                                    <div className="text-slate-800">
+                                    <div className="mb-2 font-medium text-slate-600 dark:text-gray-200">Thời gian thuê:</div>
+                                    <div className="text-slate-800 dark:text-gray-100">
                                         {formatDate(selectedRental.start_date)} - {formatDate(selectedRental.end_date)}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div className="mb-2 font-medium text-slate-600 flex justify-between items-center">
+                                    <div className="mb-2 font-medium text-slate-600 dark:text-gray-200 flex justify-between items-center">
                                         <span>Trạng thái:</span>
                                         {!editingStatus && (
                                             <Button
@@ -416,7 +416,7 @@ export default function OwnerRentals() {
                                             <select
                                                 value={newStatus}
                                                 onChange={(e) => setNewStatus(e.target.value)}
-                                                className="border rounded px-3 py-2 text-sm flex-1"
+                                                className="border rounded px-3 py-2 text-sm flex-1 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700"
                                             >
                                                 <option value="pending">Chờ xác nhận</option>
                                                 <option value="confirmed">Đã xác nhận</option>
@@ -445,8 +445,8 @@ export default function OwnerRentals() {
                                 </div>
 
                                 <div>
-                                    <div className="mb-2 font-medium text-slate-600">Tổng tiền:</div>
-                                    <div className="text-lg font-bold text-blue-700">{formatPrice(selectedRental.total_price)}</div>
+                                    <div className="mb-2 font-medium text-slate-600 dark:text-gray-200">Tổng tiền:</div>
+                                    <div className="text-lg font-bold text-blue-700 dark:text-blue-400">{formatPrice(selectedRental.total_price)}</div>
                                 </div>
                             </div>
                         </div>

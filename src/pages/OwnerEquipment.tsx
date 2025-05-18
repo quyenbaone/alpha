@@ -1,10 +1,17 @@
 import { Edit, Plus, Search, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { OwnerLayout } from '../components/OwnerLayout';
+import { Database } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 import { formatDate, formatPrice } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
+
+// Types for Supabase tables
+type DbCategory = Database['public']['Tables']['categories']['Row'];
+type DbEquipment = Database['public']['Tables']['equipment']['Row'];
+type InsertEquipment = Database['public']['Tables']['equipment']['Insert'];
+type UpdateEquipment = Database['public']['Tables']['equipment']['Update'];
 
 // Interfaces for type safety
 interface Category {
@@ -28,6 +35,7 @@ interface EquipmentItem {
     status: string;
     created_at: string;
     updated_at?: string;
+    slug?: string;
 }
 
 export default function OwnerEquipment() {
@@ -65,9 +73,8 @@ export default function OwnerEquipment() {
                 .from('categories')
                 .select('*')
                 .order('name', { ascending: true });
-
             if (error) throw error;
-            setCategories(data || []);
+            setCategories(data as Category[] || []);
         } catch (error) {
             console.error('Error fetching categories:', error);
             toast.error('Lỗi khi tải danh mục');
@@ -80,6 +87,8 @@ export default function OwnerEquipment() {
         try {
             setLoading(true);
             // Only fetch equipment owned by this user
+            if (!user) return;
+
             const { data, error } = await supabase
                 .from('equipment')
                 .select('*, category:category_id(*)')
@@ -87,7 +96,7 @@ export default function OwnerEquipment() {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setEquipment(data || []);
+            setEquipment(data as EquipmentItem[] || []);
         } catch (error) {
             console.error('Error fetching equipment:', error);
             toast.error('Lỗi khi tải dữ liệu thiết bị');
@@ -96,13 +105,13 @@ export default function OwnerEquipment() {
         }
     };
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
         // Special handling for images which should be an array
         if (name === 'images') {
             // Split by comma and trim whitespace
-            const imagesArray = value.split(',').map(img => img.trim()).filter(img => img);
+            const imagesArray = value.split(',').map((img: string) => img.trim()).filter((img: string) => img);
             setFormData({
                 ...formData,
                 [name]: imagesArray
@@ -137,9 +146,9 @@ export default function OwnerEquipment() {
         return true;
     };
 
-    const handleAddEquipment = async (e) => {
+    const handleAddEquipment = async (e: FormEvent) => {
         e.preventDefault();
-        if (!validateForm()) return;
+        if (!validateForm() || !user) return;
         setIsSubmitting(true);
 
         try {
@@ -149,18 +158,22 @@ export default function OwnerEquipment() {
                 .replace(/[^\w\s]/gi, '')
                 .replace(/\s+/g, '-') + '-' + Date.now().toString().slice(-6);
 
-            const newEquipment = {
-                ...formData,
+            const newEquipment: InsertEquipment = {
+                title: formData.title,
+                description: formData.description,
                 slug: slug,
                 price_per_day: parseFloat(formData.price_per_day),
                 quantity: parseInt(formData.quantity),
                 owner_id: user.id,
-                created_at: new Date().toISOString()
+                category_id: formData.category_id,
+                images: formData.images,
+                location: formData.location,
+                status: formData.status,
             };
 
             const { error } = await supabase
                 .from('equipment')
-                .insert([newEquipment]);
+                .insert(newEquipment);
 
             if (error) throw error;
 
@@ -168,7 +181,7 @@ export default function OwnerEquipment() {
             resetForm();
             fetchEquipment();
             setShowAddForm(false);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error adding equipment:', error);
             toast.error('Lỗi khi thêm thiết bị: ' + error.message);
         } finally {
@@ -176,7 +189,7 @@ export default function OwnerEquipment() {
         }
     };
 
-    const handleEditEquipment = (item) => {
+    const handleEditEquipment = (item: EquipmentItem) => {
         setEditingEquipment(item);
         setFormData({
             title: item.title || '',
@@ -191,18 +204,22 @@ export default function OwnerEquipment() {
         setShowAddForm(true);
     };
 
-    const handleUpdateEquipment = async (e) => {
+    const handleUpdateEquipment = async (e: FormEvent) => {
         e.preventDefault();
-        if (!editingEquipment) return;
-        if (!validateForm()) return;
+        if (!editingEquipment || !validateForm() || !user) return;
         setIsSubmitting(true);
 
         try {
             // No need to regenerate slug on update
-            const updatedEquipment = {
-                ...formData,
+            const updatedEquipment: UpdateEquipment = {
+                title: formData.title,
+                description: formData.description,
                 price_per_day: parseFloat(formData.price_per_day),
                 quantity: parseInt(formData.quantity),
+                category_id: formData.category_id,
+                images: formData.images,
+                location: formData.location,
+                status: formData.status,
                 updated_at: new Date().toISOString()
             };
 
@@ -219,7 +236,7 @@ export default function OwnerEquipment() {
             setEditingEquipment(null);
             setShowAddForm(false);
             fetchEquipment();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating equipment:', error);
             toast.error('Lỗi khi cập nhật thiết bị: ' + error.message);
         } finally {
@@ -227,8 +244,8 @@ export default function OwnerEquipment() {
         }
     };
 
-    const handleDeleteEquipment = async (id) => {
-        if (!confirm('Bạn có chắc chắn muốn xóa thiết bị này?')) return;
+    const handleDeleteEquipment = async (id: string) => {
+        if (!confirm('Bạn có chắc chắn muốn xóa thiết bị này?') || !user) return;
         setIsSubmitting(true);
 
         try {
@@ -242,7 +259,7 @@ export default function OwnerEquipment() {
 
             toast.success('Đã xóa thiết bị');
             fetchEquipment();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting equipment:', error);
             toast.error('Lỗi khi xóa thiết bị');
         } finally {
@@ -276,8 +293,8 @@ export default function OwnerEquipment() {
             <div className="py-8 px-4 md:px-8 max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Quản lý thiết bị</h1>
-                        <p className="text-gray-600 mt-1">Quản lý danh sách thiết bị của bạn</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Quản lý thiết bị</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-1">Quản lý danh sách thiết bị của bạn</p>
                     </div>
                     <div className="mt-4 md:mt-0">
                         <button
@@ -286,7 +303,7 @@ export default function OwnerEquipment() {
                                 resetForm();
                                 setShowAddForm(true);
                             }}
-                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
                             disabled={loadingCategories}
                         >
                             <Plus size={16} className="mr-2" />
@@ -297,19 +314,19 @@ export default function OwnerEquipment() {
 
                 {/* Search and filter */}
                 <div className="mb-6">
-                    <div className="flex items-center bg-white rounded-lg shadow-sm px-3 py-2">
+                    <div className="flex items-center bg-white dark:bg-gray-900 rounded-lg shadow-sm px-3 py-2">
                         <Search size={20} className="text-gray-400 mr-2" />
                         <input
                             type="text"
                             placeholder="Tìm kiếm thiết bị..."
-                            className="flex-grow outline-none text-sm"
+                            className="flex-grow bg-transparent outline-none text-sm text-gray-800 dark:text-gray-100"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                         {searchTerm && (
                             <button
                                 onClick={() => setSearchTerm('')}
-                                className="text-gray-400 hover:text-gray-600"
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                             >
                                 <X size={16} />
                             </button>
@@ -323,35 +340,35 @@ export default function OwnerEquipment() {
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                     </div>
                 ) : (
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden">
                         {equipment.length === 0 ? (
                             <div className="py-16 text-center">
-                                <p className="text-gray-500">Bạn chưa có thiết bị nào</p>
+                                <p className="text-gray-500 dark:text-gray-400">Bạn chưa có thiết bị nào</p>
                                 <button
                                     onClick={() => {
                                         setEditingEquipment(null);
                                         resetForm();
                                         setShowAddForm(true);
                                     }}
-                                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                    className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
                                 >
                                     Thêm thiết bị mới
                                 </button>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead className="bg-gray-50 dark:bg-gray-800">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá / ngày</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
-                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Thiết bị</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Danh mục</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Giá / ngày</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Trạng thái</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ngày tạo</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hành động</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                                         {filteredEquipment.map((item) => (
                                             <tr key={item.id}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -360,40 +377,40 @@ export default function OwnerEquipment() {
                                                             {item.images && item.images.length > 0 ? (
                                                                 <img className="h-10 w-10 object-cover rounded-md" src={item.images[0]} alt={item.title} />
                                                             ) : (
-                                                                <div className="h-10 w-10 bg-gray-200 rounded-md flex items-center justify-center">
-                                                                    <span className="text-xs text-gray-500">No img</span>
+                                                                <div className="h-10 w-10 bg-gray-200 dark:bg-gray-800 rounded-md flex items-center justify-center">
+                                                                    <span className="text-xs text-gray-500 dark:text-gray-400">No img</span>
                                                                 </div>
                                                             )}
                                                         </div>
                                                         <div className="ml-4">
-                                                            <div className="text-sm font-medium text-gray-900">{item.title}</div>
-                                                            <div className="text-sm text-gray-500 max-w-xs truncate">{item.description}</div>
+                                                            <div className="text-sm font-medium text-gray-900 dark:text-white">{item.title}</div>
+                                                            <div className="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">{item.description}</div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.category?.name || '-'}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPrice(item.price_per_day)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{item.category?.name || '-'}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{formatPrice(item.price_per_day)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${item.status === 'available' ? 'bg-green-100 text-green-800' :
-                                                            item.status === 'rented' ? 'bg-blue-100 text-blue-800' :
-                                                                'bg-yellow-100 text-yellow-800'}`}>
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                        ${item.status === 'available' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300' :
+                                                            item.status === 'rented' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300' :
+                                                                'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300'}`}>
                                                         {item.status === 'available' ? 'Có sẵn' :
                                                             item.status === 'rented' ? 'Đang thuê' : 'Không có sẵn'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(item.created_at)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{formatDate(item.created_at)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <button
                                                         onClick={() => handleEditEquipment(item)}
-                                                        className="text-blue-600 hover:text-blue-800 mr-3"
+                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
                                                         disabled={isSubmitting}
                                                     >
                                                         <Edit size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteEquipment(item.id)}
-                                                        className="text-red-600 hover:text-red-800"
+                                                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                                                         disabled={isSubmitting}
                                                     >
                                                         <Trash2 size={16} />
@@ -412,9 +429,9 @@ export default function OwnerEquipment() {
             {/* Add/Edit Equipment Modal */}
             {showAddForm && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                                 {editingEquipment ? 'Chỉnh sửa thiết bị' : 'Thêm thiết bị mới'}
                             </h2>
                             <button
@@ -423,65 +440,62 @@ export default function OwnerEquipment() {
                                     resetForm();
                                     setEditingEquipment(null);
                                 }}
-                                className="text-gray-600 hover:text-gray-800"
+                                className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
                             >
                                 <X size={24} />
                             </button>
                         </div>
 
                         {loadingCategories ? (
-                            <div className="text-center py-4">Đang tải danh mục...</div>
+                            <div className="text-center py-4 dark:text-gray-200">Đang tải danh mục...</div>
                         ) : categories.length === 0 ? (
-                            <div className="text-center text-red-500 font-medium py-6">
+                            <div className="text-center text-red-500 dark:text-red-400 font-medium py-6">
                                 Bạn chưa có danh mục nào.<br />
                                 Vui lòng tạo danh mục trước khi thêm thiết bị.
                             </div>
                         ) : (
                             <form onSubmit={editingEquipment ? handleUpdateEquipment : handleAddEquipment}>
                                 <div className="mb-4">
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Tiêu đề</label>
+                                    <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Tiêu đề</label>
                                     <input
                                         type="text"
                                         name="title"
                                         value={formData.title}
                                         onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                                         required
                                     />
                                 </div>
-
                                 <div className="mb-4">
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Mô tả</label>
+                                    <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Mô tả</label>
                                     <textarea
                                         name="description"
                                         value={formData.description}
                                         onChange={handleInputChange}
                                         rows={4}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                                     ></textarea>
                                 </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div>
-                                        <label className="block text-gray-700 text-sm font-medium mb-1">Giá thuê mỗi ngày (VND)</label>
+                                        <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Giá thuê mỗi ngày (VND)</label>
                                         <input
                                             type="number"
                                             name="price_per_day"
                                             value={formData.price_per_day}
                                             onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                                             required
                                             min={1}
                                         />
                                     </div>
-
                                     <div>
-                                        <label className="block text-gray-700 text-sm font-medium mb-1">Danh mục</label>
+                                        <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Danh mục</label>
                                         <select
                                             name="category_id"
                                             value={formData.category_id}
                                             onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                                             required
                                         >
                                             <option value="">-- Chọn danh mục --</option>
@@ -493,44 +507,40 @@ export default function OwnerEquipment() {
                                         </select>
                                     </div>
                                 </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div>
-                                        <label className="block text-gray-700 text-sm font-medium mb-1">Số lượng</label>
+                                        <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Số lượng</label>
                                         <input
                                             type="number"
                                             name="quantity"
                                             value={formData.quantity}
                                             onChange={handleInputChange}
                                             min="1"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                                         />
                                     </div>
-
                                     <div>
-                                        <label className="block text-gray-700 text-sm font-medium mb-1">Vị trí</label>
+                                        <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Vị trí</label>
                                         <input
                                             type="text"
                                             name="location"
                                             value={formData.location}
                                             onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                                         />
                                     </div>
                                 </div>
-
                                 <div className="mb-4">
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Đường dẫn hình ảnh</label>
+                                    <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Đường dẫn hình ảnh</label>
                                     <input
                                         type="text"
                                         name="images"
                                         value={Array.isArray(formData.images) ? formData.images.join(', ') : ''}
                                         onChange={handleInputChange}
                                         placeholder="Nhập đường dẫn hình ảnh, cách nhau bởi dấu phẩy"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">Nhập nhiều URL hình ảnh, cách nhau bởi dấu phẩy</p>
-                                    {/* Preview images */}
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Nhập nhiều URL hình ảnh, cách nhau bởi dấu phẩy</p>
                                     {Array.isArray(formData.images) && formData.images.length > 0 && (
                                         <div className="flex gap-2 mt-2">
                                             {formData.images.map((url, idx) => (
@@ -539,21 +549,19 @@ export default function OwnerEquipment() {
                                         </div>
                                     )}
                                 </div>
-
                                 <div className="mb-6">
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Trạng thái</label>
+                                    <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Trạng thái</label>
                                     <select
                                         name="status"
                                         value={formData.status}
                                         onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                                     >
                                         <option value="available">Có sẵn</option>
                                         <option value="unavailable">Không có sẵn</option>
                                         <option value="rented">Đang thuê</option>
                                     </select>
                                 </div>
-
                                 <div className="flex justify-end space-x-3">
                                     <button
                                         type="button"
@@ -562,14 +570,14 @@ export default function OwnerEquipment() {
                                             resetForm();
                                             setEditingEquipment(null);
                                         }}
-                                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                                        className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                                         disabled={isSubmitting}
                                     >
                                         Hủy
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
                                         disabled={isSubmitting}
                                     >
                                         {isSubmitting
