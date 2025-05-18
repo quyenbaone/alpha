@@ -257,41 +257,7 @@ export function SignIn() {
           <div className="px-8 py-6">
             {!showForgotPassword && (
               <>
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h3 className="text-sm font-medium text-blue-800 mb-2">Tài khoản mẫu:</h3>
-                  <div className="grid grid-cols-1 gap-2 text-xs text-gray-600">
-                    <div className="flex items-center justify-between p-2 bg-white rounded border border-blue-100">
-                      <div>
-                        <div className="font-medium text-gray-700">Admin</div>
-                        <div>admin_new@gmail.com</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-gray-500">Mật khẩu:</div>
-                        <div className="font-mono">admin@123</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-white rounded border border-blue-100">
-                      <div>
-                        <div className="font-medium text-gray-700">Chủ nhà</div>
-                        <div>owner_new@gmail.com</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-gray-500">Mật khẩu:</div>
-                        <div className="font-mono">owner@123</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-white rounded border border-blue-100">
-                      <div>
-                        <div className="font-medium text-gray-700">Người thuê</div>
-                        <div>renter_new@gmail.com</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-gray-500">Mật khẩu:</div>
-                        <div className="font-mono">renter@123</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
 
                 <button
                   onClick={handleGoogleSignIn}

@@ -180,7 +180,7 @@ export function AdminSettings() {
         <AdminLayout>
             <div className="container mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Cài đặt hệ thống</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Cài đặt hệ thống</h1>
                     <button
                         onClick={handleSaveSettings}
                         disabled={saving || loading}
@@ -207,16 +207,16 @@ export function AdminSettings() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Thông tin trang web */}
-                        <div className="bg-white rounded-lg shadow overflow-hidden">
-                            <div className="bg-gray-50 px-4 py-3 border-b">
-                                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
+                            <div className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b dark:border-gray-700">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                                     <Globe className="w-5 h-5 mr-2 text-blue-500" />
                                     Thông tin trang web
                                 </h3>
                             </div>
                             <div className="p-4 space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                         Tên trang web
                                     </label>
                                     <div className="flex items-center space-x-3">
@@ -226,13 +226,13 @@ export function AdminSettings() {
                                             value={formData.site_name}
                                             onChange={handleChange}
                                             placeholder="Nhập tên trang web"
-                                            className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                            className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                         Logo trang web
                                     </label>
                                     <div className="flex flex-col space-y-2">
@@ -243,13 +243,13 @@ export function AdminSettings() {
                                                 value={formData.site_logo}
                                                 onChange={handleChange}
                                                 placeholder="URL của logo (https://...)"
-                                                className="flex-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                className="flex-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={triggerFileInput}
                                                 disabled={uploading}
-                                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 {uploading ? (
                                                     <div className="mr-1 h-4 w-4 border-2 border-dashed rounded-full animate-spin border-gray-500"></div>
@@ -267,7 +267,7 @@ export function AdminSettings() {
                                             />
                                         </div>
                                         {logoPreview && (
-                                            <div className="mt-2 flex justify-center p-2 border rounded-md">
+                                            <div className="mt-2 flex justify-center p-2 border rounded-md dark:border-gray-700">
                                                 <img
                                                     src={logoPreview}
                                                     alt="Logo Preview"
@@ -279,8 +279,8 @@ export function AdminSettings() {
                                     </div>
                                 </div>
 
-                                <div className="pt-2 border-t">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <div className="pt-2 border-t dark:border-gray-700">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 flex items-center">
                                         <MapPin className="w-4 h-4 mr-1 text-blue-500" />
                                         Địa chỉ liên hệ
                                     </label>
@@ -289,13 +289,13 @@ export function AdminSettings() {
                                         value={formData.contact_address}
                                         onChange={handleChange}
                                         rows={2}
-                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                         placeholder="Địa chỉ liên hệ của công ty"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 flex items-center">
                                         <Phone className="w-4 h-4 mr-1 text-blue-500" />
                                         Số điện thoại liên hệ
                                     </label>
@@ -304,13 +304,13 @@ export function AdminSettings() {
                                         name="contact_phone"
                                         value={formData.contact_phone}
                                         onChange={handleChange}
-                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                         placeholder="Số điện thoại liên hệ"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 flex items-center">
                                         <Mail className="w-4 h-4 mr-1 text-blue-500" />
                                         Email liên hệ
                                     </label>
@@ -319,7 +319,7 @@ export function AdminSettings() {
                                         name="contact_email"
                                         value={formData.contact_email}
                                         onChange={handleChange}
-                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                         placeholder="Email liên hệ của công ty"
                                     />
                                 </div>
@@ -327,23 +327,23 @@ export function AdminSettings() {
                         </div>
 
                         {/* Cài đặt chung */}
-                        <div className="bg-white rounded-lg shadow overflow-hidden">
-                            <div className="bg-gray-50 px-4 py-3 border-b">
-                                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
+                            <div className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b dark:border-gray-700">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                                     <Brush className="w-5 h-5 mr-2 text-blue-500" />
                                     Cài đặt chung
                                 </h3>
                             </div>
                             <div className="p-4 space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                         Đơn vị tiền tệ
                                     </label>
                                     <select
                                         name="currency"
                                         value={formData.currency}
                                         onChange={handleChange}
-                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                     >
                                         <option value="VNĐ">VNĐ</option>
                                         <option value="USD">USD</option>
@@ -351,14 +351,14 @@ export function AdminSettings() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                         Đơn vị thời gian thuê
                                     </label>
                                     <select
                                         name="rental_time_unit"
                                         value={formData.rental_time_unit}
                                         onChange={handleChange}
-                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                     >
                                         <option value="hour">Giờ</option>
                                         <option value="day">Ngày</option>
@@ -368,7 +368,7 @@ export function AdminSettings() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                         Link Facebook
                                     </label>
                                     <input
@@ -377,7 +377,7 @@ export function AdminSettings() {
                                         value={formData.facebook_link}
                                         onChange={handleChange}
                                         placeholder="https://facebook.com/..."
-                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                     />
                                 </div>
 
@@ -390,14 +390,14 @@ export function AdminSettings() {
                                                 type="checkbox"
                                                 checked={formData.allow_user_equipment_creation}
                                                 onChange={handleChange}
-                                                className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                                className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded"
                                             />
                                         </div>
                                         <div className="ml-3 text-sm">
-                                            <label htmlFor="allow_user_equipment_creation" className="font-medium text-gray-700">
+                                            <label htmlFor="allow_user_equipment_creation" className="font-medium text-gray-700 dark:text-gray-200">
                                                 Cho phép người dùng thêm thiết bị
                                             </label>
-                                            <p className="text-gray-500">
+                                            <p className="text-gray-500 dark:text-gray-400">
                                                 Người dùng có thể thêm thiết bị mới vào hệ thống
                                             </p>
                                         </div>
@@ -411,14 +411,14 @@ export function AdminSettings() {
                                                 type="checkbox"
                                                 checked={formData.auto_email_notifications}
                                                 onChange={handleChange}
-                                                className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                                className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded"
                                             />
                                         </div>
                                         <div className="ml-3 text-sm">
-                                            <label htmlFor="auto_email_notifications" className="font-medium text-gray-700">
+                                            <label htmlFor="auto_email_notifications" className="font-medium text-gray-700 dark:text-gray-200">
                                                 Gửi email thông báo tự động
                                             </label>
-                                            <p className="text-gray-500">
+                                            <p className="text-gray-500 dark:text-gray-400">
                                                 Gửi email tự động khi có đơn thuê mới, hết hạn, v.v.
                                             </p>
                                         </div>

@@ -19,6 +19,8 @@ export interface ExtendedUser extends SupabaseUser {
   role?: string;
   is_admin?: boolean;
   created_at?: string;
+  notification_email?: boolean;
+  notification_sms?: boolean;
 }
 
 interface AuthState {

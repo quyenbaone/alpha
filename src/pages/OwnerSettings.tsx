@@ -1,5 +1,5 @@
 import { Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { OwnerLayout } from '../components/OwnerLayout';
 import { Button } from '../components/ui/Button';
@@ -10,15 +10,11 @@ import { useAuthStore } from '../store/authStore';
 interface UserFormData {
     full_name: string;
     email: string;
-    phone: string;
+    phone_number: string;
     address: string;
     notification_email: boolean;
     notification_sms: boolean;
 }
-
-// Type for the event handlers
-type InputChangeEvent = React.ChangeEvent<HTMLInputElement>;
-type FormSubmitEvent = React.FormEvent<HTMLFormElement>;
 
 export default function OwnerSettings() {
     const { user, setUser } = useAuthStore();
@@ -26,7 +22,7 @@ export default function OwnerSettings() {
     const [userData, setUserData] = useState<UserFormData>({
         full_name: '',
         email: '',
-        phone: '',
+        phone_number: '',
         address: '',
         notification_email: true,
         notification_sms: false
@@ -37,15 +33,15 @@ export default function OwnerSettings() {
             setUserData({
                 full_name: user.full_name || '',
                 email: user.email || '',
-                phone: user.phone_number || '',
+                phone_number: user.phone_number || '',
                 address: user.address || '',
-                notification_email: true,
-                notification_sms: false
+                notification_email: user.notification_email !== false,
+                notification_sms: user.notification_sms || false
             });
         }
     }, [user]);
 
-    const handleInputChange = (e: InputChangeEvent) => {
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
         setUserData({
             ...userData,
@@ -53,39 +49,36 @@ export default function OwnerSettings() {
         });
     };
 
-    const handleSubmit = async (e: FormSubmitEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-
         if (!user) return;
-
         try {
             setLoading(true);
-
-            // Update user profile data
             const { error } = await supabase
                 .from('users')
                 .update({
                     full_name: userData.full_name,
-                    phone_number: userData.phone,
+                    phone_number: userData.phone_number,
                     address: userData.address
                 } as any)
-                .eq('id', user.id);
+                .eq('id', user.id as any);
 
             if (error) throw error;
 
-            // Update the local user state
+            // Update the local user state with all the form data
             setUser({
                 ...user,
                 full_name: userData.full_name,
-                phone_number: userData.phone,
-                address: userData.address
+                phone_number: userData.phone_number,
+                address: userData.address,
+                notification_email: userData.notification_email,
+                notification_sms: userData.notification_sms
             });
 
             toast.success('Thông tin tài khoản đã được cập nhật');
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Error updating user settings:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi';
-            toast.error('Lỗi khi cập nhật thông tin: ' + errorMessage);
+            toast.error('Lỗi khi cập nhật thông tin: ' + error.message);
         } finally {
             setLoading(false);
         }
@@ -107,7 +100,7 @@ export default function OwnerSettings() {
                     <form onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="col-span-1 md:col-span-2">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">Thông tin cá nhân</h2>
+                                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Thông tin cá nhân</h2>
                             </div>
 
                             <div>
@@ -141,14 +134,14 @@ export default function OwnerSettings() {
                             </div>
 
                             <div>
-                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                     Số điện thoại
                                 </label>
                                 <input
                                     type="tel"
-                                    id="phone"
-                                    name="phone"
-                                    value={userData.phone}
+                                    id="phone_number"
+                                    name="phone_number"
+                                    value={userData.phone_number}
                                     onChange={handleInputChange}
                                     className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-transparent dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
@@ -169,7 +162,7 @@ export default function OwnerSettings() {
                             </div>
 
                             <div className="col-span-1 md:col-span-2 pt-4 mt-4 border-t dark:border-gray-700">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
                                     Tùy chọn thông báo
                                 </h2>
                             </div>
