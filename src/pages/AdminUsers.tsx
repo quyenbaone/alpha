@@ -64,9 +64,9 @@ const Tooltip = ({ content, children }: { content: string, children: React.React
         >
             {children}
             {show && (
-                <div className="absolute z-10 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded-md shadow-sm -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                <div className="absolute z-10 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-800 rounded-md shadow-sm -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                     {content}
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900 dark:bg-gray-800"></div>
                 </div>
             )}
         </div>
@@ -590,7 +590,7 @@ export function AdminUsers() {
             <AdminLayout>
                 <div className="container mx-auto px-4 py-8">
                     <div className="flex justify-center items-center h-40">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary dark:border-gray-300"></div>
                     </div>
                 </div>
             </AdminLayout>
@@ -601,43 +601,43 @@ export function AdminUsers() {
         <AdminLayout>
             <div className="container mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold">Quản lý người dùng</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý người dùng</h1>
 
                     {/* Batch actions */}
                     {selectedUsers.length > 0 && (
                         <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium">Đã chọn {selectedUsers.length} người dùng</span>
+                            <span className="text-sm font-medium dark:text-gray-200">Đã chọn {selectedUsers.length} người dùng</span>
                             <button
                                 onClick={handleBatchActivate}
-                                className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm flex items-center gap-1"
+                                className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-sm flex items-center gap-1"
                             >
                                 <ShieldCheck className="h-4 w-4" />
                                 <span>Kích hoạt</span>
                             </button>
                             <button
                                 onClick={handleBatchDeactivate}
-                                className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm flex items-center gap-1"
+                                className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-sm flex items-center gap-1"
                             >
                                 <Ban className="h-4 w-4" />
                                 <span>Bỏ kích hoạt</span>
                             </button>
                             <button
                                 onClick={handleBatchBan}
-                                className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm flex items-center gap-1"
+                                className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-sm flex items-center gap-1"
                             >
                                 <Ban className="h-4 w-4" />
                                 <span>Bỏ xác thực</span>
                             </button>
                             <button
                                 onClick={handleBatchNotification}
-                                className="px-3 py-1.5 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm flex items-center gap-1"
+                                className="px-3 py-1.5 bg-orange-600 text-white rounded-md hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800 text-sm flex items-center gap-1"
                             >
                                 <Bell className="h-4 w-4" />
                                 <span>Gửi thông báo</span>
                             </button>
                             <button
                                 onClick={() => setSelectedUsers([])}
-                                className="px-2 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
+                                className="px-2 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 text-sm"
                             >
                                 <X className="h-4 w-4" />
                             </button>
@@ -646,7 +646,7 @@ export function AdminUsers() {
                 </div>
 
                 {/* Enhanced search and filter bar */}
-                <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <div className="mb-6 bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm">
                     <div className="flex flex-col md:flex-row gap-4 items-center mb-2">
                         <div className="relative flex-grow">
                             <input
@@ -654,15 +654,15 @@ export function AdminUsers() {
                                 placeholder="Tìm kiếm theo email, tên..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg pl-10"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg pl-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
-                            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+                            <Search className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500" size={20} />
                         </div>
 
                         <div className="flex gap-2">
                             <button
                                 onClick={openFilterMenu}
-                                className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
                             >
                                 <SlidersHorizontal size={16} />
                                 <span>Bộ lọc</span>
@@ -682,7 +682,7 @@ export function AdminUsers() {
                         filters.verifiedStatus.length > 0 || filters.bannedStatus.length > 0) && (
                             <div className="flex flex-wrap gap-2 mt-3">
                                 {filters.role.map(role => (
-                                    <span key={role} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                    <span key={role} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                                         {role === 'admin' ? 'Quản trị viên' :
                                             role === 'owner' ? 'Người cho thuê' : 'Người thuê'}
                                         <X
@@ -696,7 +696,7 @@ export function AdminUsers() {
                                     </span>
                                 ))}
                                 {filters.activeStatus.map(status => (
-                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                                         {status === 'active' ? 'Đã xác thực' : 'Chưa xác thực'}
                                         <X
                                             size={14}
@@ -709,7 +709,7 @@ export function AdminUsers() {
                                     </span>
                                 ))}
                                 {filters.verifiedStatus.map(status => (
-                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                                         {status === 'verified' ? 'Đã xác thực' : 'Chưa xác thực'}
                                         <X
                                             size={14}
@@ -722,7 +722,7 @@ export function AdminUsers() {
                                     </span>
                                 ))}
                                 {filters.bannedStatus.map(status => (
-                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                                    <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                                         {status === 'banned' ? 'Chưa xác thực' : 'Đã xác thực'}
                                         <X
                                             size={14}
@@ -738,7 +738,7 @@ export function AdminUsers() {
                                     filters.verifiedStatus.length > 0 || filters.bannedStatus.length > 0) && (
                                         <button
                                             onClick={handleResetFilters}
-                                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800"
+                                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
                                         >
                                             Xóa bộ lọc
                                         </button>
@@ -749,62 +749,62 @@ export function AdminUsers() {
 
                 {filterMenuOpen && (
                     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-                        <div className="bg-white w-full max-w-lg p-6 mx-auto rounded-xl shadow-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in">
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-lg p-6 mx-auto rounded-xl shadow-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in">
                             <div className="flex justify-between items-center mb-5">
-                                <h3 className="text-lg font-semibold">Lọc người dùng</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Lọc người dùng</h3>
                                 <button
                                     onClick={() => setFilterMenuOpen(false)}
-                                    className="text-gray-400 hover:text-gray-700"
+                                    className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                                 >
                                     <X size={20} />
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-8 text-sm text-gray-800">
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-8 text-sm text-gray-800 dark:text-gray-200">
                                 {/* Group 1: Vai trò */}
                                 <div>
                                     <div className="flex justify-between items-center font-medium mb-2">
-                                        <h4>Vai trò <span className="text-gray-400">({tempFilters.role.length})</span></h4>
+                                        <h4>Vai trò <span className="text-gray-400 dark:text-gray-500">({tempFilters.role.length})</span></h4>
                                         <div className="flex gap-2 text-xs">
                                             <button
                                                 onClick={() => setTempFilters({ ...tempFilters, role: ['admin', 'owner', 'renter'] })}
-                                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
                                             >
                                                 Chọn tất cả
                                             </button>
                                             <button
                                                 onClick={() => setTempFilters({ ...tempFilters, role: [] })}
-                                                className="text-gray-600 hover:text-gray-800 font-medium"
+                                                className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 font-medium"
                                             >
                                                 Bỏ chọn
                                             </button>
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.role.includes('admin')}
                                                 onChange={() => toggleFilter('role', 'admin')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Quản trị viên</span>
                                         </label>
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.role.includes('owner')}
                                                 onChange={() => toggleFilter('role', 'owner')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Người cho thuê</span>
                                         </label>
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.role.includes('renter')}
                                                 onChange={() => toggleFilter('role', 'renter')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Người thuê</span>
                                         </label>
@@ -814,38 +814,38 @@ export function AdminUsers() {
                                 {/* Group 2: Trạng thái xác thực */}
                                 <div>
                                     <div className="flex justify-between items-center font-medium mb-2">
-                                        <h4>Trạng thái xác thực <span className="text-gray-400">({tempFilters.activeStatus.length})</span></h4>
+                                        <h4>Trạng thái xác thực <span className="text-gray-400 dark:text-gray-500">({tempFilters.activeStatus.length})</span></h4>
                                         <div className="flex gap-2 text-xs">
                                             <button
                                                 onClick={() => setTempFilters({ ...tempFilters, activeStatus: ['active', 'inactive'] })}
-                                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
                                             >
                                                 Chọn tất cả
                                             </button>
                                             <button
                                                 onClick={() => setTempFilters({ ...tempFilters, activeStatus: [] })}
-                                                className="text-gray-600 hover:text-gray-800 font-medium"
+                                                className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 font-medium"
                                             >
                                                 Bỏ chọn
                                             </button>
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.activeStatus.includes('active')}
                                                 onChange={() => toggleFilter('activeStatus', 'active')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Đã xác thực</span>
                                         </label>
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.activeStatus.includes('inactive')}
                                                 onChange={() => toggleFilter('activeStatus', 'inactive')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Chưa xác thực</span>
                                         </label>
@@ -855,38 +855,38 @@ export function AdminUsers() {
                                 {/* Group 3: Trạng thái tài khoản */}
                                 <div>
                                     <div className="flex justify-between items-center font-medium mb-2">
-                                        <h4>Trạng thái tài khoản <span className="text-gray-400">({tempFilters.verifiedStatus.length})</span></h4>
+                                        <h4>Trạng thái tài khoản <span className="text-gray-400 dark:text-gray-500">({tempFilters.verifiedStatus.length})</span></h4>
                                         <div className="flex gap-2 text-xs">
                                             <button
                                                 onClick={() => setTempFilters({ ...tempFilters, verifiedStatus: ['verified', 'unverified'] })}
-                                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
                                             >
                                                 Chọn tất cả
                                             </button>
                                             <button
                                                 onClick={() => setTempFilters({ ...tempFilters, verifiedStatus: [] })}
-                                                className="text-gray-600 hover:text-gray-800 font-medium"
+                                                className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 font-medium"
                                             >
                                                 Bỏ chọn
                                             </button>
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.verifiedStatus.includes('verified')}
                                                 onChange={() => toggleFilter('verifiedStatus', 'verified')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Đã xác thực email</span>
                                         </label>
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.verifiedStatus.includes('unverified')}
                                                 onChange={() => toggleFilter('verifiedStatus', 'unverified')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Chưa xác thực email</span>
                                         </label>
@@ -896,38 +896,38 @@ export function AdminUsers() {
                                 {/* Group 4: Trạng thái hoạt động */}
                                 <div>
                                     <div className="flex justify-between items-center font-medium mb-2">
-                                        <h4>Trạng thái hoạt động <span className="text-gray-400">({tempFilters.bannedStatus.length})</span></h4>
+                                        <h4>Trạng thái hoạt động <span className="text-gray-400 dark:text-gray-500">({tempFilters.bannedStatus.length})</span></h4>
                                         <div className="flex gap-2 text-xs">
                                             <button
                                                 onClick={() => setTempFilters({ ...tempFilters, bannedStatus: ['banned', 'not_banned'] })}
-                                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
                                             >
                                                 Chọn tất cả
                                             </button>
                                             <button
                                                 onClick={() => setTempFilters({ ...tempFilters, bannedStatus: [] })}
-                                                className="text-gray-600 hover:text-gray-800 font-medium"
+                                                className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 font-medium"
                                             >
                                                 Bỏ chọn
                                             </button>
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.bannedStatus.includes('banned')}
                                                 onChange={() => toggleFilter('bannedStatus', 'banned')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Không hoạt động</span>
                                         </label>
-                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 transition-colors">
+                                        <label className="flex items-center gap-2.5 cursor-pointer py-1.5 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={tempFilters.bannedStatus.includes('not_banned')}
                                                 onChange={() => toggleFilter('bannedStatus', 'not_banned')}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 h-4 w-4 dark:bg-gray-800"
                                             />
                                             <span>Đang hoạt động</span>
                                         </label>
@@ -935,16 +935,16 @@ export function AdminUsers() {
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <button
                                     onClick={handleResetFilters}
-                                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50 transition-colors"
+                                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                 >
                                     Đặt lại
                                 </button>
                                 <button
                                     onClick={handleApplyFilters}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold shadow-sm"
+                                    className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors font-semibold shadow-sm"
                                 >
                                     Áp dụng
                                 </button>
@@ -954,27 +954,27 @@ export function AdminUsers() {
                 )}
 
 
-                <div className="bg-white rounded-lg shadow overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-800">
                             <tr>
                                 <th className="px-3 py-3 text-left">
                                     <input
                                         type="checkbox"
                                         checked={selectedUsers.length > 0 && selectedUsers.length === paginatedUsers.length}
                                         onChange={toggleSelectAll}
-                                        className="form-checkbox h-4 w-4 text-blue-600 rounded"
+                                        className="form-checkbox h-4 w-4 text-blue-600 rounded dark:bg-gray-800 dark:border-gray-600"
                                     />
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thông tin người dùng</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai trò</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Thông tin người dùng</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vai trò</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Trạng thái</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                             {paginatedUsers.map((user) => (
-                                <tr key={user.id} className={`${!user.is_active ? 'bg-gray-50' : ''} group hover:bg-gray-50 transition-colors`}>
+                                <tr key={user.id} className={`${!user.is_active ? 'bg-gray-50 dark:bg-gray-800' : ''} group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors`}>
                                     <td className="px-3 py-4">
                                         {/* Don't allow selecting admin users if current user is not an admin */}
                                         {(user.role !== 'admin' || user.id === user.id) && (
@@ -982,7 +982,7 @@ export function AdminUsers() {
                                                 type="checkbox"
                                                 checked={selectedUsers.includes(user.id)}
                                                 onChange={() => toggleSelectUser(user.id)}
-                                                className="form-checkbox h-4 w-4 text-blue-600 rounded"
+                                                className="form-checkbox h-4 w-4 text-blue-600 rounded dark:bg-gray-800 dark:border-gray-600"
                                             />
                                         )}
                                     </td>
@@ -990,49 +990,49 @@ export function AdminUsers() {
                                         {editingItem === user.id ? (
                                             <div className="space-y-2">
                                                 <div>
-                                                    <label className="block text-xs text-gray-500">Email</label>
+                                                    <label className="block text-xs text-gray-500 dark:text-gray-400">Email</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.email || ''}
                                                         onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                                        className="border rounded px-2 py-1 w-full"
+                                                        className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                                         disabled
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs text-gray-500">Họ tên</label>
+                                                    <label className="block text-xs text-gray-500 dark:text-gray-400">Họ tên</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.full_name || ''}
                                                         onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                                                        className="border rounded px-2 py-1 w-full"
+                                                        className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs text-gray-500">Số điện thoại</label>
+                                                    <label className="block text-xs text-gray-500 dark:text-gray-400">Số điện thoại</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.phone_number || ''}
                                                         onChange={(e) => setEditForm({ ...editForm, phone_number: e.target.value })}
-                                                        className="border rounded px-2 py-1 w-full"
+                                                        className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs text-gray-500">Địa chỉ</label>
+                                                    <label className="block text-xs text-gray-500 dark:text-gray-400">Địa chỉ</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.address || ''}
                                                         onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                                                        className="border rounded px-2 py-1 w-full"
+                                                        className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                                     />
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <label className="text-sm">Đã xác thực</label>
+                                                    <label className="text-sm dark:text-gray-300">Đã xác thực</label>
                                                     <input
                                                         type="checkbox"
                                                         checked={editForm.verified}
                                                         onChange={(e) => setEditForm({ ...editForm, verified: e.target.checked })}
-                                                        className="form-checkbox h-4 w-4 text-green-600"
+                                                        className="form-checkbox h-4 w-4 text-green-600 dark:bg-gray-800 dark:border-gray-600"
                                                     />
                                                 </div>
                                             </div>
@@ -1046,16 +1046,16 @@ export function AdminUsers() {
                                                             className="h-10 w-10 rounded-full object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                                            <User className="h-6 w-6 text-gray-500" />
+                                                        <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                                            <User className="h-6 w-6 text-gray-500 dark:text-gray-400" />
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <div className="font-medium">{user.email}</div>
-                                                    <div className="text-sm text-gray-500">{user.full_name || 'Chưa cập nhật'}</div>
+                                                    <div className="font-medium dark:text-white">{user.email}</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.full_name || 'Chưa cập nhật'}</div>
                                                     {user.phone_number && (
-                                                        <div className="text-sm text-gray-500">{user.phone_number}</div>
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">{user.phone_number}</div>
                                                     )}
                                                 </div>
                                             </div>
@@ -1066,7 +1066,7 @@ export function AdminUsers() {
                                             <select
                                                 value={editForm.role || 'renter'}
                                                 onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                                                className="border rounded px-2 py-1"
+                                                className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                             >
                                                 <option value="admin">Quản trị viên</option>
                                                 <option value="owner">Người cho thuê</option>
@@ -1076,10 +1076,10 @@ export function AdminUsers() {
                                             <div>
                                                 <span className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium
                                                     ${user.role === 'admin'
-                                                        ? 'bg-purple-100 text-purple-700'
+                                                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200'
                                                         : user.role === 'owner'
-                                                            ? 'bg-blue-100 text-blue-700'
-                                                            : 'bg-gray-100 text-gray-700'}`}
+                                                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                                                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'}`}
                                                 >
                                                     {user.role === 'admin' && <Shield className="h-3.5 w-3.5 mr-1.5" />}
                                                     {user.role === 'owner' && <User className="h-3.5 w-3.5 mr-1.5" />}
@@ -1094,12 +1094,12 @@ export function AdminUsers() {
                                     <td className="px-6 py-4">
                                         {editingItem === user.id ? (
                                             <div className="flex items-center gap-2">
-                                                <label className="text-sm">Đã xác thực</label>
+                                                <label className="text-sm dark:text-gray-300">Đã xác thực</label>
                                                 <input
                                                     type="checkbox"
                                                     checked={editForm.verified}
                                                     onChange={(e) => setEditForm({ ...editForm, verified: e.target.checked })}
-                                                    className="form-checkbox h-4 w-4 text-green-600"
+                                                    className="form-checkbox h-4 w-4 text-green-600 dark:bg-gray-800 dark:border-gray-600"
                                                 />
                                             </div>
                                         ) : (
@@ -1107,8 +1107,8 @@ export function AdminUsers() {
                                                 <StatusBadge
                                                     active={user.verified === true}
                                                     icon={ShieldCheck}
-                                                    activeColor="bg-blue-100 text-blue-700 hover:bg-blue-200"
-                                                    inactiveColor="bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                                    activeColor="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"
+                                                    inactiveColor="bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                                                     text={user.verified ? 'Đã xác thực' : 'Chưa xác thực'}
                                                     onClick={() => handleToggleUserStatus(user.id, 'verified', !user.verified)}
                                                     tooltip={user.verified ? 'Click để hủy xác thực' : 'Click để xác thực'}
@@ -1121,13 +1121,13 @@ export function AdminUsers() {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={handleSaveEdit}
-                                                    className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs"
+                                                    className="px-3 py-1 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-800 text-xs"
                                                 >
                                                     Lưu
                                                 </button>
                                                 <button
                                                     onClick={handleCancelEdit}
-                                                    className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs"
+                                                    className="px-3 py-1 bg-gray-500 dark:bg-gray-600 text-white rounded-md hover:bg-gray-600 dark:hover:bg-gray-700 text-xs"
                                                 >
                                                     Hủy
                                                 </button>
@@ -1138,7 +1138,7 @@ export function AdminUsers() {
                                                     <Tooltip content="Chỉnh sửa thông tin người dùng">
                                                         <button
                                                             onClick={() => handleEditUser(user.id)}
-                                                            className="text-blue-500 hover:text-blue-700 p-1.5 rounded-full hover:bg-blue-50"
+                                                            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900"
                                                         >
                                                             <Edit className="h-4 w-4" />
                                                         </button>
@@ -1147,7 +1147,7 @@ export function AdminUsers() {
                                                     <Tooltip content="Gửi thông báo hệ thống">
                                                         <button
                                                             onClick={() => openNotificationModal(user.id)}
-                                                            className="text-orange-500 hover:text-orange-700 p-1.5 rounded-full hover:bg-orange-50"
+                                                            className="text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 p-1.5 rounded-full hover:bg-orange-50 dark:hover:bg-orange-900"
                                                         >
                                                             <Bell className="h-4 w-4" />
                                                         </button>
@@ -1159,7 +1159,7 @@ export function AdminUsers() {
                                                             <Tooltip content={user.verified ? "Bỏ xác thực người dùng" : "Xác thực người dùng"}>
                                                                 <button
                                                                     onClick={() => handleToggleUserStatus(user.id, 'verified', user.verified === true)}
-                                                                    className="text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50"
+                                                                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900"
                                                                 >
                                                                     <Ban className="h-4 w-4" />
                                                                 </button>
@@ -1168,7 +1168,7 @@ export function AdminUsers() {
                                                             <Tooltip content="Vô hiệu hóa tài khoản">
                                                                 <button
                                                                     onClick={() => handleDeleteUser(user.id)}
-                                                                    className="text-red-700 hover:text-red-900 p-1.5 rounded-full hover:bg-red-50"
+                                                                    className="text-red-700 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
                                                                 </button>
@@ -1179,7 +1179,7 @@ export function AdminUsers() {
                                                             <Tooltip content="Không thể chặn quản trị viên">
                                                                 <button
                                                                     disabled
-                                                                    className="text-gray-300 p-1.5 rounded-full cursor-not-allowed"
+                                                                    className="text-gray-300 dark:text-gray-600 p-1.5 rounded-full cursor-not-allowed"
                                                                 >
                                                                     <Ban className="h-4 w-4" />
                                                                 </button>
@@ -1188,7 +1188,7 @@ export function AdminUsers() {
                                                             <Tooltip content="Không thể xóa quản trị viên">
                                                                 <button
                                                                     disabled
-                                                                    className="text-gray-300 p-1.5 rounded-full cursor-not-allowed"
+                                                                    className="text-gray-300 dark:text-gray-600 p-1.5 rounded-full cursor-not-allowed"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
                                                                 </button>
@@ -1208,13 +1208,13 @@ export function AdminUsers() {
                 {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="flex justify-between items-center mt-4">
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                             Hiển thị {(currentPage - 1) * usersPerPage + 1} - {Math.min(currentPage * usersPerPage, filteredUsers.length)} trong số {filteredUsers.length} người dùng
                         </div>
                         <div className="flex gap-1">
                             <button
                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                                 disabled={currentPage === 1}
                             >
                                 Trước
@@ -1225,26 +1225,26 @@ export function AdminUsers() {
                                     <button
                                         key={i}
                                         onClick={() => setCurrentPage(pageNum)}
-                                        className={`px-3 py-1 rounded ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                        className={`px-3 py-1 rounded ${currentPage === pageNum ? 'bg-blue-600 dark:bg-blue-700 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                                     >
                                         {pageNum}
                                     </button>
                                 );
                             })}
                             {totalPages > 5 && currentPage < totalPages - 2 && (
-                                <span className="px-2 py-1">...</span>
+                                <span className="px-2 py-1 text-gray-500 dark:text-gray-400">...</span>
                             )}
                             {totalPages > 5 && (
                                 <button
                                     onClick={() => setCurrentPage(totalPages)}
-                                    className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                    className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-blue-600 dark:bg-blue-700 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                                 >
                                     {totalPages}
                                 </button>
                             )}
                             <button
                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                                className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                                 disabled={currentPage === totalPages}
                             >
                                 Tiếp
@@ -1256,26 +1256,26 @@ export function AdminUsers() {
                 {/* Notification Modal */}
                 {notificationModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                            <h2 className="text-xl font-bold mb-4">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-md">
+                            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                                 {notification.userId === 'batch'
                                     ? `Gửi thông báo cho ${selectedUsers.length} người dùng`
                                     : 'Gửi thông báo hệ thống'}
                             </h2>
                             <div className="space-y-3 mb-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tiêu đề</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Tiêu đề</label>
                                     <input
                                         type="text"
-                                        className="w-full px-3 py-2 border rounded-md"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                         value={notification.title}
                                         onChange={(e) => setNotification({ ...notification, title: e.target.value })}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nội dung</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nội dung</label>
                                     <textarea
-                                        className="w-full px-3 py-2 border rounded-md"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                                         rows={4}
                                         value={notification.message}
                                         onChange={(e) => setNotification({ ...notification, message: e.target.value })}
@@ -1284,13 +1284,13 @@ export function AdminUsers() {
                             </div>
                             <div className="flex justify-end gap-3">
                                 <button
-                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                                    className="px-4 py-2 bg-gray-500 dark:bg-gray-700 text-white rounded-md hover:bg-gray-600 dark:hover:bg-gray-800"
                                     onClick={() => setNotificationModal(false)}
                                 >
                                     Hủy
                                 </button>
                                 <button
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                    className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-800"
                                     onClick={notification.userId === 'batch' ? sendBatchNotification : sendNotification}
                                 >
                                     Gửi thông báo

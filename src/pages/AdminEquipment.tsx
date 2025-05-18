@@ -655,10 +655,10 @@ export function AdminEquipment() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === 'available'
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                : item.status === 'hidden'
-                                                    ? 'bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                            : item.status === 'hidden'
+                                                ? 'bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                                             }`}>
                                             {item.status === 'available' ? (
                                                 <><span className="w-1.5 h-1.5 rounded-full bg-green-600 mr-1.5"></span>Có sẵn</>
