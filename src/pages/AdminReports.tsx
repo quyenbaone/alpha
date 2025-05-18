@@ -49,6 +49,32 @@ interface ReportData {
     averageValue: number;
 }
 
+// Type definitions for Supabase responses
+interface RentalRecord {
+    created_at: string;
+    total_price: number;
+    status?: string;
+    equipment_id?: string;
+    id?: string;
+}
+
+interface EquipmentRecord {
+    id: string;
+    category_id: string;
+}
+
+interface UserRecord {
+    id: string;
+    full_name?: string;
+    email?: string;
+    rentals?: RentalRecord[];
+}
+
+interface CategoryRevenueRecord {
+    category_id: string;
+    total_revenue: number;
+}
+
 export function AdminReports() {
     const [timeRange, setTimeRange] = useState('month');
     const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +90,7 @@ export function AdminReports() {
 
     useEffect(() => {
         fetchReportData();
+        // eslint-disable-next-line
     }, [timeRange]);
 
     const fetchReportData = async () => {
@@ -116,13 +143,15 @@ export function AdminReports() {
             if (categoryRentalError) throw categoryRentalError;
 
             // Tạo map để tổng hợp doanh thu theo danh mục
-            const categoryRevenueMap = new Map();
+            const categoryRevenueMap = new Map<string, number>();
 
-            // Đảm bảo các đối tượng tồn tại trước khi xử lý
             if (categoryRentalData && equipmentData) {
-                categoryRentalData.forEach((rental: any) => {
+                const safeRentalData = categoryRentalData as unknown as RentalRecord[];
+                const safeEquipmentData = equipmentData as unknown as EquipmentRecord[];
+
+                safeRentalData.forEach((rental) => {
                     if (rental && rental.equipment_id && rental.total_price) {
-                        const equipment = equipmentData.find((e: any) => e.id === rental.equipment_id);
+                        const equipment = safeEquipmentData.find(e => e.id === rental.equipment_id);
                         if (equipment && equipment.category_id) {
                             const currentRevenue = categoryRevenueMap.get(equipment.category_id) || 0;
                             categoryRevenueMap.set(equipment.category_id, currentRevenue + rental.total_price);
@@ -131,7 +160,6 @@ export function AdminReports() {
                 });
             }
 
-            // Chuyển đổi map thành mảng để hiển thị
             const categoryRevenueData = Array.from(categoryRevenueMap).map(([categoryId, totalRevenue]) => ({
                 category_id: categoryId,
                 total_revenue: totalRevenue
@@ -141,46 +169,41 @@ export function AdminReports() {
             const { data: userData, error: userError } = await supabase
                 .from('users')
                 .select('id, full_name, email')
-                .eq('role', 'customer')
+                .eq('role', 'customer' as any)
                 .limit(10);
 
             if (userError) throw userError;
 
             // Lấy giao dịch thuê của mỗi khách hàng
-            const topCustomersWithRentals = [];
-
+            const topCustomersWithRentals: UserRecord[] = [];
             if (userData) {
-                for (const user of userData) {
+                const safeUserData = userData as unknown as UserRecord[];
+                for (const user of safeUserData) {
                     const { data: userRentals, error: userRentalsError } = await supabase
                         .from('rentals')
                         .select('id, total_price, status')
-                        .eq('renter_id', user.id);
+                        .eq('renter_id', user.id as any);
 
                     if (!userRentalsError && userRentals) {
                         topCustomersWithRentals.push({
                             ...user,
-                            rentals: userRentals
+                            rentals: userRentals as unknown as RentalRecord[]
                         });
                     }
                 }
             }
 
             // Xử lý dữ liệu doanh thu
-            const monthlyRevenues = processMonthlyData(revenueData || [], 'total_price');
+            const safeRevenueData = revenueData as unknown as RentalRecord[];
+            const safeRentalData = rentalData as unknown as RentalRecord[];
+            const safeAllRevenueData = allRevenueData as unknown as RentalRecord[];
+            const safeCategoryData = categoryRevenueData as unknown as CategoryRevenueRecord[];
 
-            // Xử lý dữ liệu đơn thuê
-            const monthlyRentals = processMonthlyData(rentalData || []);
-
-            // Tính tổng doanh thu
-            const totalRevenue = allRevenueData?.reduce((sum, rental) => sum + (rental.total_price || 0), 0) || 0;
-
-            // Tính giá trị trung bình mỗi đơn
+            const monthlyRevenues = processMonthlyData(safeRevenueData || [], 'total_price');
+            const monthlyRentals = processMonthlyData(safeRentalData || []);
+            const totalRevenue = safeAllRevenueData?.reduce((sum, rental) => sum + (rental.total_price || 0), 0) || 0;
             const averageValue = totalRentalsCount ? totalRevenue / totalRentalsCount : 0;
-
-            // Xử lý dữ liệu danh mục
-            const processedCategories = processCategories(categoryRevenueData);
-
-            // Xử lý dữ liệu top khách hàng
+            const processedCategories = processCategories(safeCategoryData);
             const processedTopUsers = processTopUsers(topCustomersWithRentals);
 
             setReportData({
@@ -200,7 +223,6 @@ export function AdminReports() {
         }
     };
 
-    // Lấy ngày bắt đầu dựa trên khoảng thời gian
     const getTimeRangeDate = () => {
         const now = new Date();
         let startDate = new Date();
@@ -225,8 +247,7 @@ export function AdminReports() {
         return startDate.toISOString();
     };
 
-    // Xử lý dữ liệu theo tháng
-    const processMonthlyData = (data: any[], valueField?: string) => {
+    const processMonthlyData = (data: RentalRecord[], valueField?: string) => {
         const months = Array(12).fill(0);
 
         if (!data) return months;
@@ -236,7 +257,7 @@ export function AdminReports() {
             const monthIndex = date.getMonth();
 
             if (valueField) {
-                months[monthIndex] += item[valueField] || 0;
+                months[monthIndex] += (item as any)[valueField] || 0;
             } else {
                 months[monthIndex] += 1;
             }
@@ -245,13 +266,10 @@ export function AdminReports() {
         return months;
     };
 
-    // Xử lý dữ liệu danh mục
-    const processCategories = (data: any[]): CategoryData[] => {
+    const processCategories = (data: CategoryRevenueRecord[]): CategoryData[] => {
         if (!data) return [];
 
         const categories: Record<string, CategoryData> = {};
-
-        // Danh sách tên danh mục mặc định (bạn có thể thay thế bằng dữ liệu thực)
         const categoryNames: Record<string, string> = {
             '1': 'Camera',
             '2': 'Đèn chiếu sáng',
@@ -273,7 +291,6 @@ export function AdminReports() {
             }
 
             categories[categoryId].count += 1;
-
             if (item.total_revenue) {
                 categories[categoryId].revenue += item.total_revenue;
             }
@@ -282,8 +299,7 @@ export function AdminReports() {
         return Object.values(categories);
     };
 
-    // Xử lý dữ liệu top khách hàng
-    const processTopUsers = (data: any[]): UserData[] => {
+    const processTopUsers = (data: UserRecord[]): UserData[] => {
         if (!data) return [];
 
         return data.map(user => {
@@ -291,7 +307,7 @@ export function AdminReports() {
             const rentalsCount = user.rentals ? user.rentals.length : 0;
 
             if (user.rentals) {
-                user.rentals.forEach((rental: any) => {
+                user.rentals.forEach((rental: RentalRecord) => {
                     totalSpent += rental.total_price || 0;
                 });
             }
@@ -302,9 +318,7 @@ export function AdminReports() {
                 spent: totalSpent
             };
         })
-            // Sắp xếp theo số lượng đơn hàng giảm dần
             .sort((a, b) => b.rentals - a.rentals)
-            // Chỉ lấy 5 người dùng hàng đầu
             .slice(0, 5);
     };
 
@@ -370,13 +384,13 @@ export function AdminReports() {
         <AdminLayout>
             <div className="container mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Báo cáo & Thống kê</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Báo cáo & Thống kê</h1>
 
                     <div className="flex space-x-2">
                         <select
                             value={timeRange}
                             onChange={(e) => setTimeRange(e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200"
                         >
                             <option value="week">Tuần này</option>
                             <option value="month">Tháng này</option>
@@ -384,14 +398,14 @@ export function AdminReports() {
                             <option value="year">Năm nay</option>
                         </select>
 
-                        <button className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center">
+                        <button className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center text-gray-900 dark:text-gray-200">
                             <Filter size={16} className="mr-1" />
                             Lọc
                         </button>
 
                         <button
                             onClick={fetchReportData}
-                            className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+                            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center text-gray-900 dark:text-gray-200"
                         >
                             <RefreshCw size={16} className="mr-1" />
                             Làm mới
@@ -412,19 +426,17 @@ export function AdminReports() {
                     <>
                         {/* Thống kê tổng quan */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">Tổng doanh thu</h3>
-                                <p className="text-3xl font-bold text-gray-900">{formatPrice(reportData.totalRevenue)}</p>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Tổng doanh thu</h3>
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">{formatPrice(reportData.totalRevenue)}</p>
                             </div>
-
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">Tổng đơn thuê</h3>
-                                <p className="text-3xl font-bold text-gray-900">{reportData.totalRentalsCount}</p>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Tổng đơn thuê</h3>
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">{reportData.totalRentalsCount}</p>
                             </div>
-
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">Giá trị trung bình mỗi đơn</h3>
-                                <p className="text-3xl font-bold text-gray-900">
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Giá trị trung bình mỗi đơn</h3>
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
                                     {formatPrice(reportData.averageValue)}
                                 </p>
                             </div>
@@ -432,15 +444,14 @@ export function AdminReports() {
 
                         {/* Biểu đồ */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <h3 className="text-lg font-semibold mb-4">Doanh thu theo tháng</h3>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Doanh thu theo tháng</h3>
                                 <div className="h-80">
                                     <Line data={revenueChartData} options={chartOptions} />
                                 </div>
                             </div>
-
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <h3 className="text-lg font-semibold mb-4">Số lượng đơn thuê theo tháng</h3>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Số lượng đơn thuê theo tháng</h3>
                                 <div className="h-80">
                                     <Bar data={rentalChartData} options={chartOptions} />
                                 </div>
@@ -450,42 +461,41 @@ export function AdminReports() {
                         {/* Phân tích danh mục và top người dùng */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {reportData.categories.length > 0 && (
-                                <div className="bg-white rounded-lg shadow p-6">
-                                    <h3 className="text-lg font-semibold mb-4">Phân tích danh mục</h3>
+                                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Phân tích danh mục</h3>
                                     <div className="h-80">
                                         <Bar data={categoryChartData} options={chartOptions} />
                                     </div>
                                 </div>
                             )}
-
                             {reportData.topUsers.length > 0 && (
-                                <div className="bg-white rounded-lg shadow p-6">
-                                    <h3 className="text-lg font-semibold mb-4">Top khách hàng</h3>
+                                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Top khách hàng</h3>
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full">
                                             <thead>
-                                                <tr className="bg-gray-50">
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <tr className="bg-gray-50 dark:bg-gray-700">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
                                                         Tên công ty
                                                     </th>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
                                                         Số đơn
                                                     </th>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
                                                         Tổng chi tiêu
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-200">
+                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                                 {reportData.topUsers.map((user, index) => (
-                                                    <tr key={index} className="hover:bg-gray-50">
-                                                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                                             {user.name}
                                                         </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                                                             {user.rentals}
                                                         </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                                                             {formatPrice(user.spent)}
                                                         </td>
                                                     </tr>

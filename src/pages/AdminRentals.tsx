@@ -294,21 +294,21 @@ export function AdminRentals() {
     const getStatusLabel = (status: string) => {
         switch (status) {
             case 'pending':
-                return { text: 'Đang chờ', color: 'bg-yellow-100 text-yellow-800' };
+                return { text: 'Đang chờ', color: 'bg-yellow-100 dark:bg-yellow-800/30 text-yellow-800 dark:text-yellow-300' };
             case 'approved':
             case 'confirmed':
-                return { text: 'Đã duyệt', color: 'bg-green-100 text-green-800' };
+                return { text: 'Đã duyệt', color: 'bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300' };
             case 'delivering':
-                return { text: 'Đang giao hàng', color: 'bg-purple-100 text-purple-800' };
+                return { text: 'Đang giao hàng', color: 'bg-purple-100 dark:bg-purple-800/30 text-purple-800 dark:text-purple-300' };
             case 'in_progress':
-                return { text: 'Đang thuê', color: 'bg-blue-100 text-blue-800' };
+                return { text: 'Đang thuê', color: 'bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300' };
             case 'rejected':
             case 'cancelled':
-                return { text: 'Từ chối', color: 'bg-red-100 text-red-800' };
+                return { text: 'Từ chối', color: 'bg-red-100 dark:bg-red-800/30 text-red-800 dark:text-red-300' };
             case 'completed':
-                return { text: 'Hoàn thành', color: 'bg-green-100 text-green-800' };
+                return { text: 'Hoàn thành', color: 'bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300' };
             default:
-                return { text: status, color: 'bg-gray-100 text-gray-800' };
+                return { text: status, color: 'bg-gray-100 dark:bg-gray-800/50 text-gray-800 dark:text-gray-300' };
         }
     };
 
@@ -380,41 +380,41 @@ export function AdminRentals() {
     const getPaymentStatusLabel = (status?: string) => {
         switch (status) {
             case 'paid':
-                return { text: 'Đã thanh toán', color: 'bg-green-100 text-green-800' };
+                return { text: 'Đã thanh toán', color: 'bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300' };
             case 'unpaid':
-                return { text: 'Chưa thanh toán', color: 'bg-red-100 text-red-800' };
+                return { text: 'Chưa thanh toán', color: 'bg-red-100 dark:bg-red-800/30 text-red-800 dark:text-red-300' };
             case 'cod':
-                return { text: 'Thanh toán khi nhận', color: 'bg-blue-100 text-blue-800' };
+                return { text: 'Thanh toán khi nhận', color: 'bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300' };
             default:
-                return { text: 'Không xác định', color: 'bg-gray-100 text-gray-800' };
+                return { text: 'Không xác định', color: 'bg-gray-100 dark:bg-gray-800/50 text-gray-800 dark:text-gray-300' };
         }
     };
 
     return (
         <AdminLayout>
             <div className="container mx-auto p-4">
-                <h1 className="text-3xl font-bold mb-6">Quản lý đơn thuê</h1>
+                <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Quản lý đơn thuê</h1>
 
                 {/* Stats Dashboard */}
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-gray-500 text-sm">Tổng đơn thuê</h3>
-                        <p className="text-2xl font-semibold">{stats.total}</p>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm">Tổng đơn thuê</h3>
+                        <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.total}</p>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-gray-500 text-sm">Đơn chờ xác nhận</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm">Đơn chờ xác nhận</h3>
                         <p className="text-2xl font-semibold text-yellow-600">{stats.pending}</p>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-gray-500 text-sm">Đơn đã xác nhận</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm">Đơn đã xác nhận</h3>
                         <p className="text-2xl font-semibold text-blue-600">{stats.confirmed}</p>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-gray-500 text-sm">Đơn đã hoàn thành</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm">Đơn đã hoàn thành</h3>
                         <p className="text-2xl font-semibold text-green-600">{stats.completed}</p>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-gray-500 text-sm">Doanh thu (VNĐ)</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm">Doanh thu (VNĐ)</h3>
                         <p className="text-2xl font-semibold text-purple-600">
                             {stats.totalRevenue.toLocaleString()}
                         </p>
@@ -423,12 +423,12 @@ export function AdminRentals() {
 
                 <div className="container mx-auto px-4 py-8">
                     <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">Quản lý đơn thuê</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý đơn thuê</h1>
                         <div className="flex space-x-2">
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200"
                             >
                                 <option value="all">Tất cả trạng thái</option>
                                 <option value="pending">Đang chờ</option>
@@ -440,7 +440,7 @@ export function AdminRentals() {
                             <select
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200"
                             >
                                 <option value="all">Tất cả thời gian</option>
                                 <option value="today">Hôm nay</option>
@@ -450,7 +450,7 @@ export function AdminRentals() {
                             </select>
 
                             <button
-                                className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+                                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center text-gray-900 dark:text-gray-200"
                             >
                                 <Filter size={16} className="mr-1" />
                                 Lọc thêm
@@ -458,7 +458,7 @@ export function AdminRentals() {
 
                             <button
                                 onClick={fetchRentals}
-                                className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+                                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center text-gray-900 dark:text-gray-200"
                             >
                                 <RefreshCw size={16} className="mr-1" />
                                 Làm mới
@@ -474,7 +474,7 @@ export function AdminRentals() {
 
                             <button
                                 onClick={() => setShowHelpModal(true)}
-                                className="px-3 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-md flex items-center text-sm"
+                                className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md flex items-center text-sm"
                             >
                                 <span className="mr-1">?</span>
                                 Trợ giúp
@@ -490,7 +490,7 @@ export function AdminRentals() {
                                 placeholder="Tìm kiếm theo tên thiết bị, email hoặc tên công ty..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-700"
                             />
                             <Search className="absolute left-3 top-3 text-gray-400" />
                         </div>
@@ -501,49 +501,49 @@ export function AdminRentals() {
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-lg shadow overflow-hidden">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                             {filteredRentals.length === 0 ? (
-                                <div className="p-6 text-center text-gray-500">
+                                <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                                     Không tìm thấy đơn thuê nào
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
+                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead className="bg-gray-50 dark:bg-gray-700">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     Thiết bị
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     Người thuê
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     Thời gian thuê
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     Tổng tiền
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     Trạng thái
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     Thanh toán
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     Ngày tạo
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     Thao tác
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
+                                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                             {filteredRentals.map((rental) => {
                                                 const status = getStatusLabel(rental.status);
                                                 const paymentStatus = getPaymentStatusLabel(rental.payment_status);
 
                                                 return (
-                                                    <tr key={rental.id} className="hover:bg-gray-50">
+                                                    <tr key={rental.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex items-center">
                                                                 <div className="h-10 w-10 flex-shrink-0">
@@ -555,33 +555,33 @@ export function AdminRentals() {
                                                                     />
                                                                 </div>
                                                                 <div className="ml-4">
-                                                                    <div className="text-sm font-medium text-gray-900">
+                                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                                         {rental.equipment?.title}
                                                                     </div>
-                                                                    <div className="text-sm text-gray-500">
+                                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
                                                                         {formatPrice(rental.equipment?.price_per_day)}/ngày
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="text-sm text-gray-900">
+                                                            <div className="text-sm text-gray-900 dark:text-white">
                                                                 {rental.renter?.full_name || 'N/A'}
                                                             </div>
-                                                            <div className="text-sm text-gray-500">
+                                                            <div className="text-sm text-gray-500 dark:text-gray-400">
                                                                 {rental.renter?.email}
                                                             </div>
                                                             {rental.renter?.phone_number && (
-                                                                <div className="text-sm text-gray-500">
+                                                                <div className="text-sm text-gray-500 dark:text-gray-400">
                                                                     SĐT: {rental.renter.phone_number}
                                                                 </div>
                                                             )}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="text-sm text-gray-900">
+                                                            <div className="text-sm text-gray-900 dark:text-white">
                                                                 {formatDate(rental.start_date)} - {formatDate(rental.end_date)}
                                                             </div>
-                                                            <div className="text-sm text-gray-500">
+                                                            <div className="text-sm text-gray-500 dark:text-gray-400">
                                                                 {Math.ceil(
                                                                     (new Date(rental.end_date).getTime() - new Date(rental.start_date).getTime()) /
                                                                     (1000 * 60 * 60 * 24)
@@ -589,7 +589,7 @@ export function AdminRentals() {
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="text-sm font-medium text-gray-900">
+                                                            <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                                 {formatPrice(rental.total_price)}
                                                             </div>
                                                         </td>
@@ -603,7 +603,7 @@ export function AdminRentals() {
                                                                 {paymentStatus.text}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                             {formatDate(rental.created_at)}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
@@ -617,7 +617,7 @@ export function AdminRentals() {
                                                                 onClick={() => handleUpdateRentalStatus(rental.id, 'confirmed')}
                                                                 disabled={rental.status === 'confirmed' || rental.status === 'completed'}
                                                                 className={`${rental.status === 'confirmed' || rental.status === 'completed'
-                                                                    ? 'text-gray-400 bg-gray-100'
+                                                                    ? 'text-gray-400 bg-gray-100 dark:text-gray-500 dark:bg-gray-700'
                                                                     : 'text-green-600 hover:text-green-900 bg-green-100 hover:bg-green-200'
                                                                     } px-2 py-1 rounded-md text-xs`}
                                                             >
@@ -647,13 +647,13 @@ export function AdminRentals() {
             {/* Rental Details Modal */}
             {showRentalDetails && selectedRental && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex justify-between items-start">
-                                <h2 className="text-2xl font-bold mb-4">Chi tiết đơn thuê #{selectedRental.id}</h2>
+                                <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Chi tiết đơn thuê #{selectedRental.id}</h2>
                                 <button
                                     onClick={() => setShowRentalDetails(false)}
-                                    className="text-gray-500 hover:text-gray-700"
+                                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -661,8 +661,8 @@ export function AdminRentals() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-2">Thông tin thiết bị</h3>
-                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Thông tin thiết bị</h3>
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                         {selectedRental.equipment ? (
                                             <div>
                                                 <div className="mb-3">
@@ -683,61 +683,61 @@ export function AdminRentals() {
                                                         />
                                                     )}
                                                 </div>
-                                                <p className="font-semibold text-lg">{selectedRental.equipment.title}</p>
-                                                <p className="text-gray-600 mb-2">Giá: {formatPrice(selectedRental.equipment.price_per_day)}/ngày</p>
+                                                <p className="font-semibold text-lg text-gray-900 dark:text-white">{selectedRental.equipment.title}</p>
+                                                <p className="text-gray-600 dark:text-gray-300 mb-2">Giá: {formatPrice(selectedRental.equipment.price_per_day)}/ngày</p>
                                             </div>
                                         ) : (
-                                            <p className="text-gray-500">Không có thông tin thiết bị</p>
+                                            <p className="text-gray-500 dark:text-gray-400">Không có thông tin thiết bị</p>
                                         )}
                                     </div>
 
-                                    <h3 className="font-semibold text-lg mt-4 mb-2">Thông tin thuê</h3>
-                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h3 className="font-semibold text-lg mt-4 mb-2 text-gray-900 dark:text-white">Thông tin thuê</h3>
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
-                                                <p className="text-sm text-gray-500">Ngày bắt đầu</p>
-                                                <p className="font-medium">{formatDate(selectedRental.start_date)}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Ngày bắt đầu</p>
+                                                <p className="font-medium text-gray-900 dark:text-white">{formatDate(selectedRental.start_date)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500">Ngày kết thúc</p>
-                                                <p className="font-medium">{formatDate(selectedRental.end_date)}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Ngày kết thúc</p>
+                                                <p className="font-medium text-gray-900 dark:text-white">{formatDate(selectedRental.end_date)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500">Trạng thái đơn</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Trạng thái đơn</p>
                                                 <span className={`px-2 py-1 rounded-full text-xs ${getStatusLabel(selectedRental.status).color}`}>
                                                     {getStatusLabel(selectedRental.status).text}
                                                 </span>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500">Trạng thái thanh toán</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Trạng thái thanh toán</p>
                                                 <span className={`px-2 py-1 rounded-full text-xs ${getPaymentStatusLabel(selectedRental.payment_status).color}`}>
                                                     {getPaymentStatusLabel(selectedRental.payment_status).text}
                                                 </span>
                                             </div>
                                             <div className="col-span-2">
-                                                <p className="text-sm text-gray-500">Tổng tiền</p>
-                                                <p className="font-bold text-lg">{formatPrice(selectedRental.total_price)}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Tổng tiền</p>
+                                                <p className="font-bold text-lg text-gray-900 dark:text-white">{formatPrice(selectedRental.total_price)}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-2">Thông tin người thuê</h3>
-                                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                                    <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Thông tin người thuê</h3>
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
                                         {selectedRental.renter ? (
                                             <div>
-                                                <p><span className="text-gray-500">Tên:</span> {selectedRental.renter.full_name || 'N/A'}</p>
-                                                <p><span className="text-gray-500">Email:</span> {selectedRental.renter.email || 'N/A'}</p>
-                                                <p><span className="text-gray-500">SĐT:</span> {selectedRental.renter.phone_number || 'N/A'}</p>
+                                                <p><span className="text-gray-500 dark:text-gray-400">Tên:</span> <span className="text-gray-900 dark:text-white">{selectedRental.renter.full_name || 'N/A'}</span></p>
+                                                <p><span className="text-gray-500 dark:text-gray-400">Email:</span> <span className="text-gray-900 dark:text-white">{selectedRental.renter.email || 'N/A'}</span></p>
+                                                <p><span className="text-gray-500 dark:text-gray-400">SĐT:</span> <span className="text-gray-900 dark:text-white">{selectedRental.renter.phone_number || 'N/A'}</span></p>
                                             </div>
                                         ) : (
-                                            <p className="text-gray-500">Không có thông tin người thuê</p>
+                                            <p className="text-gray-500 dark:text-gray-400">Không có thông tin người thuê</p>
                                         )}
                                     </div>
 
-                                    <h3 className="font-semibold text-lg mb-2">Cập nhật trạng thái</h3>
-                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Cập nhật trạng thái</h3>
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                         <div className="grid grid-cols-2 gap-2 mb-4">
                                             <button
                                                 onClick={() => handleUpdateRentalStatus(selectedRental.id, 'confirmed')}
@@ -763,16 +763,16 @@ export function AdminRentals() {
                                         </div>
 
                                         <div>
-                                            <h4 className="font-medium text-sm mb-2">Ghi chú</h4>
+                                            <h4 className="font-medium text-sm mb-2 text-gray-900 dark:text-white">Ghi chú</h4>
                                             <textarea
-                                                className="w-full border rounded-md px-3 py-2 mb-2"
+                                                className="w-full border rounded-md px-3 py-2 mb-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-700"
                                                 placeholder="Thêm ghi chú về đơn thuê này..."
                                                 rows={3}
                                                 value={rentalNote}
                                                 onChange={(e) => setRentalNote(e.target.value)}
                                             />
                                             <button
-                                                className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 w-full"
+                                                className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 w-full"
                                                 onClick={saveNote}
                                             >
                                                 Lưu ghi chú
@@ -789,13 +789,13 @@ export function AdminRentals() {
             {/* Help Modal */}
             {showHelpModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex justify-between items-start">
-                                <h2 className="text-2xl font-bold mb-4">Hướng dẫn sử dụng</h2>
+                                <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Hướng dẫn sử dụng</h2>
                                 <button
                                     onClick={() => setShowHelpModal(false)}
-                                    className="text-gray-500 hover:text-gray-700"
+                                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -803,16 +803,16 @@ export function AdminRentals() {
 
                             <div className="space-y-4">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1">Thông tin tổng quan</h3>
-                                    <p className="text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">Thông tin tổng quan</h3>
+                                    <p className="text-gray-600 dark:text-gray-300">
                                         Trang này hiển thị tất cả các đơn thuê thiết bị. Bạn có thể xem chi tiết,
                                         cập nhật trạng thái, và quản lý các đơn thuê từ đây.
                                     </p>
                                 </div>
 
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1">Các trạng thái đơn thuê</h3>
-                                    <ul className="list-disc list-inside text-gray-600 ml-2">
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">Các trạng thái đơn thuê</h3>
+                                    <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 ml-2">
                                         <li><span className="font-medium">Chờ xác nhận:</span> Đơn thuê mới, cần được xác nhận</li>
                                         <li><span className="font-medium">Đã xác nhận:</span> Đơn đã được chấp nhận</li>
                                         <li><span className="font-medium">Hoàn thành:</span> Đơn thuê đã kết thúc thành công</li>
@@ -821,8 +821,8 @@ export function AdminRentals() {
                                 </div>
 
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1">Các chức năng chính</h3>
-                                    <ul className="list-disc list-inside text-gray-600 ml-2">
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">Các chức năng chính</h3>
+                                    <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 ml-2">
                                         <li>Sử dụng bộ lọc để tìm đơn thuê theo trạng thái, thanh toán, thời gian</li>
                                         <li>Tìm kiếm đơn thuê theo tên thiết bị hoặc thông tin người thuê</li>
                                         <li>Xuất dữ liệu ra file CSV để phân tích</li>
