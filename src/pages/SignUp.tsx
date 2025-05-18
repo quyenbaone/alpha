@@ -3,7 +3,9 @@ import { CheckSquare, Eye, EyeOff, Loader2, Phone, User } from 'lucide-react';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { z } from 'zod';
+import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 
 // CSS animation keyframes
@@ -59,6 +61,8 @@ type SignUpSchema = z.infer<typeof signUpSchema>;
 export function SignUp() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [isResending, setIsResending] = React.useState(false);
+  const [lastSubmittedEmail, setLastSubmittedEmail] = React.useState('');
   const navigate = useNavigate();
   const { signUp } = useAuthStore();
 
@@ -79,12 +83,96 @@ export function SignUp() {
   const onSubmit = async (data: SignUpSchema) => {
     try {
       console.log("Form data:", data);
-      await signUp(data.email, data.password);
+      // Show loading toast
+      toast.loading('Đang đăng ký...', { id: 'signup' });
+
+      // Save the email for potential resend
+      setLastSubmittedEmail(data.email);
+
+      const { error } = await signUp(data.email, data.password, data.fullName);
+
+      // Dismiss loading toast
+      toast.dismiss('signup');
+
+      if (error) {
+        console.error("SignUp error:", error);
+
+        if (error.status === 429) {
+          // Check for specific email rate limit error
+          if (error.code === 'over_email_send_rate_limit') {
+            toast.error(error.message || 'Quá nhiều yêu cầu email. Vui lòng thử lại sau.');
+            setError('email', {
+              message: error.message || 'Đã gửi quá nhiều email xác nhận. Vui lòng thử lại sau.'
+            });
+            return;
+          }
+
+          toast.error('Quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.');
+          setError('root', { message: 'Quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.' });
+          return;
+        }
+
+        if (error.message?.includes('already registered')) {
+          toast.error('Email này đã được đăng ký.');
+          setError('email', { message: 'Email này đã được đăng ký trước đó' });
+          return;
+        }
+
+        toast.error('Đăng ký thất bại');
+        setError('root', { message: error.message || 'Đăng ký thất bại. Vui lòng thử lại sau.' });
+        return;
+      }
+
+      // Success
+      toast.success('Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.');
       navigate('/signin');
     } catch (error) {
+      toast.dismiss('signup');
+
       if (error instanceof Error) {
-        setError('root', { message: error.message });
+        console.error("Unhandled signup error:", error);
+        toast.error('Đăng ký thất bại');
+
+        if (error.message?.includes('network') || error.message?.includes('fetch')) {
+          setError('root', { message: 'Lỗi kết nối mạng. Vui lòng kiểm tra lại kết nối internet của bạn.' });
+        } else {
+          setError('root', { message: error.message || 'Đã xảy ra lỗi. Vui lòng thử lại sau.' });
+        }
       }
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!lastSubmittedEmail || isResending) return;
+
+    setIsResending(true);
+    toast.loading('Đang gửi lại email xác nhận...', { id: 'resend' });
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: lastSubmittedEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      toast.dismiss('resend');
+
+      if (error) {
+        if (error.status === 429) {
+          toast.error('Vui lòng đợi ít nhất 2 phút trước khi gửi lại email.');
+        } else {
+          toast.error(error.message || 'Không thể gửi lại email. Vui lòng thử lại sau.');
+        }
+      } else {
+        toast.success('Đã gửi lại email xác nhận. Vui lòng kiểm tra hộp thư của bạn.');
+      }
+    } catch (err) {
+      toast.dismiss('resend');
+      toast.error('Không thể gửi lại email. Vui lòng thử lại sau.');
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -362,6 +450,32 @@ export function SignUp() {
                   'Đăng ký'
                 )}
               </button>
+
+              {lastSubmittedEmail && (
+                <div className="mt-4">
+                  <p className="text-sm text-center text-gray-600 mb-2">
+                    Không nhận được email xác nhận?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={isResending}
+                    className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    {isResending ? (
+                      <span className="flex items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Đang gửi lại...
+                      </span>
+                    ) : (
+                      'Gửi lại email xác nhận'
+                    )}
+                  </button>
+                  <p className="mt-2 text-xs text-center text-gray-500">
+                    Kiểm tra cả thư mục spam/junk và đợi ít nhất 2 phút giữa các lần gửi.
+                  </p>
+                </div>
+              )}
 
               <p className="text-center text-sm text-gray-600">
                 Đã có tài khoản?{' '}

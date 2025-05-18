@@ -120,16 +120,30 @@ export function SignIn() {
       const { error } = await signIn(email, password);
 
       if (error) {
+        toast.dismiss('login');
+        console.error('SignIn error:', error);
+
+        // Handle specific error cases
+        if (error.status === 429) {
+          setErrors({ general: 'Quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.' });
+          toast.error('Quá nhiều yêu cầu');
+          return;
+        }
+
         if (error.message?.includes('Invalid login credentials')) {
           setErrors({ general: 'Email hoặc mật khẩu không chính xác.' });
-        } else if (error.message?.includes('Email not confirmed')) {
-          setErrors({ general: 'Email chưa được xác nhận. Vui lòng kiểm tra hộp thư của bạn.' });
-        } else if (error.message?.includes('connection') || error.message?.includes('network')) {
-          setErrors({ general: 'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet của bạn.' });
-        } else {
-          setErrors({ general: error.message || 'Đăng nhập thất bại. Vui lòng thử lại sau.' });
+          toast.error('Email hoặc mật khẩu không chính xác');
+          return;
         }
-        toast.dismiss('login');
+
+        if (error.message?.includes('Email not confirmed')) {
+          setErrors({ general: 'Email chưa được xác nhận. Vui lòng kiểm tra hộp thư của bạn.' });
+          toast.error('Email chưa được xác nhận');
+          return;
+        }
+
+        // Default error case
+        setErrors({ general: error.message || 'Đăng nhập thất bại. Vui lòng thử lại sau.' });
         toast.error('Đăng nhập thất bại');
         return;
       }
@@ -142,12 +156,34 @@ export function SignIn() {
       toast.dismiss('login');
 
       if (error.message === 'network_error' || error.message?.includes('fetch') || error.message?.includes('Failed to fetch')) {
-        setErrors({ general: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.' });
-        toast.error('Lỗi kết nối');
-      } else if (!errors.general) {
-        setErrors({ general: 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.' });
-        toast.error('Đăng nhập thất bại');
+        // Try one more time with network errors
+        setTimeout(async () => {
+          try {
+            toast.info('Đang thử lại...', { id: 'retry-login' });
+            const { error } = await signIn(email, password);
+
+            if (error) {
+              toast.dismiss('retry-login');
+              setErrors({ general: 'Đăng nhập thất bại. Vui lòng thử lại sau.' });
+              toast.error('Đăng nhập thất bại');
+            } else {
+              toast.dismiss('retry-login');
+              toast.success('Đăng nhập thành công!');
+              navigate('/');
+            }
+          } catch {
+            toast.dismiss('retry-login');
+            setErrors({ general: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.' });
+            toast.error('Lỗi kết nối');
+          } finally {
+            setLoading(false);
+          }
+        }, 1000); // Wait 1 second before retry
+        return;
       }
+
+      setErrors({ general: error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.' });
+      toast.error('Đăng nhập thất bại');
     } finally {
       setLoading(false);
     }

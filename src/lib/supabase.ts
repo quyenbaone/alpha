@@ -35,6 +35,20 @@ const checkForCachedSession = () => {
 const cachedResponses = new Map<string, { data: any, timestamp: number }>();
 const CACHE_DURATION = 60000; // 1 minute cache
 
+// Track rate limited operations
+const rateLimitedOperations = new Map<string, number>();
+const RATE_LIMIT_WINDOW = 2 * 60 * 1000; // 2 minutes
+
+// Clear expired rate limit tracking
+setInterval(() => {
+  const now = Date.now();
+  rateLimitedOperations.forEach((timestamp, operation) => {
+    if (now - timestamp > RATE_LIMIT_WINDOW) {
+      rateLimitedOperations.delete(operation);
+    }
+  });
+}, 60 * 1000); // Clean up every minute
+
 // Performance optimized fetch
 const optimizedFetch = (...args: Parameters<typeof fetch>) => {
   // Only cache GET requests
@@ -68,7 +82,93 @@ const optimizedFetch = (...args: Parameters<typeof fetch>) => {
     });
   }
 
-  // For non-GET requests, use standard fetch
+  // For non-GET requests like POST/PUT (auth operations)
+  const url = args[0].toString();
+  const options = args[1] || {};
+  const isAuthRequest = url.includes('/auth/v1/');
+  const isEmailOperation = url.includes('/signup') || url.includes('/recover') || url.includes('/otp');
+
+  // Add request metadata for debugging
+  const requestInfo = {
+    method: options.method || 'GET',
+    url: url,
+    timestamp: new Date().toISOString()
+  };
+
+  // Create operation key for tracking rate limits
+  const operationKey = isEmailOperation ?
+    `email:${getEmailFromBody(options.body)}` :
+    `auth:${url.split('/').pop() || 'unknown'}`;
+
+  // Helper to safely extract email from request body
+  function getEmailFromBody(body: any): string {
+    if (!body) return 'unknown';
+    try {
+      const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+      return parsed.email || 'unknown';
+    } catch (e) {
+      console.error('Failed to parse request body', e);
+      return 'unknown';
+    }
+  }
+
+  // Check if this operation was recently rate limited
+  if (isAuthRequest && rateLimitedOperations.has(operationKey)) {
+    const timeSinceRateLimit = Date.now() - (rateLimitedOperations.get(operationKey) || 0);
+    if (timeSinceRateLimit < RATE_LIMIT_WINDOW) {
+      // Operation is still in cooldown period - simulate a rate limit response
+      console.warn(`Operation ${operationKey} is in cooldown period. Remaining: ${Math.ceil((RATE_LIMIT_WINDOW - timeSinceRateLimit) / 1000)} seconds`);
+
+      return Promise.resolve(new Response(JSON.stringify({
+        error: "Client-side rate limit",
+        message: "Too many requests for this operation. Please try again later.",
+        status: 429
+      }), {
+        status: 429,
+        headers: new Headers({
+          'Content-Type': 'application/json',
+          'Retry-After': Math.ceil((RATE_LIMIT_WINDOW - timeSinceRateLimit) / 1000).toString()
+        })
+      }));
+    }
+  }
+
+  // Add delay for auth requests to avoid rate limiting
+  if (isAuthRequest) {
+    // Add longer delay for email operations which are more strictly rate limited
+    const authDelay = isEmailOperation ?
+      500 + (Math.random() * 1000) : // 500-1500ms for email operations
+      Math.random() * 500; // 0-500ms for other auth operations
+
+    return new Promise(resolve => setTimeout(resolve, authDelay))
+      .then(() => fetch(...args)
+        .then(response => {
+          // Handle rate limiting
+          if (response.status === 429) {
+            console.warn('Rate limit hit:', requestInfo);
+            // Record this operation as rate limited
+            rateLimitedOperations.set(operationKey, Date.now());
+
+            // Add the retry-after header to the request info for debugging
+            const retryAfter = response.headers.get('retry-after');
+            console.info('Retry after:', retryAfter || 'Not specified');
+          }
+
+          // Log auth errors for debugging
+          if (!response.ok && isAuthRequest) {
+            console.warn(`Auth request failed (${response.status}):`, requestInfo);
+          }
+
+          return response;
+        })
+        .catch(error => {
+          console.error('Fetch error:', error, requestInfo);
+          throw error;
+        })
+      );
+  }
+
+  // Default case for non-auth, non-GET requests
   return fetch(...args);
 };
 
