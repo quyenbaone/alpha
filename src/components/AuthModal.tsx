@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
+import { useUserRegistration } from '../lib/hooks/useUserRegistration';
 import { useAuthStore } from '../store/authStore';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -17,7 +18,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [name, setName] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
-  const { signIn, signUp, signInWithGoogle } = useAuthStore();
+  const { signIn, signInWithGoogle } = useAuthStore();
+  const { registerUser } = useUserRegistration();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +42,11 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
         toast.success('Đăng nhập thành công');
         onClose();
       } else {
-        const { error } = await signUp(email, password, name);
+        const { error } = await registerUser({
+          email,
+          password,
+          fullName: name
+        });
         if (error) {
           if (error.message.includes('already registered')) {
             setError('Email này đã được đăng ký');

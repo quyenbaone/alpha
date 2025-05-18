@@ -45,7 +45,11 @@ interface AuthState {
   userRole: 'admin' | 'owner' | 'renter' | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
-  signUp: (email: string, password: string, name?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData?: {
+    fullName?: string;
+    phoneNumber?: string;
+    role?: 'owner' | 'renter';
+  }) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   setSession: (session: any) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -137,7 +141,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      signUp: async (email: string, password: string, name?: string) => {
+      signUp: async (email: string, password: string, userData?: {
+        fullName?: string;
+        phoneNumber?: string;
+        role?: 'owner' | 'renter';
+      }) => {
         // Check if this email has been used for signup recently
         const normalizedEmail = email.trim().toLowerCase();
         const lastAttempt = recentSignups.get(normalizedEmail);
@@ -168,7 +176,7 @@ export const useAuthStore = create<AuthState>()(
               password,
               options: {
                 data: {
-                  full_name: name
+                  full_name: userData?.fullName || ''
                 },
                 emailRedirectTo: `${window.location.origin}/auth/callback`
               }
@@ -178,6 +186,29 @@ export const useAuthStore = create<AuthState>()(
               // Successfully sent signup email - record this attempt
               recentSignups.set(normalizedEmail, Date.now());
               set({ user: data.user });
+
+              // After successful auth signup, store user profile in the users table
+              if (data.user) {
+                try {
+                  const { error: profileError } = await supabase
+                    .from('users')
+                    .insert([{
+                      id: data.user.id,
+                      email: normalizedEmail,
+                      full_name: userData?.fullName || null,
+                      phone_number: userData?.phoneNumber || null,
+                      role: userData?.role || 'renter',
+                      is_admin: false
+                    }]);
+
+                  if (profileError) {
+                    console.error('Error saving user profile:', profileError);
+                  }
+                } catch (profileErr) {
+                  console.error('Unexpected error saving profile:', profileErr);
+                }
+              }
+
               return { error: null };
             }
 

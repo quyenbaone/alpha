@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { useUserRegistration } from '../lib/hooks/useUserRegistration';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
 
 // CSS animation keyframes
 const blobAnimation = `
@@ -64,7 +64,7 @@ export function SignUp() {
   const [isResending, setIsResending] = React.useState(false);
   const [lastSubmittedEmail, setLastSubmittedEmail] = React.useState('');
   const navigate = useNavigate();
-  const { signUp } = useAuthStore();
+  const { registerUser } = useUserRegistration();
 
   const {
     register,
@@ -89,7 +89,13 @@ export function SignUp() {
       // Save the email for potential resend
       setLastSubmittedEmail(data.email);
 
-      const { error } = await signUp(data.email, data.password, data.fullName);
+      const { error } = await registerUser({
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber,
+        role: data.role
+      });
 
       // Dismiss loading toast
       toast.dismiss('signup');
