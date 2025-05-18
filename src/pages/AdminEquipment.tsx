@@ -182,13 +182,13 @@ export function AdminEquipment() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setEditingItem(equipmentId);
         setEditForm({
-            title: item.title,
+            title: item.title || '',
             description: item.description || '',
-            price_per_day: item.price_per_day.toString(),
-            category_id: item.category_id,
+            price_per_day: item.price_per_day?.toString() || '',
+            category_id: item.category_id || '',
             images: item.images || [],
             imageInput: item.images && item.images.length > 0 ? item.images[0] : '',
-            deposit_amount: item.deposit_amount?.toString() || '',
+            deposit_amount: item.deposit_amount?.toString() || '0',
             location: item.location || 'Hồ Chí Minh',
             status: item.status || 'available',
             quantity: item.quantity?.toString() || '1'
@@ -202,9 +202,16 @@ export function AdminEquipment() {
                 toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
                 return;
             }
-            const price_per_day = parseFloat(editForm.price_per_day);
-            const deposit_amount = parseFloat(editForm.deposit_amount.toString()) || 0;
-            const quantity = parseInt(editForm.quantity) || 1;
+
+            // Trim giá trị và kiểm tra định dạng số
+            const priceValue = editForm.price_per_day.toString().trim();
+            const depositValue = editForm.deposit_amount?.toString().trim() || '0';
+            const quantityValue = editForm.quantity?.trim() || '1';
+
+            const price_per_day = parseFloat(priceValue);
+            const deposit_amount = parseFloat(depositValue) || 0;
+            const quantity = parseInt(quantityValue) || 1;
+
             if (isNaN(price_per_day) || price_per_day <= 0) {
                 toast.error('Giá thuê phải là số dương');
                 return;
@@ -213,27 +220,48 @@ export function AdminEquipment() {
                 toast.error('Số lượng phải là số dương');
                 return;
             }
+
             const slug = generateSlug(editForm.title);
-            const images = editForm.imageInput ? [editForm.imageInput] : [];
+            const images = editForm.imageInput ? [editForm.imageInput.trim()] : [];
+
+            console.log('Preparing update payload:', {
+                title: editForm.title.trim(),
+                price_per_day,
+                category_id: editForm.category_id
+            });
+
             const updatePayload = {
-                title: editForm.title,
+                title: editForm.title.trim(),
                 slug,
-                description: editForm.description || '',
+                description: editForm.description?.trim() || '',
                 price_per_day,
                 category_id: editForm.category_id,
                 images,
                 deposit_amount,
-                location: editForm.location || 'Hồ Chí Minh',
-                status: editForm.status,
+                location: editForm.location?.trim() || 'Hồ Chí Minh',
+                status: editForm.status || 'available',
                 quantity,
                 updated_at: new Date()
             };
-            const { error } = await supabase
+
+            // Kiểm tra dữ liệu trước khi gửi
+            if (!editingItem) {
+                toast.error('Không xác định ID thiết bị cần cập nhật');
+                return;
+            }
+
+            const { data, error } = await supabase
                 .from('equipment')
                 .update(updatePayload)
-                .eq('id', editingItem);
+                .eq('id', editingItem)
+                .select();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase update error:', error);
+                throw error;
+            }
+
+            console.log('Update successful, data:', data);
             toast.success('Đã cập nhật thông tin thiết bị');
             setEditingItem(null);
             setEditForm({
@@ -252,6 +280,7 @@ export function AdminEquipment() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             fetchEquipment();
         } catch (error: any) {
+            console.error('Error in handleSaveEdit:', error);
             toast.error(`Lỗi khi cập nhật thông tin: ${error.message || 'Lỗi không xác định'}`);
         }
     };
@@ -300,27 +329,62 @@ export function AdminEquipment() {
                 toast.error('Bạn cần đăng nhập để thêm thiết bị');
                 return;
             }
+
+            // Trim giá trị và kiểm tra định dạng số 
+            const priceValue = newEquipment.price_per_day.trim();
+            const depositValue = (newEquipment.deposit_amount?.toString() || '0').trim();
+            const quantityValue = (newEquipment.quantity || '1').trim();
+
+            const price_per_day = parseFloat(priceValue);
+            const deposit_amount = parseFloat(depositValue) || 0;
+            const quantity = parseInt(quantityValue) || 1;
+
+            if (isNaN(price_per_day) || price_per_day <= 0) {
+                toast.error('Giá thuê phải là số dương');
+                return;
+            }
+
+            if (isNaN(quantity) || quantity <= 0) {
+                toast.error('Số lượng phải là số dương');
+                return;
+            }
+
             const slug = generateSlug(newEquipment.title);
-            const images = newEquipment.imageInput ? [newEquipment.imageInput] : [];
+            const images = newEquipment.imageInput ? [newEquipment.imageInput.trim()] : [];
+
+            console.log('Preparing insert payload:', {
+                title: newEquipment.title.trim(),
+                price_per_day,
+                category_id: newEquipment.category_id
+            });
+
             const equipmentPayload = {
-                title: newEquipment.title,
+                title: newEquipment.title.trim(),
                 slug,
-                description: newEquipment.description || '',
+                description: newEquipment.description?.trim() || '',
                 category_id: newEquipment.category_id,
-                price_per_day: parseFloat(newEquipment.price_per_day),
-                deposit_amount: parseFloat(newEquipment.deposit_amount) || 0,
+                price_per_day,
+                deposit_amount,
                 images,
                 owner_id: user.id,
-                location: newEquipment.location || 'Hồ Chí Minh',
-                status: newEquipment.status,
-                quantity: parseInt(newEquipment.quantity) || 1,
+                location: newEquipment.location?.trim() || 'Hồ Chí Minh',
+                status: newEquipment.status || 'available',
+                quantity,
                 created_at: new Date(),
                 updated_at: new Date()
             };
-            const { error } = await supabase
+
+            const { data, error } = await supabase
                 .from('equipment')
-                .insert([equipmentPayload]);
-            if (error) throw error;
+                .insert([equipmentPayload])
+                .select();
+
+            if (error) {
+                console.error('Supabase insert error:', error);
+                throw error;
+            }
+
+            console.log('Insert successful, data:', data);
             toast.success('Đã thêm thiết bị mới');
             setShowNewEquipmentForm(false);
             setNewEquipment({
@@ -338,6 +402,7 @@ export function AdminEquipment() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             fetchEquipment();
         } catch (error: any) {
+            console.error('Error in handleCreateEquipment:', error);
             toast.error(error.message || 'Lỗi khi thêm thiết bị mới');
         }
     };
@@ -348,206 +413,252 @@ export function AdminEquipment() {
     );
 
     // ====== FORM COMPONENT ======
-    const EquipmentForm = ({ formData, setFormData, onSave, onCancel, title, saveButtonText }: EquipmentFormProps) => (
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
-            <div className="bg-blue-50 dark:bg-blue-900 border-b border-blue-100 dark:border-blue-800 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-blue-800 dark:text-blue-300 flex items-center">
-                    {title === "Thêm thiết bị mới" ? <Plus className="h-5 w-5 mr-2 text-blue-600" /> : <Edit className="h-5 w-5 mr-2 text-blue-600" />}
-                    {title}
-                </h2>
-            </div>
-            <div className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left */}
-                    <div className="space-y-5">
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-                            <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Thông tin cơ bản</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                                        Tên thiết bị <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-                                        placeholder="Nhập tên thiết bị"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                                        Danh mục <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        value={formData.category_id}
-                                        onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                                        className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-                                    >
-                                        <option value="">-- Chọn danh mục --</option>
-                                        {categories.map(category => (
-                                            <option key={category.id} value={category.id}>
-                                                {category.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    const EquipmentForm = ({ formData, setFormData, onSave, onCancel, title, saveButtonText }: EquipmentFormProps) => {
+        // Thêm state để theo dõi lỗi validate
+        const [errors, setErrors] = useState({
+            title: false,
+            category_id: false,
+            price_per_day: false
+        });
+
+        // Hàm validate trước khi lưu
+        const validateAndSave = () => {
+            const newErrors = {
+                title: !formData.title.trim(),
+                category_id: !formData.category_id,
+                price_per_day: !formData.price_per_day || isNaN(parseFloat(formData.price_per_day)) || parseFloat(formData.price_per_day) <= 0
+            };
+
+            setErrors(newErrors);
+
+            // Nếu không có lỗi, gọi hàm onSave
+            if (!Object.values(newErrors).some(error => error)) {
+                onSave();
+            } else {
+                toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+            }
+        };
+
+        return (
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
+                <div className="bg-blue-50 dark:bg-blue-900 border-b border-blue-100 dark:border-blue-800 px-6 py-4 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-blue-800 dark:text-blue-300 flex items-center">
+                        {title === "Thêm thiết bị mới" ? <Plus className="h-5 w-5 mr-2 text-blue-600" /> : <Edit className="h-5 w-5 mr-2 text-blue-600" />}
+                        {title}
+                    </h2>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Left */}
+                        <div className="space-y-5">
+                            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+                                <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Thông tin cơ bản</h3>
+                                <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                                            Giá thuê/ngày <span className="text-red-500">*</span>
+                                            Tên thiết bị <span className="text-red-500">*</span>
                                         </label>
-                                        <div className="relative">
+                                        <input
+                                            value={formData.title}
+                                            onChange={(e) => {
+                                                setFormData({ ...formData, title: e.target.value });
+                                                if (e.target.value.trim()) {
+                                                    setErrors({ ...errors, title: false });
+                                                }
+                                            }}
+                                            className={`w-full border ${errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white`}
+                                            placeholder="Nhập tên thiết bị"
+                                        />
+                                        {errors.title && <p className="mt-1 text-sm text-red-500">Tên thiết bị là bắt buộc</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                            Danh mục <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={formData.category_id}
+                                            onChange={(e) => {
+                                                setFormData({ ...formData, category_id: e.target.value });
+                                                if (e.target.value) {
+                                                    setErrors({ ...errors, category_id: false });
+                                                }
+                                            }}
+                                            className={`w-full border ${errors.category_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white`}
+                                        >
+                                            <option value="">-- Chọn danh mục --</option>
+                                            {categories.map(category => (
+                                                <option key={category.id} value={category.id}>
+                                                    {category.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.category_id && <p className="mt-1 text-sm text-red-500">Danh mục thiết bị là bắt buộc</p>}
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                                Giá thuê/ngày <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={formData.price_per_day}
+                                                    onChange={(e) => {
+                                                        setFormData({ ...formData, price_per_day: e.target.value });
+                                                        const value = parseFloat(e.target.value);
+                                                        if (!isNaN(value) && value > 0) {
+                                                            setErrors({ ...errors, price_per_day: false });
+                                                        }
+                                                    }}
+                                                    className={`w-full border ${errors.price_per_day ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white`}
+                                                    placeholder="0"
+                                                />
+                                                <span className="absolute right-3 top-2 text-sm text-gray-500 dark:text-gray-400">VNĐ</span>
+                                            </div>
+                                            {errors.price_per_day && <p className="mt-1 text-sm text-red-500">Giá thuê phải là số dương</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                                Tiền đặt cọc
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={formData.deposit_amount}
+                                                    onChange={(e) => setFormData({ ...formData, deposit_amount: e.target.value })}
+                                                    className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                                    placeholder="0"
+                                                />
+                                                <span className="absolute right-3 top-2 text-sm text-gray-500 dark:text-gray-400">VNĐ</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                                Số lượng
+                                            </label>
                                             <input
                                                 type="number"
-                                                value={formData.price_per_day}
-                                                onChange={(e) => setFormData({ ...formData, price_per_day: e.target.value })}
+                                                value={formData.quantity}
+                                                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                                                 className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-                                                placeholder="0"
+                                                placeholder="1"
+                                                min="1"
                                             />
-                                            <span className="absolute right-3 top-2 text-sm text-gray-500 dark:text-gray-400">VNĐ</span>
                                         </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                                            Tiền đặt cọc
-                                        </label>
-                                        <div className="relative">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                                Địa điểm
+                                            </label>
                                             <input
-                                                type="number"
-                                                value={formData.deposit_amount}
-                                                onChange={(e) => setFormData({ ...formData, deposit_amount: e.target.value })}
+                                                value={formData.location}
+                                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                                 className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-                                                placeholder="0"
+                                                placeholder="Nhập địa điểm"
                                             />
-                                            <span className="absolute right-3 top-2 text-sm text-gray-500 dark:text-gray-400">VNĐ</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            </div>
+                            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+                                <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Hình ảnh & Vị trí</h3>
+                                <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                                            Số lượng
+                                            Link hình ảnh
                                         </label>
-                                        <input
-                                            type="number"
-                                            value={formData.quantity}
-                                            onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                                            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-                                            placeholder="1"
-                                            min="1"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                                            Địa điểm
-                                        </label>
-                                        <input
-                                            value={formData.location}
-                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-                                            placeholder="Nhập địa điểm"
-                                        />
+                                        <div className="flex space-x-2">
+                                            <input
+                                                value={formData.imageInput}
+                                                onChange={(e) => setFormData({ ...formData, imageInput: e.target.value })}
+                                                className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                                                placeholder="https://example.com/image.jpg"
+                                            />
+                                        </div>
+                                        {formData.imageInput && (
+                                            <div className="mt-2 flex justify-center">
+                                                <img
+                                                    className="h-32 w-32 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+                                                    src={formData.imageInput}
+                                                    alt="Preview"
+                                                    onError={(e) => e.currentTarget.src = '/placeholder.png'}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-                            <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Hình ảnh & Vị trí</h3>
-                            <div className="space-y-4">
+                        {/* Right */}
+                        <div className="space-y-5">
+                            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+                                <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Trạng thái & Hiển thị</h3>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                                        Link hình ảnh
+                                        Trạng thái hiển thị
                                     </label>
-                                    <div className="flex space-x-2">
-                                        <input
-                                            value={formData.imageInput}
-                                            onChange={(e) => setFormData({ ...formData, imageInput: e.target.value })}
-                                            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-                                            placeholder="https://example.com/image.jpg"
-                                        />
-                                    </div>
-                                    {formData.imageInput && (
-                                        <div className="mt-2 flex justify-center">
-                                            <img
-                                                className="h-32 w-32 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
-                                                src={formData.imageInput}
-                                                alt="Preview"
-                                                onError={(e) => e.currentTarget.src = '/placeholder.png'}
-                                            />
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div
+                                            className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'available' ? 'bg-green-50 border-green-500 text-green-700 dark:bg-green-900 dark:border-green-400 dark:text-green-200' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                            onClick={() => setFormData({ ...formData, status: 'available' })}
+                                        >
+                                            <div className="flex justify-center mb-1">
+                                                <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                                            </div>
+                                            <span className="text-sm font-medium">Có sẵn</span>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Right */}
-                    <div className="space-y-5">
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-                            <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Trạng thái & Hiển thị</h3>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                                    Trạng thái hiển thị
-                                </label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div
-                                        className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'available' ? 'bg-green-50 border-green-500 text-green-700 dark:bg-green-900 dark:border-green-400 dark:text-green-200' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                                        onClick={() => setFormData({ ...formData, status: 'available' })}
-                                    >
-                                        <div className="flex justify-center mb-1">
-                                            <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                                        <div
+                                            className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'hidden' ? 'bg-gray-50 border-gray-500 text-gray-700 dark:bg-gray-700 dark:border-gray-400 dark:text-gray-100' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                            onClick={() => setFormData({ ...formData, status: 'hidden' })}
+                                        >
+                                            <div className="flex justify-center mb-1">
+                                                <span className="w-3 h-3 rounded-full bg-gray-500 inline-block"></span>
+                                            </div>
+                                            <span className="text-sm font-medium">Ẩn</span>
                                         </div>
-                                        <span className="text-sm font-medium">Có sẵn</span>
-                                    </div>
-                                    <div
-                                        className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'hidden' ? 'bg-gray-50 border-gray-500 text-gray-700 dark:bg-gray-700 dark:border-gray-400 dark:text-gray-100' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                                        onClick={() => setFormData({ ...formData, status: 'hidden' })}
-                                    >
-                                        <div className="flex justify-center mb-1">
-                                            <span className="w-3 h-3 rounded-full bg-gray-500 inline-block"></span>
+                                        <div
+                                            className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'maintenance' ? 'bg-yellow-50 border-yellow-500 text-yellow-700 dark:bg-yellow-900 dark:border-yellow-400 dark:text-yellow-200' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                            onClick={() => setFormData({ ...formData, status: 'maintenance' })}
+                                        >
+                                            <div className="flex justify-center mb-1">
+                                                <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                                            </div>
+                                            <span className="text-sm font-medium">Bảo trì</span>
                                         </div>
-                                        <span className="text-sm font-medium">Ẩn</span>
-                                    </div>
-                                    <div
-                                        className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'maintenance' ? 'bg-yellow-50 border-yellow-500 text-yellow-700 dark:bg-yellow-900 dark:border-yellow-400 dark:text-yellow-200' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                                        onClick={() => setFormData({ ...formData, status: 'maintenance' })}
-                                    >
-                                        <div className="flex justify-center mb-1">
-                                            <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
-                                        </div>
-                                        <span className="text-sm font-medium">Bảo trì</span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-                            <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Mô tả thiết bị</h3>
-                            <textarea
-                                rows={6}
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-h-[180px] resize-y dark:bg-gray-800 dark:text-white"
-                                placeholder="Nhập thông tin chi tiết về thiết bị, tính năng, cách sử dụng..."
-                            />
-                        </div>
-                        <div className="flex justify-end gap-3 mt-6">
-                            <button
-                                onClick={onCancel}
-                                className="px-5 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                            >
-                                <XCircle className="h-5 w-5 text-red-500" /> Hủy
-                            </button>
-                            <button
-                                onClick={onSave}
-                                className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
-                            >
-                                <Save className="h-5 w-5" /> {saveButtonText}
-                            </button>
+                            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+                                <h3 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-4 border-b pb-2 border-gray-100 dark:border-gray-800">Mô tả thiết bị</h3>
+                                <textarea
+                                    rows={6}
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-h-[180px] resize-y dark:bg-gray-800 dark:text-white"
+                                    placeholder="Nhập thông tin chi tiết về thiết bị, tính năng, cách sử dụng..."
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button
+                                    onClick={onCancel}
+                                    className="px-5 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                                >
+                                    <XCircle className="h-5 w-5 text-red-500" /> Hủy
+                                </button>
+                                <button
+                                    onClick={validateAndSave}
+                                    className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+                                >
+                                    <Save className="h-5 w-5" /> {saveButtonText}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     if (loading) {
         return (
