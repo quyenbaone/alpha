@@ -121,6 +121,20 @@ export function AdminEquipment() {
     });
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+    // Toast state management to avoid React warnings
+    const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    useEffect(() => {
+        if (toastMessage) {
+            if (toastMessage.type === 'success') {
+                toast.success(toastMessage.message);
+            } else {
+                toast.error(toastMessage.message);
+            }
+            setToastMessage(null);
+        }
+    }, [toastMessage]);
+
     useEffect(() => {
         if (user) {
             fetchCategories();
@@ -139,7 +153,7 @@ export function AdminEquipment() {
             if (error) throw error;
             setCategories(data || []);
         } catch (error) {
-            toast.error('Lỗi khi tải danh mục thiết bị');
+            setToastMessage({ type: 'error', message: 'Lỗi khi tải danh mục thiết bị' });
         }
     };
 
@@ -167,7 +181,7 @@ export function AdminEquipment() {
             if (equipmentError) throw equipmentError;
             setEquipment(equipmentData || []);
         } catch (error) {
-            toast.error('Lỗi khi tải dữ liệu thiết bị');
+            setToastMessage({ type: 'error', message: 'Lỗi khi tải dữ liệu thiết bị' });
         } finally {
             setLoading(false);
         }
@@ -176,7 +190,7 @@ export function AdminEquipment() {
     const handleEditEquipment = async (equipmentId: string) => {
         const item = equipment.find(e => e.id === equipmentId);
         if (!item) {
-            toast.error('Không tìm thấy thiết bị');
+            setToastMessage({ type: 'error', message: 'Không tìm thấy thiết bị' });
             return;
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -199,7 +213,7 @@ export function AdminEquipment() {
     const handleSaveEdit = async () => {
         try {
             if (!editForm.title || !editForm.category_id || !editForm.price_per_day) {
-                toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+                setToastMessage({ type: 'error', message: 'Vui lòng điền đầy đủ thông tin bắt buộc' });
                 return;
             }
 
@@ -213,11 +227,11 @@ export function AdminEquipment() {
             const quantity = parseInt(quantityValue) || 1;
 
             if (isNaN(price_per_day) || price_per_day <= 0) {
-                toast.error('Giá thuê phải là số dương');
+                setToastMessage({ type: 'error', message: 'Giá thuê phải là số dương' });
                 return;
             }
             if (isNaN(quantity) || quantity <= 0) {
-                toast.error('Số lượng phải là số dương');
+                setToastMessage({ type: 'error', message: 'Số lượng phải là số dương' });
                 return;
             }
 
@@ -246,7 +260,7 @@ export function AdminEquipment() {
 
             // Kiểm tra dữ liệu trước khi gửi
             if (!editingItem) {
-                toast.error('Không xác định ID thiết bị cần cập nhật');
+                setToastMessage({ type: 'error', message: 'Không xác định ID thiết bị cần cập nhật' });
                 return;
             }
 
@@ -262,7 +276,7 @@ export function AdminEquipment() {
             }
 
             console.log('Update successful, data:', data);
-            toast.success('Đã cập nhật thông tin thiết bị');
+            setToastMessage({ type: 'success', message: 'Đã cập nhật thông tin thiết bị' });
             setEditingItem(null);
             setEditForm({
                 title: '',
@@ -281,7 +295,7 @@ export function AdminEquipment() {
             fetchEquipment();
         } catch (error: any) {
             console.error('Error in handleSaveEdit:', error);
-            toast.error(`Lỗi khi cập nhật thông tin: ${error.message || 'Lỗi không xác định'}`);
+            setToastMessage({ type: 'error', message: `Lỗi khi cập nhật thông tin: ${error.message || 'Lỗi không xác định'}` });
         }
     };
 
@@ -311,22 +325,22 @@ export function AdminEquipment() {
                 .delete()
                 .eq('id', equipmentId);
             if (error) throw error;
-            toast.success('Đã xóa thiết bị');
+            setToastMessage({ type: 'success', message: 'Đã xóa thiết bị' });
             window.scrollTo({ top: 0, behavior: 'smooth' });
             fetchEquipment();
         } catch (error) {
-            toast.error('Lỗi khi xóa thiết bị');
+            setToastMessage({ type: 'error', message: 'Lỗi khi xóa thiết bị' });
         }
     };
 
     const handleCreateEquipment = async () => {
         try {
             if (!newEquipment.title || !newEquipment.price_per_day || !newEquipment.category_id) {
-                toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+                setToastMessage({ type: 'error', message: 'Vui lòng điền đầy đủ thông tin bắt buộc' });
                 return;
             }
             if (!user) {
-                toast.error('Bạn cần đăng nhập để thêm thiết bị');
+                setToastMessage({ type: 'error', message: 'Bạn cần đăng nhập để thêm thiết bị' });
                 return;
             }
 
@@ -340,12 +354,12 @@ export function AdminEquipment() {
             const quantity = parseInt(quantityValue) || 1;
 
             if (isNaN(price_per_day) || price_per_day <= 0) {
-                toast.error('Giá thuê phải là số dương');
+                setToastMessage({ type: 'error', message: 'Giá thuê phải là số dương' });
                 return;
             }
 
             if (isNaN(quantity) || quantity <= 0) {
-                toast.error('Số lượng phải là số dương');
+                setToastMessage({ type: 'error', message: 'Số lượng phải là số dương' });
                 return;
             }
 
@@ -385,7 +399,7 @@ export function AdminEquipment() {
             }
 
             console.log('Insert successful, data:', data);
-            toast.success('Đã thêm thiết bị mới');
+            setToastMessage({ type: 'success', message: 'Đã thêm thiết bị mới' });
             setShowNewEquipmentForm(false);
             setNewEquipment({
                 title: '',
@@ -403,7 +417,7 @@ export function AdminEquipment() {
             fetchEquipment();
         } catch (error: any) {
             console.error('Error in handleCreateEquipment:', error);
-            toast.error(error.message || 'Lỗi khi thêm thiết bị mới');
+            setToastMessage({ type: 'error', message: error.message || 'Lỗi khi thêm thiết bị mới' });
         }
     };
 
@@ -421,6 +435,20 @@ export function AdminEquipment() {
             price_per_day: false
         });
 
+        // Use useEffect to display toast message when validation fails
+        const [showValidationError, setShowValidationError] = useState(false);
+
+        useEffect(() => {
+            // Use setTimeout to avoid calling setState during render
+            if (showValidationError) {
+                const timer = setTimeout(() => {
+                    toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+                    setShowValidationError(false);
+                }, 0);
+                return () => clearTimeout(timer);
+            }
+        }, [showValidationError]);
+
         // Hàm validate trước khi lưu
         const validateAndSave = () => {
             const newErrors = {
@@ -435,8 +463,58 @@ export function AdminEquipment() {
             if (!Object.values(newErrors).some(error => error)) {
                 onSave();
             } else {
-                toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+                setShowValidationError(true);
             }
+        };
+
+        // Handlers for updating form data and clearing errors
+        const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const value = e.target.value;
+            setFormData({ ...formData, title: value });
+            if (value.trim()) {
+                setErrors({ ...errors, title: false });
+            }
+        };
+
+        const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+            const value = e.target.value;
+            setFormData({ ...formData, category_id: value });
+            if (value) {
+                setErrors({ ...errors, category_id: false });
+            }
+        };
+
+        const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const value = e.target.value;
+            setFormData({ ...formData, price_per_day: value });
+            const numValue = parseFloat(value);
+            if (!isNaN(numValue) && numValue > 0) {
+                setErrors({ ...errors, price_per_day: false });
+            }
+        };
+
+        const handleDepositChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            setFormData({ ...formData, deposit_amount: e.target.value });
+        };
+
+        const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            setFormData({ ...formData, quantity: e.target.value });
+        };
+
+        const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            setFormData({ ...formData, location: e.target.value });
+        };
+
+        const handleImageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            setFormData({ ...formData, imageInput: e.target.value });
+        };
+
+        const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+            setFormData({ ...formData, description: e.target.value });
+        };
+
+        const handleStatusChange = (status: string) => {
+            setFormData({ ...formData, status });
         };
 
         return (
@@ -460,12 +538,7 @@ export function AdminEquipment() {
                                         </label>
                                         <input
                                             value={formData.title}
-                                            onChange={(e) => {
-                                                setFormData({ ...formData, title: e.target.value });
-                                                if (e.target.value.trim()) {
-                                                    setErrors({ ...errors, title: false });
-                                                }
-                                            }}
+                                            onChange={handleTitleChange}
                                             className={`w-full border ${errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white`}
                                             placeholder="Nhập tên thiết bị"
                                         />
@@ -477,12 +550,7 @@ export function AdminEquipment() {
                                         </label>
                                         <select
                                             value={formData.category_id}
-                                            onChange={(e) => {
-                                                setFormData({ ...formData, category_id: e.target.value });
-                                                if (e.target.value) {
-                                                    setErrors({ ...errors, category_id: false });
-                                                }
-                                            }}
+                                            onChange={handleCategoryChange}
                                             className={`w-full border ${errors.category_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white`}
                                         >
                                             <option value="">-- Chọn danh mục --</option>
@@ -503,13 +571,7 @@ export function AdminEquipment() {
                                                 <input
                                                     type="number"
                                                     value={formData.price_per_day}
-                                                    onChange={(e) => {
-                                                        setFormData({ ...formData, price_per_day: e.target.value });
-                                                        const value = parseFloat(e.target.value);
-                                                        if (!isNaN(value) && value > 0) {
-                                                            setErrors({ ...errors, price_per_day: false });
-                                                        }
-                                                    }}
+                                                    onChange={handlePriceChange}
                                                     className={`w-full border ${errors.price_per_day ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white`}
                                                     placeholder="0"
                                                 />
@@ -525,7 +587,7 @@ export function AdminEquipment() {
                                                 <input
                                                     type="number"
                                                     value={formData.deposit_amount}
-                                                    onChange={(e) => setFormData({ ...formData, deposit_amount: e.target.value })}
+                                                    onChange={handleDepositChange}
                                                     className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                                                     placeholder="0"
                                                 />
@@ -541,7 +603,7 @@ export function AdminEquipment() {
                                             <input
                                                 type="number"
                                                 value={formData.quantity}
-                                                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                                                onChange={handleQuantityChange}
                                                 className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                                                 placeholder="1"
                                                 min="1"
@@ -553,7 +615,7 @@ export function AdminEquipment() {
                                             </label>
                                             <input
                                                 value={formData.location}
-                                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                                onChange={handleLocationChange}
                                                 className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                                                 placeholder="Nhập địa điểm"
                                             />
@@ -571,7 +633,7 @@ export function AdminEquipment() {
                                         <div className="flex space-x-2">
                                             <input
                                                 value={formData.imageInput}
-                                                onChange={(e) => setFormData({ ...formData, imageInput: e.target.value })}
+                                                onChange={handleImageInputChange}
                                                 className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                                                 placeholder="https://example.com/image.jpg"
                                             />
@@ -601,7 +663,7 @@ export function AdminEquipment() {
                                     <div className="grid grid-cols-3 gap-3">
                                         <div
                                             className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'available' ? 'bg-green-50 border-green-500 text-green-700 dark:bg-green-900 dark:border-green-400 dark:text-green-200' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                                            onClick={() => setFormData({ ...formData, status: 'available' })}
+                                            onClick={() => handleStatusChange('available')}
                                         >
                                             <div className="flex justify-center mb-1">
                                                 <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
@@ -610,7 +672,7 @@ export function AdminEquipment() {
                                         </div>
                                         <div
                                             className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'hidden' ? 'bg-gray-50 border-gray-500 text-gray-700 dark:bg-gray-700 dark:border-gray-400 dark:text-gray-100' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                                            onClick={() => setFormData({ ...formData, status: 'hidden' })}
+                                            onClick={() => handleStatusChange('hidden')}
                                         >
                                             <div className="flex justify-center mb-1">
                                                 <span className="w-3 h-3 rounded-full bg-gray-500 inline-block"></span>
@@ -619,7 +681,7 @@ export function AdminEquipment() {
                                         </div>
                                         <div
                                             className={`border rounded-lg p-3 text-center cursor-pointer ${formData.status === 'maintenance' ? 'bg-yellow-50 border-yellow-500 text-yellow-700 dark:bg-yellow-900 dark:border-yellow-400 dark:text-yellow-200' : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                                            onClick={() => setFormData({ ...formData, status: 'maintenance' })}
+                                            onClick={() => handleStatusChange('maintenance')}
                                         >
                                             <div className="flex justify-center mb-1">
                                                 <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
@@ -634,7 +696,7 @@ export function AdminEquipment() {
                                 <textarea
                                     rows={6}
                                     value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    onChange={handleDescriptionChange}
                                     className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-h-[180px] resize-y dark:bg-gray-800 dark:text-white"
                                     placeholder="Nhập thông tin chi tiết về thiết bị, tính năng, cách sử dụng..."
                                 />

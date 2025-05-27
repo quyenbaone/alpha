@@ -113,6 +113,14 @@ export function AdminEquipmentForm() {
         setEquipment(prev => ({ ...prev, [name]: value }));
     };
 
+    // Function to handle numeric input with formatting
+    const handleNumericInput = (e) => {
+        const { name, value } = e.target;
+        // Remove any non-digit characters except for the decimal point
+        const numericValue = value.replace(/[^\d]/g, '');
+        setEquipment(prev => ({ ...prev, [name]: numericValue }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -137,7 +145,7 @@ export function AdminEquipmentForm() {
                 slug: slug,
                 description: equipment.description || '',
                 category_id: equipment.category_id,
-                price_per_day: parseFloat(equipment.price_per_day),
+                price_per_day: parseFloat(equipment.price_per_day) || 0,
                 deposit_amount: parseFloat(equipment.deposit_amount) || 0,
                 images: images,
                 condition: equipment.condition,
@@ -258,19 +266,23 @@ export function AdminEquipmentForm() {
                                 </label>
                                 <div className="relative">
                                     <input
-                                        type="number"
+                                        type="text"
                                         name="price_per_day"
                                         value={equipment.price_per_day}
-                                        onChange={handleChange}
+                                        onChange={handleNumericInput}
                                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="Nhập giá thuê"
-                                        min="0"
                                         required
                                     />
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                                         VND
                                     </div>
                                 </div>
+                                {equipment.price_per_day && (
+                                    <div className="mt-1 text-xs text-gray-500">
+                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(equipment.price_per_day))}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
@@ -279,18 +291,22 @@ export function AdminEquipmentForm() {
                                 </label>
                                 <div className="relative">
                                     <input
-                                        type="number"
+                                        type="text"
                                         name="deposit_amount"
                                         value={equipment.deposit_amount}
-                                        onChange={handleChange}
+                                        onChange={handleNumericInput}
                                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="Nhập tiền đặt cọc"
-                                        min="0"
                                     />
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                                         VND
                                     </div>
                                 </div>
+                                {equipment.deposit_amount && (
+                                    <div className="mt-1 text-xs text-gray-500">
+                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(equipment.deposit_amount))}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
@@ -355,13 +371,12 @@ export function AdminEquipmentForm() {
                                     Số lượng khả dụng
                                 </label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="available_quantity"
                                     value={equipment.available_quantity}
-                                    onChange={handleChange}
+                                    onChange={handleNumericInput}
                                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Nhập số lượng khả dụng"
-                                    min="0"
                                 />
                             </div>
 
