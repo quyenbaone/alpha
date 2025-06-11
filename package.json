@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@hookform/resolvers": "^3.3.4",
     "@react-google-maps/api": "^2.20.6",
     "@stripe/react-stripe-js": "^2.5.0",

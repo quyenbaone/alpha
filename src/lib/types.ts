@@ -1,6 +1,32 @@
 import { Database } from './database.types';
 
-export type Equipment = Database['public']['Tables']['equipment']['Row'];
+export interface Equipment {
+  id: string;
+  title: string;
+  description?: string;
+  price_per_day: number;
+  category_id: string;
+  category?: {
+    id: string;
+    name: string;
+  };
+  owner_id: string;
+  owner?: {
+    id: string;
+    email: string;
+  };
+  images?: string[];
+  image?: string;
+  rating?: number;
+  reviews?: number;
+  location?: string;
+  status: 'available' | 'unavailable';
+  quantity?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export type { Database };
 export type Rental = Database['public']['Tables']['rentals']['Row'];
 export type Message = Database['public']['Tables']['messages']['Row'];
 export type Notification = Database['public']['Tables']['notifications']['Row'];

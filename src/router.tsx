@@ -24,8 +24,7 @@ window.__reactRouterFutureFlags = {
 };
 
 // Lazy load components to improve initial load time
-const Home = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
-const Equipment = lazy(() => import('./pages/Equipment').then(module => ({ default: module.Equipment })));
+const HomeEquipment = lazy(() => import('./pages/HomeEquipment').then(module => ({ default: module.HomeEquipment })));
 const EquipmentDetail = lazy(() => import('./pages/EquipmentDetail').then(module => ({ default: module.EquipmentDetail })));
 const Cart = lazy(() => import('./pages/Cart').then(module => ({ default: module.Cart })));
 const Profile = lazy(() => import('./pages/Profile').then(module => ({ default: module.Profile })));
@@ -56,8 +55,7 @@ export const router = createBrowserRouter(
     createRoutesFromElements(
         <Route element={<AppWrapper />}>
             <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="equipment" element={<Equipment />} />
+                <Route index element={<HomeEquipment />} />
                 <Route path="equipment/:id" element={<EquipmentDetail />} />
                 <Route path="contact" element={<Contact />} />
                 <Route path="terms" element={<Terms />} />
