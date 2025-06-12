@@ -76,12 +76,12 @@ export function CategoryNav() {
 
               {/* Dropdown */}
               {activeCategory === category.id && (
-                <div className="absolute top-full left-0 w-48 bg-white shadow-lg rounded-lg py-2 z-50">
+                <div className="absolute top-full left-0 w-48 dropdown-menu">
                   {category.subcategories.map((subcategory) => (
                     <Link
                       key={subcategory.id}
                       to={`/categories/${category.slug}/${subcategory.slug}`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-500"
+                      className="dropdown-item"
                     >
                       {subcategory.name}
                     </Link>

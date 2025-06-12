@@ -1,7 +1,7 @@
 /*
   Alpha Theme System
   ------------------
-  This theme uses CSS variables to create a consistent design system across both light and dark modes.
+  This theme uses CSS variables to create a consistent design system.
   
   Key colors:
   - --background / --foreground: Main text and background colors
@@ -19,8 +19,6 @@
   - Use the variables through Tailwind's CSS variable system: bg-background, text-foreground, etc.
   - For direct HSL values, use: bg-[hsl(var(--primary))] or text-[hsl(var(--foreground))]
   - For opacity variants, use: bg-primary/80, border-border/50, etc.
-  
-  The theme automatically switches between light and dark mode based on the .dark class on the <html> element.
 */
 
 @tailwind base;
@@ -29,7 +27,6 @@
 
 @layer base {
   :root {
-    /* Light mode */
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     
@@ -54,42 +51,11 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: 214.3 31.8% 91.4%;
+    --border: 0 0% 100%;
     --input: 214.3 31.8% 91.4%;
     --ring: 210 100% 50%;
     
     --radius: 0.75rem;
-  }
-
-  .dark {
-    /* Dark mode */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
-    
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
-    
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --border: 217 33% 25%;
-    --input: 217 33% 25%;
-    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -165,34 +131,6 @@
     @apply relative text-primary-foreground/90 hover:text-primary-foreground transition-all duration-300;
     @apply after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gradient-to-r after:from-primary after:via-accent after:to-primary;
     @apply after:transition-all after:duration-300 hover:after:w-full;
-  }
-
-  .heading-highlight {
-    @apply font-bold relative;
-    @apply before:content-[''] before:absolute before:-bottom-1 before:left-0 before:w-full before:h-[2px];
-    @apply before:bg-gradient-to-r before:from-primary before:via-accent before:to-primary;
-    @apply before:bg-[length:200%_auto];
-    animation: shine 3s ease-in-out infinite;
-  }
-
-  .brand-text {
-    @apply text-3xl font-bold tracking-wider uppercase;
-    @apply bg-clip-text text-transparent;
-    @apply bg-gradient-to-r from-white via-primary-foreground to-white;
-    @apply bg-[length:200%_auto];
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-    letter-spacing: 0.2em;
-    animation: shine 2s linear infinite;
-  }
-
-  @keyframes shine {
-    0% {
-      background-position: 200% center;
-    }
-
-    100% {
-      background-position: -200% center;
-    }
   }
 }
 

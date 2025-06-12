@@ -46,7 +46,6 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
         try {
             setLoading(true);
 
-            // Fetch reviews for this equipment
             const { data: reviewsData, error: reviewsError } = await supabase
                 .from('reviews')
                 .select('*')
@@ -55,12 +54,9 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
 
             if (reviewsError) throw reviewsError;
 
-            // If we have reviews, fetch the user info separately
             if (reviewsData && reviewsData.length > 0) {
-                // Get unique user IDs
                 const userIds = [...new Set(reviewsData.map(review => review.user_id))];
 
-                // Fetch user info
                 const { data: usersData, error: usersError } = await supabase
                     .from('users')
                     .select('id, email, full_name, avatar_url')
@@ -68,13 +64,11 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
 
                 if (usersError) throw usersError;
 
-                // Create a map of user info
                 const userMap = (usersData || []).reduce((map, user) => {
                     map[user.id] = user;
                     return map;
                 }, {} as Record<string, any>);
 
-                // Process reviews to include user name and avatar
                 const processedReviews = reviewsData.map(review => {
                     const userData = userMap[review.user_id];
                     return {
@@ -88,7 +82,6 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
 
                 setReviews(processedReviews);
 
-                // Check if current user has already submitted a review
                 if (user) {
                     const userReview = processedReviews.find(r => r.user_id === user.id);
                     if (userReview) {
@@ -98,7 +91,6 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                     }
                 }
 
-                // Calculate and update average rating if callback provided
                 if (onRatingUpdate && processedReviews.length > 0) {
                     const totalRating = processedReviews.reduce((sum, review) => sum + review.rating, 0);
                     const avgRating = totalRating / processedReviews.length;
@@ -135,7 +127,6 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
             setSubmitting(true);
 
             if (userReview) {
-                // Update existing review
                 const { error } = await supabase
                     .from('reviews')
                     .update({
@@ -149,7 +140,6 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                 toast.success('Cập nhật đánh giá thành công');
                 setEditMode(false);
             } else {
-                // Create new review
                 const { error } = await supabase
                     .from('reviews')
                     .insert({
@@ -164,7 +154,6 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                 toast.success('Đã gửi đánh giá thành công');
             }
 
-            // Refresh reviews
             fetchReviews();
         } catch (error) {
             console.error('Error submitting review:', error);
@@ -181,21 +170,18 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
         }
 
         if (helpfulMarked[reviewId]) {
-            return; // Already marked as helpful
+            return;
         }
 
         try {
-            // Update helpful count in the review
             const { error } = await supabase.rpc('increment_helpful_count', {
                 review_id: reviewId
             });
 
             if (error) throw error;
 
-            // Update local state
             setHelpfulMarked(prev => ({ ...prev, [reviewId]: true }));
 
-            // Update the reviews list
             setReviews(prev =>
                 prev.map(review =>
                     review.id === reviewId
@@ -211,7 +197,6 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
         }
     };
 
-    // Function to get initials from user name
     const getInitials = (name: string) => {
         return name
             .split(' ')
@@ -238,8 +223,8 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
     };
 
     return (
-        <div className="bg-gray-50 p-6 rounded-lg mb-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-6">Đánh giá sản phẩm</h2>
+        <div className="bg-white p-6 rounded-lg mb-6 shadow-sm">
+            <h2 className="text-xl font-semibold mb-6 text-gray-900">Đánh giá sản phẩm</h2>
 
             {/* User review form */}
             {user && !userReview && (
@@ -271,14 +256,14 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             placeholder="Chia sẻ trải nghiệm của bạn với sản phẩm này..."
-                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px]"
+                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#0F4D4D] min-h-[100px]"
                         />
                     </div>
 
                     <button
                         onClick={handleSubmitReview}
                         disabled={submitting}
-                        className="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+                        className="bg-[#0F4D4D] text-white py-2 px-4 rounded-lg hover:bg-[#145757] transition-colors disabled:opacity-50"
                     >
                         {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
                     </button>
@@ -315,7 +300,7 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             placeholder="Chia sẻ trải nghiệm của bạn với sản phẩm này..."
-                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 min-h-[100px]"
+                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#0F4D4D] min-h-[100px]"
                         />
                     </div>
 
@@ -323,7 +308,7 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                         <button
                             onClick={handleSubmitReview}
                             disabled={submitting}
-                            className="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+                            className="bg-[#0F4D4D] text-white py-2 px-4 rounded-lg hover:bg-[#145757] transition-colors disabled:opacity-50"
                         >
                             {submitting ? 'Đang cập nhật...' : 'Cập nhật đánh giá'}
                         </button>
@@ -339,7 +324,7 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
 
             {/* Reviews list */}
             <div>
-                <h3 className="font-medium mb-4">Tất cả đánh giá ({reviews.length})</h3>
+                <h3 className="font-medium mb-4 text-gray-900">Tất cả đánh giá ({reviews.length})</h3>
 
                 {loading ? (
                     <div className="animate-pulse space-y-4">
@@ -376,7 +361,7 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                                                 className="h-12 w-12 rounded-full object-cover border border-gray-200"
                                             />
                                         ) : (
-                                            <div className="h-12 w-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-medium border border-orange-200">
+                                            <div className="h-12 w-12 rounded-full bg-[#f5f5f5] text-[#0F4D4D] flex items-center justify-center font-medium border border-[#0F4D4D]">
                                                 {getInitials(review.user_name || '')}
                                             </div>
                                         )}
@@ -386,7 +371,7 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                                     <div className="flex-1">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <p className="font-medium">{review.user_name}</p>
+                                                <p className="font-medium text-gray-900">{review.user_name}</p>
                                                 <div className="flex items-center mt-1">
                                                     <div className="flex">
                                                         {[...Array(5)].map((_, i) => (
@@ -402,11 +387,11 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                                                 </div>
                                             </div>
 
-                                            {/* Edit button (only for user's own review) */}
+                                            {/* Edit button */}
                                             {user && review.user_id === user.id && !editMode && (
                                                 <button
                                                     onClick={handleEditReview}
-                                                    className="text-gray-500 hover:text-orange-500 p-1"
+                                                    className="text-gray-500 hover:text-[#0F4D4D] p-1"
                                                     title="Chỉnh sửa đánh giá"
                                                 >
                                                     <Edit className="h-4 w-4" />
@@ -422,7 +407,7 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                                                 disabled={helpfulMarked[review.id] || review.user_id === user?.id}
                                                 className={`flex items-center text-sm ${helpfulMarked[review.id] || review.user_id === user?.id
                                                     ? 'text-gray-400 cursor-default'
-                                                    : 'text-gray-600 hover:text-orange-500'
+                                                    : 'text-gray-600 hover:text-[#0F4D4D]'
                                                     }`}
                                             >
                                                 <ThumbsUp className="h-4 w-4 mr-1" />
@@ -437,13 +422,13 @@ export function ProductReviews({ equipmentId, onRatingUpdate }: ProductReviewsPr
                 )}
 
                 {!user && (
-                    <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-100">
-                        <p className="text-center text-orange-700">
-                            Vui lòng <a href="/signin" className="font-medium underline">đăng nhập</a> để đánh giá sản phẩm
+                    <div className="mt-6 p-4">
+                        <p className="text-center text-gray-700">
+                            Vui lòng <a href="/signin" className="font-medium underline text-[#0F4D4D]">đăng nhập</a> để đánh giá sản phẩm
                         </p>
                     </div>
                 )}
             </div>
         </div>
     );
-} 
+}

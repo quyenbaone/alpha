@@ -151,15 +151,15 @@ export function Header() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden z-10 border border-[#D9E6E2]">
-                    <div className="p-3 border-b border-[#D9E6E2]">
-                      <p className="text-sm font-medium text-[#116466]">{user.email}</p>
-                      <p className="text-xs text-[#666666]">{getUserRole()}</p>
+                  <div className="absolute right-0 mt-2 w-56 dropdown-menu">
+                    <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.email}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{getUserRole()}</p>
                     </div>
                     <div className="py-1">
                       <Link
                         to="/profile"
-                        className="block px-4 py-2 text-sm text-[#116466] hover:bg-[#E6F2F1]"
+                        className="dropdown-item"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Tài khoản của tôi
@@ -167,7 +167,7 @@ export function Header() {
                       {isAdmin && (
                         <Link
                           to="/admin"
-                          className="block px-4 py-2 text-sm text-[#116466] hover:bg-[#E6F2F1]"
+                          className="dropdown-item"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           Quản trị viên
@@ -176,21 +176,12 @@ export function Header() {
                       {userRole === 'owner' && (
                         <Link
                           to="/owner"
-                          className="block px-4 py-2 text-sm text-[#116466] hover:bg-[#E6F2F1]"
+                          className="dropdown-item"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           Quản lý cho thuê
                         </Link>
                       )}
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <div className="flex items-center">
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Đăng xuất
-                        </div>
-                      </button>
                     </div>
                   </div>
                 )}

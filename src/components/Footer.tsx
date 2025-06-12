@@ -76,40 +76,38 @@ export function Footer() {
           {/* Contact */}
           <div>
             <h3 className="text-xl font-semibold mb-6 border-b border-gray-600 pb-2">Liên hệ</h3>
-            <ul className="space-y-4 font-medium text-base">
-  <li className="flex items-center space-x-2 cursor-pointer group">
-    <MapPin className="h-5 w-5 text-white group-hover:text-[#22c55e] transition-colors duration-300" />
-    <Link
-      to="/contact"
-      className="text-white group-hover:text-[#22c55e] transition-colors duration-300"
-      title="Xem địa chỉ trên bản đồ"
-    >
-      Quy Nhơn - Bình Định
-    </Link>
-  </li>
-  <li className="flex items-center space-x-2 cursor-pointer group">
-    <Phone className="h-5 w-5 text-white group-hover:text-[#22c55e] transition-colors duration-300" />
-    <a
-      href="tel:0342340850"
-      className="text-white group-hover:text-[#22c55e] transition-colors duration-300"
-      title="Gọi điện thoại"
-    >
-      0342340850
-
-    </a>
-  </li>
-  <li className="flex items-center space-x-2 cursor-pointer group">
-    <Mail className="h-5 w-5 text-white group-hover:text-[#22c55e] transition-colors duration-300" />
-    <a
-      href="mailto:hotro.alphateam@gmail.com"
-      className="text-white group-hover:text-[#22c55e] transition-colors duration-300"
-      title="Gửi email"
-    >
-      hotro.alphateam@gmail.com
-    </a>
-  </li>
-</ul>
-
+            <ul className="space-y-5 font-medium text-base">
+              <li className="flex items-center space-x-3">
+                <MapPin className="h-6 w-6 text-white hover:text-[#22c55e] transition-colors duration-300" />
+                <Link
+                  to="/contact"
+                  className="text-white hover:text-[#22c55e] transition-colors duration-300"
+                  title="Xem địa chỉ trên bản đồ"
+                >
+                  {settings.contact_address || "Quy Nhơn - Bình Định"}
+                </Link>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Phone className="h-6 w-6 text-white hover:text-[#22c55e] transition-colors duration-300" />
+                <a
+                  href={`tel:${settings.contact_phone || "0352486411"}`}
+                  className="text-white hover:text-[#22c55e] transition-colors duration-300"
+                  title="Gọi điện thoại"
+                >
+                  {settings.contact_phone || "0352486411"}
+                </a>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Mail className="h-6 w-6 text-white hover:text-[#22c55e] transition-colors duration-300" />
+                <a
+                  href={`mailto:${settings.contact_email || "alpha@gmail.com"}`}
+                  className="text-white hover:text-[#22c55e] transition-colors duration-300"
+                  title="Gửi email"
+                >
+                  {settings.contact_email || "alpha@gmail.com"}
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 

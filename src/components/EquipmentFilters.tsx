@@ -48,18 +48,16 @@ export function EquipmentFilters({
     setRatingFilter(0);
   };
 
-  const buttonBase = "cursor-pointer transition-all duration-300 ease-in-out rounded-lg px-4 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#116466]";
-
   return (
-    <div className="bg-white rounded-xl shadow-lg p-4 mb-8 max-w-full flex flex-wrap items-center gap-4 justify-between">
-      <div className="flex items-center gap-4 flex-wrap max-w-[75%]">
+    <div className="p-4 bg-[#f5f7f8] rounded-lg shadow-lg">
+      <div className="flex flex-wrap items-center gap-4 p-4 rounded-lg bg-white shadow-sm">
         {/* Danh mục */}
         <div className="flex items-center gap-2 whitespace-nowrap">
-          <span className="text-[#116466] font-medium">Danh mục:</span>
+          <label className="text-gray-800 font-semibold">Danh mục:</label>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="rounded-lg border border-gray-300 p-2 text-sm focus:border-[#116466] focus:ring-2 focus:ring-[#116466] focus:outline-none"
+            className="bg-white text-gray-900 rounded px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             {categories.map(cat => (
               <option key={cat.value} value={cat.value}>
@@ -71,7 +69,7 @@ export function EquipmentFilters({
 
         {/* Khoảng giá */}
         <div className="flex items-center gap-2 whitespace-nowrap">
-          <span className="text-[#116466] font-medium">Giá:</span>
+          <label className="text-gray-800 font-semibold">Giá:</label>
           <select
             value={`${filterPriceMin}-${filterPriceMax}`}
             onChange={(e) => {
@@ -79,7 +77,7 @@ export function EquipmentFilters({
               setFilterPriceMin(min);
               setFilterPriceMax(max);
             }}
-            className="rounded-lg border border-gray-300 p-2 text-sm focus:border-[#116466] focus:ring-2 focus:ring-[#116466] focus:outline-none"
+            className="bg-white text-gray-900 rounded px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             {PRICE_RANGES.map(range => (
               <option key={`${range.min}-${range.max}`} value={`${range.min}-${range.max}`}>
@@ -91,11 +89,11 @@ export function EquipmentFilters({
 
         {/* Đánh giá */}
         <div className="flex items-center gap-2 whitespace-nowrap">
-          <span className="text-[#116466] font-medium">Đánh giá:</span>
+          <label className="text-gray-800 font-semibold">Đánh giá:</label>
           <select
             value={ratingFilter}
             onChange={(e) => setRatingFilter(Number(e.target.value))}
-            className="rounded-lg border border-gray-300 p-2 text-sm focus:border-[#116466] focus:ring-2 focus:ring-[#116466] focus:outline-none"
+            className="bg-white text-gray-900 rounded px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value={0}>Tất cả</option>
             {[5, 4, 3, 2, 1].map(star => (
@@ -105,15 +103,15 @@ export function EquipmentFilters({
             ))}
           </select>
         </div>
-      </div>
 
-      {/* Nút xóa bộ lọc */}
-      <button
-        onClick={handleClearFilters}
-        className={`${buttonBase} bg-[#116466] text-white hover:bg-[#0a4b4d] shadow-md`}
-      >
-        Xóa bộ lọc
-      </button>
+        {/* Nút xóa bộ lọc */}
+        <button
+          onClick={handleClearFilters}
+          className="ml-auto bg-white text-gray-800 rounded-lg px-4 py-2 border border-gray-300 hover:bg-indigo-600 hover:text-white transition-colors"
+        >
+          Xóa bộ lọc
+        </button>
+      </div>
     </div>
   );
 }
