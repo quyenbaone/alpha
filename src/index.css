@@ -1,26 +1,3 @@
-/*
-  Alpha Theme System
-  ------------------
-  This theme uses CSS variables to create a consistent design system.
-  
-  Key colors:
-  - --background / --foreground: Main text and background colors
-  - --card / --card-foreground: Card component colors
-  - --primary / --primary-foreground: Primary accent colors
-  - --secondary / --secondary-foreground: Secondary accent colors
-  - --muted / --muted-foreground: Subdued UI elements
-  - --accent / --accent-foreground: Accent UI elements
-  - --destructive / --destructive-foreground: Error and warning states
-  - --border: Border colors
-  - --input: Form input borders
-  - --ring: Focus states
-
-  Usage:
-  - Use the variables through Tailwind's CSS variable system: bg-background, text-foreground, etc.
-  - For direct HSL values, use: bg-[hsl(var(--primary))] or text-[hsl(var(--foreground))]
-  - For opacity variants, use: bg-primary/80, border-border/50, etc.
-*/
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

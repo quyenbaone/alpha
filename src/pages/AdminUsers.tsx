@@ -935,16 +935,16 @@ export function AdminUsers() {
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                                 <button
                                     onClick={handleResetFilters}
-                                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                    className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
                                 >
                                     Đặt lại
                                 </button>
                                 <button
                                     onClick={handleApplyFilters}
-                                    className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors font-semibold shadow-sm"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold shadow-sm"
                                 >
                                     Áp dụng
                                 </button>

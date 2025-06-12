@@ -22,7 +22,7 @@ export function EquipmentDetail() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isLiked, setIsLiked] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showCalendarFor, setShowCalendarFor] = useState<'start' | 'end' | null>(null);
   const addToCart = useCartStore((state) => state.addToCart);
   const [avgRating, setAvgRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
@@ -34,7 +34,7 @@ export function EquipmentDetail() {
     if (!id) navigate('/equipment');
   }, [id, navigate]);
 
-  // Calculate rental days
+  // Tính số ngày thuê
   let days = 1;
   if (startDate && endDate) {
     const s = new Date(startDate);
@@ -42,13 +42,13 @@ export function EquipmentDetail() {
     days = Math.max(Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)), 1);
   }
 
-  // Fees
+  // Phí
   const insurance = 50000;
   const service = 30000;
   const perDay = equipment?.price_per_day || 0;
   const total = perDay * days + insurance + service;
 
-  // Add to cart handler
+  // Xử lý thêm vào giỏ
   const handleAddToCart = () => {
     if (!equipment) return;
 
@@ -69,7 +69,7 @@ export function EquipmentDetail() {
     toast.success('Đã thêm vào giỏ hàng');
   };
 
-  // Rent now handler (with validation & redirect)
+  // Xử lý thuê ngay
   const handleRentNow = () => {
     if (!user) {
       navigate('/signin');
@@ -102,18 +102,49 @@ export function EquipmentDetail() {
     navigate('/cart');
   };
 
-  // Today's date string for min date on inputs
+  // Ngày hiện tại (để giới hạn chọn ngày)
   const today = new Date();
   const vietnamTime = new Date(today.getTime() + 7 * 60 * 60 * 1000);
   const todayString = vietnamTime.toISOString().split('T')[0];
 
-  // Update rating from reviews component
+  // Cập nhật đánh giá
   const handleRatingUpdate = (newRating: number, count: number) => {
     setAvgRating(newRating);
     setReviewCount(count);
   };
 
-  // Skeleton loading UI
+  // Xử lý khi chọn ngày trên calendar
+  const handleDateSelect = (start: Date, end: Date) => {
+    const startStr = start.toISOString().split('T')[0];
+    const endStr = end.toISOString().split('T')[0];
+
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const today = new Date(vietnamTime.getFullYear(), vietnamTime.getMonth(), vietnamTime.getDate());
+
+    if (start < today) {
+      toast.error('Ngày bắt đầu không thể là ngày trong quá khứ');
+      return;
+    }
+
+    if (end <= start) {
+      toast.error('Ngày kết thúc phải sau ngày bắt đầu');
+      return;
+    }
+
+    if (showCalendarFor === 'start') {
+      setStartDate(startStr);
+      // Nếu ngày kết thúc hiện tại nhỏ hơn ngày bắt đầu thì reset endDate
+      if (endDate && new Date(endStr) < new Date(endDate)) {
+        setEndDate('');
+      }
+    } else if (showCalendarFor === 'end') {
+      setEndDate(endStr);
+    }
+
+    setShowCalendarFor(null); // Ẩn lịch sau khi chọn
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -169,7 +200,7 @@ export function EquipmentDetail() {
                 variant="outline"
                 className="absolute top-4 left-4 px-4 py-1 text-base bg-orange-500 text-white border-0 rounded-full shadow"
               >
-                {equipment.category}
+                {typeof equipment.category === 'string' ? equipment.category : equipment.category.name}
               </Badge>
             )}
           </div>
@@ -208,92 +239,78 @@ export function EquipmentDetail() {
 
           {/* Booking */}
           <div className="p-6 rounded-xl mb-6 bg-transparent">
-  <h2 className="text-xl font-semibold mb-4 text-gray-900">Đặt thuê</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Đặt thuê</h2>
 
-  <div className="grid grid-cols-2 gap-4 mb-4">
-    <div>
-      <label className="block mb-1 font-medium text-gray-700">Ngày bắt đầu</label>
-      <input
-        type="date"
-        value={startDate}
-        onChange={(e) => {
-          setStartDate(e.target.value);
-          if (endDate && new Date(e.target.value) > new Date(endDate)) setEndDate('');
-        }}
-        className="w-full p-2 rounded-lg bg-white text-gray-900 placeholder-gray-400 border border-gray-300 focus:ring-2 focus:ring-[#0F4D4D] focus:border-[#0F4D4D]"
-        min={todayString}
-      />
-    </div>
-    <div>
-      <label className="block mb-1 font-medium text-gray-700">Ngày kết thúc</label>
-      <input
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        className="w-full p-2 rounded-lg bg-white text-gray-900 placeholder-gray-400 border border-gray-300 focus:ring-2 focus:ring-[#0F4D4D] focus:border-[#0F4D4D]"
-        min={startDate || todayString}
-      />
-    </div>
-  </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">Ngày bắt đầu</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={startDate}
+                  placeholder="Chọn ngày bắt đầu"
+                  onClick={() => setShowCalendarFor('start')}
+                  className="w-full p-2 rounded-lg bg-white text-gray-900 placeholder-gray-400 border border-gray-300 cursor-pointer focus:ring-2 focus:ring-[#0F4D4D] focus:border-[#0F4D4D]"
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">Ngày kết thúc</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={endDate}
+                  placeholder="Chọn ngày kết thúc"
+                  onClick={() => setShowCalendarFor('end')}
+                  className="w-full p-2 rounded-lg bg-white text-gray-900 placeholder-gray-400 border border-gray-300 cursor-pointer focus:ring-2 focus:ring-[#0F4D4D] focus:border-[#0F4D4D]"
+                />
+              </div>
+            </div>
 
-  <button
-    onClick={() => setShowCalendar(!showCalendar)}
-    className="flex items-center gap-2 font-semibold mb-4 text-[#0F4D4D] hover:text-[#145757]"
-  >
-    <Calendar className="h-5 w-5" />
-    {showCalendar ? 'Ẩn lịch' : 'Xem lịch khả dụng'}
-  </button>
+            {(showCalendarFor === 'start' || showCalendarFor === 'end') && (
+              <div className="mt-4">
+                <EquipmentCalendar
+                  equipmentId={id}
+                  onDateSelect={handleDateSelect}
+                />
+              </div>
+            )}
 
-  {showCalendar && (
-    <div className="mt-4">
-      <EquipmentCalendar
-        equipmentId={id}
-        onDateSelect={(start, end) => {
-          setStartDate(start.toISOString().split('T')[0]);
-          setEndDate(end.toISOString().split('T')[0]);
-        }}
-      />
-    </div>
-  )}
+            <div className="mt-6 space-y-1 text-sm text-gray-700">
+              <div className="flex justify-between">
+                <span>Giá thuê mỗi ngày</span>
+                <span>{formatPrice(perDay)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Phí bảo hiểm</span>
+                <span>{formatPrice(insurance)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Phí dịch vụ</span>
+                <span>{formatPrice(service)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-base border-t border-gray-200 pt-2 mt-2 text-gray-900">
+                <span>Tổng cộng ({days} ngày)</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+            </div>
 
-  <div className="mt-6 space-y-1 text-sm text-gray-700">
-    <div className="flex justify-between">
-      <span>Giá thuê mỗi ngày</span>
-      <span>{formatPrice(perDay)}</span>
-    </div>
-    <div className="flex justify-between">
-      <span>Phí bảo hiểm</span>
-      <span>{formatPrice(insurance)}</span>
-    </div>
-    <div className="flex justify-between">
-      <span>Phí dịch vụ</span>
-      <span>{formatPrice(service)}</span>
-    </div>
-    <div className="flex justify-between font-bold text-base border-t border-gray-200 pt-2 mt-2 text-gray-900">
-  <span>Tổng cộng ({days} ngày)</span>
-  <span>{formatPrice(total)}</span>
-</div>
-
-  </div>
-
-  <div className="flex gap-4 mt-8">
-    <Button
-      variant="outline"
-      onClick={handleAddToCart}
-      className="flex-1 py-3 text-base text-[#0F4D4D] border border-[#0F4D4D] hover:bg-[#0F4D4D] hover:text-white"
-    >
-      <ShoppingCart className="h-5 w-5 mr-2" /> Thêm vào giỏ
-    </Button>
-    <Button
-      variant="solid"
-      onClick={handleRentNow}
-      className="flex-1 py-3 text-base bg-[#0F4D4D] hover:bg-[#145757] text-white"
-    >
-      Thuê ngay
-    </Button>
-  </div>
-</div>
-
+            <div className="flex gap-4 mt-8">
+              <Button
+                variant="outline"
+                onClick={handleAddToCart}
+                className="flex-1 py-3 text-base text-[#0F4D4D] border border-[#0F4D4D] hover:bg-[#0F4D4D] hover:text-white transition-colors"
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" /> Thêm vào giỏ
+              </Button>
+              <Button
+                variant="solid"
+                onClick={handleRentNow}
+                className="flex-1 py-3 text-base bg-[#0F4D4D] hover:bg-[#145757] text-white transition-colors"
+              >
+                Thuê ngay
+              </Button>
+            </div>
+          </div>
 
           {/* Map & Description */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
@@ -318,10 +335,9 @@ export function EquipmentDetail() {
 
       {/* Product Reviews Outside the Details Box */}
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
-  <h2 className="text-2xl font-semibold mb-6 text-gray-900 border-0">Đánh giá sản phẩm</h2>
-  <ProductReviews equipmentId={id} onRatingUpdate={handleRatingUpdate} />
-</div>
-</div>
-
+        <h2 className="text-2xl font-semibold mb-6 text-gray-900 border-0">Đánh giá sản phẩm</h2>
+        <ProductReviews equipmentId={id} onRatingUpdate={handleRatingUpdate} />
+      </div>
+    </div>
   );
 }

@@ -90,21 +90,21 @@ export function Footer() {
               <li className="flex items-center space-x-3">
                 <Phone className="h-6 w-6 text-white hover:text-[#22c55e] transition-colors duration-300" />
                 <a
-                  href={`tel:${settings.contact_phone || "0352486411"}`}
+                  href={`tel:${settings.contact_phone || "+84123456789"}`}
                   className="text-white hover:text-[#22c55e] transition-colors duration-300"
                   title="Gọi điện thoại"
                 >
-                  {settings.contact_phone || "0352486411"}
+                  {settings.contact_phone || "+84123456789"}
                 </a>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail className="h-6 w-6 text-white hover:text-[#22c55e] transition-colors duration-300" />
                 <a
-                  href={`mailto:${settings.contact_email || "alpha@gmail.com"}`}
+                  href={`mailto:${settings.contact_email || "hotro.alphateam@gmail.com"}`}
                   className="text-white hover:text-[#22c55e] transition-colors duration-300"
                   title="Gửi email"
                 >
-                  {settings.contact_email || "alpha@gmail.com"}
+                  {settings.contact_email || "hotro.alphateam@gmail.com"}
                 </a>
               </li>
             </ul>
