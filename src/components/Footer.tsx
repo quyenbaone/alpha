@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone } from 'lucide-react';
+import { Facebook, Instagram, Mail, MapPin, Phone, Twitter } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettingsStore } from '../store/settingsStore';
@@ -9,65 +9,85 @@ export function Footer() {
 
   useEffect(() => {
     fetchSettings();
-
-    if ((window as any).FB) {
-      (window as any).FB.XFBML.parse();
-    }
   }, [fetchSettings]);
 
   return (
-    <footer className="bg-[#0F4D4D] text-white py-6">
-      <div className="container mx-auto px-6 max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-
+    <footer className="bg-gray-900 text-gray-300">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div className="space-y-6">
-            <Link to="/" className="flex items-center space-x-3">
+          <div>
+            <Link to="/" className="flex items-center space-x-2 mb-4">
               <img
                 src={settings.site_logo || "/logo.png"}
                 alt="Logo"
-                className="h-10 w-auto"
+                className="h-8 w-auto"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/logo.png";
                 }}
               />
-              <span className="text-2xl font-extrabold tracking-tight">Alpha</span>
+              <span className="text-xl font-bold text-white">{settings.site_name || 'Alpha'}</span>
             </Link>
-            <p className="text-gray-300 leading-relaxed max-w-sm">
+            <p className="text-sm mb-4">
               Nền tảng cho thuê thiết bị chuyên nghiệp, đáng tin cậy và tiết kiệm chi phí.
             </p>
-            {/* Facebook Follow */}
-            <div>
-              <iframe
-                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61576194940259&tabs=timeline&width=280&height=70&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=true&appId"
-                width="280"
-                height="70"
-                style={{ border: 'none', overflow: 'hidden' }}
-                scrolling="no"
-                frameBorder="0"
-                allowFullScreen={true}
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                title="Facebook Follow"
-              />
+            <div className="flex space-x-4">
+              <a href={settings.facebook_link || "#"} className="text-white/60 hover:text-white transition-colors">
+                <Facebook className="h-5 w-5" />
+              </a>
+              <a href="#" className="text-white/60 hover:text-white transition-colors">
+                <Twitter className="h-5 w-5" />
+              </a>
+              <a href="#" className="text-white/60 hover:text-white transition-colors">
+                <Instagram className="h-5 w-5" />
+              </a>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-xl font-semibold mb-6 border-b border-gray-600 pb-2">Liên kết nhanh</h3>
-            <ul className="space-y-4 font-medium text-base">
+            <h3 className="text-white font-semibold mb-4">Liên kết nhanh</h3>
+            <ul className="space-y-2">
               <li>
-                <Link to="/about"
-                  className="text-white hover:text-[#22c55e] transition-colors duration-300"
-                >
-                  Giới thiệu chung
+                <Link to="/equipment" className="text-sm text-white/70 hover:text-white transition-colors">
+                  Thiết bị
                 </Link>
               </li>
               <li>
-                <Link to="/contact"
-                  className="text-white hover:text-[#22c55e] transition-colors duration-300"
-                >
-                  Liên hệ hỗ trợ
+                <Link to="/about" className="text-sm text-white/70 hover:text-white transition-colors">
+                  Giới thiệu
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-sm text-white/70 hover:text-white transition-colors">
+                  Liên hệ
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Hỗ trợ</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/faq" className="text-sm text-white/70 hover:text-white transition-colors">
+                  Câu hỏi thường gặp
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-sm text-white/70 hover:text-white transition-colors">
+                  Điều khoản sử dụng
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-sm text-white/70 hover:text-white transition-colors">
+                  Chính sách bảo mật
+                </Link>
+              </li>
+              <li>
+                <Link to="/help" className="text-sm text-white/70 hover:text-white transition-colors">
+                  Trung tâm trợ giúp
                 </Link>
               </li>
             </ul>
@@ -75,47 +95,55 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="text-xl font-semibold mb-6 border-b border-gray-600 pb-2">Liên hệ</h3>
-            <ul className="space-y-5 font-medium text-base">
-              <li className="flex items-center space-x-3">
-                <MapPin className="h-6 w-6 text-white hover:text-[#22c55e] transition-colors duration-300" />
-                <Link
-                  to="/contact"
-                  className="text-white hover:text-[#22c55e] transition-colors duration-300"
-                  title="Xem địa chỉ trên bản đồ"
-                >
-                  {settings.contact_address || "Quy Nhơn - Bình Định"}
-                </Link>
+            <h3 className="text-white font-semibold mb-4">Liên hệ</h3>
+            <ul className="space-y-2">
+              <li className="flex items-start space-x-2">
+                <MapPin className="h-4 w-4 mt-1 flex-shrink-0 text-white/70" />
+                <span className="text-sm text-white/70">
+                  {settings.contact_address || "123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh"}
+                </span>
               </li>
-              <li className="flex items-center space-x-3">
-                <Phone className="h-6 w-6 text-white hover:text-[#22c55e] transition-colors duration-300" />
-                <a
-                  href={`tel:${settings.contact_phone || "+84123456789"}`}
-                  className="text-white hover:text-[#22c55e] transition-colors duration-300"
-                  title="Gọi điện thoại"
-                >
-                  {settings.contact_phone || "+84123456789"}
-                </a>
+              <li className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 flex-shrink-0 text-white/70" />
+                <span className="text-sm text-white/70">{settings.contact_phone || "(84) 123 456 789"}</span>
               </li>
-              <li className="flex items-center space-x-3">
-                <Mail className="h-6 w-6 text-white hover:text-[#22c55e] transition-colors duration-300" />
-                <a
-                  href={`mailto:${settings.contact_email || "hotro.alphateam@gmail.com"}`}
-                  className="text-white hover:text-[#22c55e] transition-colors duration-300"
-                  title="Gửi email"
-                >
-                  {settings.contact_email || "hotro.alphateam@gmail.com"}
-                </a>
+              <li className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 flex-shrink-0 text-white/70" />
+                <span className="text-sm text-white/70">{settings.contact_email || "contact@alpha.com"}</span>
               </li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-700 mt-12 pt-6">
-          <p className="text-center text-gray-400 text-sm">
-            © {year} Alpha. Tất cả quyền được bảo lưu.
-          </p>
+        <div className="border-t border-white/10 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-sm text-white/70">
+              © {year} {settings.site_name || 'Alpha'}. Tất cả quyền được bảo lưu.
+            </p>
+            <div className="flex space-x-4 mt-4 md:mt-0">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
+                alt="Visa"
+                className="h-6 w-auto bg-white rounded p-0.5"
+              />
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                alt="Mastercard"
+                className="h-6 w-auto bg-white rounded p-0.5"
+              />
+              <img
+                src="https://homepage.momocdn.net/fileuploads/svg/momo-file-240411162904.svg"
+                alt="MoMo"
+                className="h-6 w-auto bg-white rounded p-0.5"
+              />
+              <img
+                src="https://stcd02206177151.cloud.edgevnpay.vn/assets/images/logo-icon/logo-primary.svg"
+                alt="VNPay"
+                className="h-6 w-auto bg-white rounded p-0.5"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </footer>

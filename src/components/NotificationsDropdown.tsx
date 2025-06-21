@@ -1,91 +1,116 @@
-import { useEffect, useState } from 'react';
 import { Bell, Check, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
-import type { Database } from '../types/supabase';
 
-type NotificationType = Database['public']['Tables']['notifications']['Row'];
+interface Notification {
+  id: string;
+  type: 'message' | 'rental_request' | 'rental_status';
+  content: string;
+  read: boolean;
+  created_at: string;
+  related_id: string;
+}
 
 interface NotificationsDropdownProps {
   onClose: () => void;
 }
 
 export function NotificationsDropdown({ onClose }: NotificationsDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const { user } = useAuthStore();
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    async function fetchNotifications() {
-      if (!user?.id) return;
+    if (user) {
+      fetchNotifications();
+      subscribeToNotifications();
+    }
+  }, [user]);
 
+  const fetchNotifications = async () => {
+    try {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-      if (error) {
-        console.error('Error fetching notifications:', error);
-        return;
-      }
-
-      if (data) {
-        setNotifications(data);
-      }
+      if (error) throw error;
+      setNotifications(data);
+      setUnreadCount(data.filter((n: Notification) => !n.read).length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
     }
+  };
 
-    fetchNotifications();
-  }, [user]);
+  const subscribeToNotifications = () => {
+    const subscription = supabase
+      .channel('notifications')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, payload => {
+        const newNotification = payload.new as Notification;
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      })
+      .subscribe();
 
-  const markAllAsRead = async () => {
-    if (!user?.id) return;
-
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true } as Partial<NotificationType>)
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error marking all as read:', error);
-      return;
-    }
-
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    return () => {
+      subscription.unsubscribe();
+    };
   };
 
   const markAsRead = async (notificationId: string) => {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true } as Partial<NotificationType>)
-      .eq('id', notificationId)
-      .single();
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
 
-    if (error) {
-      console.error('Error marking as read:', error);
-      return;
+      if (error) throw error;
+
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === notificationId ? { ...n, read: true } : n
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
     }
-
-    setNotifications(notifications.map(n =>
-      n.id === notificationId ? { ...n, read: true } : n
-    ));
   };
 
-  const deleteNotification = async (notificationId: string) => {
-    const { error } = await supabase
-      .from('notifications')
-      .delete()
-      .eq('id', notificationId);
+  const handleNotificationClick = async (notification: Notification) => {
+    await markAsRead(notification.id);
 
-    if (error) {
-      console.error('Error deleting notification:', error);
-      return;
+    // Navigate based on notification type
+    if (notification.type === 'message') {
+      navigate('/messages');
+    } else if (notification.type === 'rental_status') {
+      navigate('/profile');
     }
 
-    setNotifications(notifications.filter(n => n.id !== notificationId));
+    setIsOpen(false);
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(
+      notifications.map((notification) => ({ ...notification, read: true }))
+    );
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(
+      notifications.filter((notification) => notification.id !== id)
+    );
   };
 
   return (
@@ -103,37 +128,36 @@ export function NotificationsDropdown({ onClose }: NotificationsDropdownProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 dropdown-menu">
-          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Thông báo</h3>
+        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50">
+          <div className="px-4 py-2 border-b flex justify-between items-center">
+            <h3 className="font-semibold text-gray-900">Thông báo</h3>
             <button
               onClick={markAllAsRead}
-              className="text-sm text-blue-500 hover:text-blue-600"
+              className="text-sm text-orange-500 hover:text-orange-600"
             >
               Đánh dấu đã đọc
             </button>
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                <Bell className="h-8 w-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
+              <div className="px-4 py-8 text-center text-gray-500">
+                <Bell className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                 <p>Không có thông báo mới</p>
               </div>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                    !notification.read ? 'bg-blue-50 dark:bg-blue-900/50' : ''
-                  }`}
+                  className={`px-4 py-3 hover:bg-gray-50 ${!notification.read ? 'bg-orange-50' : ''
+                    }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900 dark:text-gray-100">
+                      <p className="font-medium text-gray-900">
                         {notification.content}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         {new Date(notification.created_at).toLocaleString()}
                       </p>
                     </div>
@@ -159,10 +183,10 @@ export function NotificationsDropdown({ onClose }: NotificationsDropdownProps) {
             )}
           </div>
 
-          <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+          <div className="px-4 py-2 border-t">
             <Link
               to="/notifications"
-              className="block text-center text-sm text-blue-500 hover:text-blue-600"
+              className="block text-center text-sm text-orange-500 hover:text-orange-600"
               onClick={onClose}
             >
               Xem tất cả thông báo
